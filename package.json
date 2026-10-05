@@ -18,7 +18,8 @@
     "test:watch": "vitest",
     "db:indexes": "tsx scripts/db-indexes.ts",
     "user:create": "tsx scripts/user-create.ts",
-    "dev:seed": "tsx scripts/dev-seed.ts"
+    "dev:seed": "tsx scripts/dev-seed.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.2.1",

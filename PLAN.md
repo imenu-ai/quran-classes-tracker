@@ -499,7 +499,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - Theme toggle.
   - Sync details: pending count, last sync, rejected list with retry/discard, "sync now".
   - Logout with an unsynced-changes warning and a local wipe.
-- [ ] **6.4 Playwright.** *(Added from step 4.7: measure, in a production build, how long the evaluation screen takes to reflect a tap. In the dev build on Windows WebKit it was about 1 s. Optimize the live query if a production build on a phone is noticeably slow.)* Memory-server Mongo plus a production build; projects: iPhone 15 (WebKit), Pixel 7 (Chromium), Desktop.
+- [x] **6.4 Playwright.** *(Added from step 4.7: measure, in a production build, how long the evaluation screen takes to reflect a tap. In the dev build on Windows WebKit it was about 1 s. Optimize the live query if a production build on a phone is noticeably slow.)* Memory-server Mongo plus a production build; projects: iPhone 15 (WebKit), Pixel 7 (Chromium), Desktop.
   - Main flow: login → class → students → lesson → attendance → evaluate → assign homework → profile.
   - **Offline run:** go offline mid-lesson, keep working, reconnect, then check that the server has the data, using a second browser context that logs in fresh.
   - **LTR smoke:** cookie `en` with `ENABLED_LOCALES=ar,en`; `dir=ltr` on the main screens, and no horizontal overflow at 360 px.
@@ -508,6 +508,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - `amplify.yml`: Node 22, `corepack enable`, `pnpm install --frozen-lockfile`, `pnpm build`.
   - SSR env vars written to `.env.production` at build time (an Amplify requirement).
   - Atlas network access, the `BETTER_AUTH_URL` and secret, and an env checklist.
+  - *(Added from step 6.4.)* The sign-in rate limit's client IP behind CloudFront: Better Auth only trusts a single-value `x-forwarded-for` unless `trustedProxies` is set. Check the real header after the first deploy and configure `advanced.ipAddress`.
 - [ ] **6.7 Final wrap-up. Stop.**
 
 ---
@@ -581,3 +582,9 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 - 2026-10-05 (step 6.3):
   - Profile and password changes go straight to Better Auth (`updateUser`, `changePassword`) and need a connection. Offline, a clear message says so. After a change, the device's saved session is refreshed.
   - "Discard" on a rejected change deletes it locally if it never reached the server. Otherwise it resets the sync cursor, so the next sync restores the server's version.
+- 2026-10-05 (step 6.4):
+  - `pnpm test:e2e` starts its own environment (`e2e/server.mts`): an in-memory MongoDB with one fresh account per spec and project, a production build in `.next-e2e`, and `next start` on port 3100. Each browser context sends its own `x-forwarded-for`, so sign-ins don't share a rate-limit bucket.
+  - The offline spec runs in Chromium only: Playwright can't drive service workers offline in WebKit. The iPhone offline path is a manual checklist in the README.
+  - The LTR smoke accounts are created with `locale: "en"`. Sign-in copies `user.locale` into the cookie, so a cookie set by the test beforehand was overwritten.
+  - Score-tap latency, measured in the page in the production build: Chromium 6–21 ms, Playwright's WebKit on Windows 207–268 ms (the IndexedDB write and live query). The score picker now shows the tapped score at once and follows the stored value as soon as it changes; a failed write rolls it back. After the change: WebKit 3–40 ms, Chromium 1–19 ms. The main flow records it as the `score-tap-ms` annotation.
+  - A temporary check script committed by mistake in Phase 1 (`login-check2.tmp.mjs`) was removed.
