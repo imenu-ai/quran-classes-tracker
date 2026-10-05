@@ -1,9 +1,8 @@
 name: CI
 
-# Lint and type-check on the production branch only (agreed scope for now).
+# Lint and type-check every pull request into the production branch. The
+# merge itself isn't re-checked: Amplify builds main on its own.
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 
