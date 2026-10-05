@@ -84,10 +84,6 @@
     "logoutPending": "{count, plural, one {# change hasn't} other {# changes haven't}} been synced yet. Signing out will delete {count, plural, one {it} other {them}} from this device.",
     "logoutAnyway": "Sign out anyway"
   },
-  "home": {
-    "greeting": "Welcome, {name}",
-    "localData": "Classes: {classes} · Students: {students}"
-  },
   "sync": {
     "connected": "Online",
     "offline": "Offline",

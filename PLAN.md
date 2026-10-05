@@ -429,7 +429,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 
 - [x] **3.1 App shell.** Header (title, sync indicator, search), bottom navigation within thumb reach, safe areas, query-param routes, loading skeletons, empty states.
   *Done when* the shell is navigable on 360 px and on tablet and desktop widths (two-column at ≥ md).
-- [ ] **3.2 Home.** Class cards via `useLiveQuery` (student count, "lesson today" badge), empty state with "create class".
+- [x] **3.2 Home.** Class cards via `useLiveQuery` (student count, "lesson today" badge), empty state with "create class".
   *Done when* creating a class offline appears instantly and syncs once back online.
 - [ ] **3.3 Class management.** Create, rename, archive. Archiving is blocked with active students, with "move students" or "archive all" options.
   *Done when* every path works and is reflected after a sync on a second browser profile.
@@ -475,7 +475,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 
 ### Phase 6: PWA and offline hardening, settings, E2E, README, deployment
 
-- [ ] **6.1 Serwist.**
+- [ ] **6.1 Serwist.** *(Added from step 3.2: in-app navigation fetches each route's React Server Components payload (`?_rsc=…`), so the service worker must cache those per pathname, ignoring the query string, as well as the HTML. Otherwise navigating offline to a page not yet visited fails.)*
   - Precache the build assets and fonts.
   - Navigations: NetworkFirst with a 3 s timeout and `ignoreSearch`, falling back to an offline page.
   - Warm the page-shell cache after login.
@@ -530,3 +530,4 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - A minimal `/settings` page exists now, holding sign-out (moved from the temporary home) so the navigation is complete. Phase 6 fills in the rest.
   - User text interpolated into a translated sentence is wrapped in `<bdi>` through next-intl rich text, so a name in one script doesn't reorder a sentence in the other.
   - The Next.js dev badge is turned off because it covered the mobile navigation.
+- 2026-10-05 (step 3.2): Without a service worker, navigating offline in the app fails, because Next.js fetches each route's payload from the network. The step 3.2 check therefore simulated "server unreachable" by failing every `/api/*` request. The class was created instantly, counted as pending, and synced once the server was back, and a second device then saw it. Step 6.1 now also requires caching the route payloads (`?_rsc`).

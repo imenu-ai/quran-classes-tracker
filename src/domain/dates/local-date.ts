@@ -12,3 +12,19 @@ export function isLocalDate(value: unknown): value is LocalDate {
     date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
   );
 }
+
+/**
+ * Today's calendar date in a time zone (the tenant's, e.g. Asia/Hebron),
+ * independent of the device's own time zone setting.
+ */
+export function todayInTimeZone(timeZone: string, now: Date = new Date()): LocalDate {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}

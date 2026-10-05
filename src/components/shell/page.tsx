@@ -8,14 +8,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /** Content column shared by every app page. */
-export function PageContainer({
-  className,
-  children,
-}: Readonly<{ className?: string; children: React.ReactNode }>) {
+export function PageContainer({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <div className={cn("mx-auto flex w-full max-w-4xl flex-col gap-4 px-4 py-4", className)}>
-      {children}
-    </div>
+    <div
+      className={cn("mx-auto flex w-full max-w-4xl flex-col gap-4 px-4 py-4", className)}
+      {...props}
+    />
   );
 }
 
