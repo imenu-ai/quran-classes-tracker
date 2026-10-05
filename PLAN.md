@@ -360,7 +360,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* `pnpm build` and `pnpm typecheck` pass.
 - [x] **1.2 Lint and format.** ESLint 9 flat config (next core-web-vitals + TS), Prettier + tailwind plugin, `better-tailwindcss/enforce-logical-properties: error`, and `no-restricted-syntax` blocking `dir="rtl"|"ltr"` literals.
   *Done when* a temporary fixture using `ml-2`, `text-left` and `dir="rtl"` fails lint (shown in the commit message), the fixture is removed, and lint is clean.
-- [ ] **1.3 Vitest setup.** Node and jsdom environments, path aliases.
+- [x] **1.3 Vitest setup.** Node and jsdom environments, path aliases.
   *Done when* `pnpm test` runs a smoke test.
 - [ ] **1.4 Sura map.** `SURAHS`, `SURAH_MAP`, `getSurah`, `getSurahName` (falls back to `ar`), `getAyahCount`, `isValidSurah` (from the brief's table, verbatim).
   *Done when* the tests pass: 114 entries, 1..114 in order with no gaps, total 6236, spot checks, non-empty names, locale fallback.
