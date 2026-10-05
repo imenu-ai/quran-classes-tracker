@@ -363,7 +363,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 4. Lessons (attendance and evaluation) | [x] Done |
 | 5. Student profile, monthly stats, chart | [x] Done |
 | 6. PWA and offline hardening, settings, E2E, README, deployment | [x] Done |
-| 7. Deployment (CloudFormation + Amplify) | [ ] In progress |
+| 7. Deployment (CloudFormation + Amplify) | [x] Done |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -513,7 +513,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - *(Added from step 6.4.)* The sign-in rate limit's client IP behind CloudFront: Better Auth only trusts a single-value `x-forwarded-for` unless `trustedProxies` is set. Check the real header after the first deploy and configure `advanced.ipAddress`.
 - [x] **6.7 Final wrap-up. Stop.**
 
-### [ ] Phase 7: Deployment (CloudFormation + Amplify)
+### [x] Phase 7: Deployment (CloudFormation + Amplify)
 
 - [x] **7.1 CI on pull requests.** `ci.yml` runs lint and type-check on pull requests to `main` only, not on the push after the merge.
 - [x] **7.2 Amplify stack.** `infra/amplify-stack.yml`:
@@ -532,7 +532,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - the first merge;
   - `BETTER_AUTH_URL` after the first deploy, and rebuilding after a secret change;
   - the existing post-deploy checks.
-- [ ] **7.5 Final wrap-up. Stop.** Nothing is deployed by Claude: the user merges to `main`.
+- [x] **7.5 Final wrap-up. Stop.** Nothing is deployed by Claude: the user merges to `main`.
 
 ---
 
