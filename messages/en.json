@@ -56,7 +56,8 @@
   "common": {
     "noValue": "—",
     "close": "Close",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "cancel": "Cancel"
   },
   "auth": {
     "login": {
@@ -75,9 +76,12 @@
       "offline": "Signing in needs an internet connection",
       "generic": "Couldn't sign in. Please try again"
     },
-    "logout": "Sign out"
+    "logout": "Sign out",
+    "logoutPending": "{count, plural, one {# change hasn't} other {# changes haven't}} been synced yet. Signing out will delete {count, plural, one {it} other {them}} from this device.",
+    "logoutAnyway": "Sign out anyway"
   },
   "home": {
-    "greeting": "Welcome, {name}"
+    "greeting": "Welcome, {name}",
+    "localData": "Classes: {classes} · Students: {students}"
   }
 }

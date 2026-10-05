@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { HomePlaceholder } from "@/components/auth/home-placeholder";
+import { HomePlaceholder } from "@/components/home/home-placeholder";
 
 export default async function HomePage() {
   const t = await getTranslations("app");

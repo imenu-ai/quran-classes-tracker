@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/client/auth/auth-client";
 import { getLoginErrorKey, type LoginErrorKey } from "@/client/auth/login-error";
+import { bootstrapSession } from "@/client/session/session";
 
 type FieldErrors = Partial<Record<"username" | "password", true>>;
 
@@ -24,9 +25,13 @@ export function LoginForm() {
   const [error, setError] = useState<LoginErrorKey | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Already signed in: go straight to the app.
+  // Already signed in on the server (e.g. local data was cleared): remember
+  // the session on this device again and go straight to the app.
   useEffect(() => {
-    if (session.data) router.replace("/");
+    if (!session.data) return;
+    void bootstrapSession()
+      .then(() => router.replace("/"))
+      .catch(() => {});
   }, [session.data, router]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -49,7 +54,10 @@ export function LoginForm() {
         setError(getLoginErrorKey(result.error, navigator.onLine));
         return;
       }
-      // The server set the locale cookie; refresh so the layout picks it up.
+      // Remember the teacher on this device (the offline gate), then enter the
+      // app; its first sync is a full pull. The server also set the locale
+      // cookie, so refresh to render in that locale.
+      await bootstrapSession();
       router.replace("/");
       router.refresh();
     } catch {

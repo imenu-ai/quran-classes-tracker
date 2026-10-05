@@ -419,7 +419,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* the route-handler tests cover 401, a 400 on a malformed body, and the happy path.
 - [x] **2.8 Client sync engine.** Push → pull loop, Web Locks single-flight, triggers, backoff with jitter, `needsLogin` on 401 (outbox kept), rejected → dead-letter, apply pull with LWW, cursor saved.
   *Done when* tests with mocked fetch and fake-indexeddb cover: an offline write syncs later, 401 keeps the outbox, the backoff schedule, a rejection moving to `rejected`, a pulled newer record replacing a local one, and a pulled older record not overwriting a pending local edit.
-- [ ] **2.9 Session bootstrap.** After login, save the user and tenant snapshot, run a full pull, and add the client gate in `(app)/layout`. A dev seed command (`pnpm dev:seed`) creates sample data for a user.
+- [x] **2.9 Session bootstrap.** After login, save the user and tenant snapshot, run a full pull, and add the client gate in `(app)/layout`. A dev seed command (`pnpm dev:seed`) creates sample data for a user.
   *Done when*, manually: log in → data pulled → offline reload still shows the user (the shell is cached by the browser in dev; full SW comes in Phase 6).
 - [ ] **2.10 Sync indicator** in the header, covering all states.
   *Done when* each state is verified manually by toggling offline in DevTools and blocking the API.
@@ -521,3 +521,8 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 - 2026-10-05 (step 1.14): The workflow was validated with `@action-validator/cli` (GitHub workflow schema) instead of actionlint, because actionlint needs Docker or a native binary and the Docker daemon wasn't running. `pnpm typecheck` now runs `next typegen` first, so route types exist on a clean CI checkout.
 - 2026-10-05 (step 1.13): Arabic progress labels use "جاري" rather than "جارٍ". WebKit wrapped the tanween form onto two lines inside a button.
 - 2026-10-05 (step 2.1): Every syncable record gains **`updatedBy`**, the ID of the device that made the last change (generated once per device and stored in `meta`). Last-write-wins compares `updatedAt` first and breaks ties on `updatedBy`, the same way on the server and the client. This replaces the `_lwwTie` placeholder in §2.4. A retried push (same timestamp, same device) comes back "stale" and is cleared safely.
+- 2026-10-05 (step 2.9):
+  - The session snapshot and the device ID live in a small device-level IndexedDB (`qct-app`), not in the per-user database. The app has to know which user's database to open first.
+  - A new `GET /api/me` endpoint supplies the tenant's name and time zone.
+  - A browser can't reload a page while offline without a service worker. So the "offline reload" check moves to Phase 6. This step checked that the data stays on screen offline, and that a reload uses the saved snapshot without the login screen.
+  - `withTenant` forwards Better Auth's renewed session cookie (step 2.7), so a teacher who mostly syncs keeps a live 400-day session.
