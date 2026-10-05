@@ -352,9 +352,20 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 
 ## 6. Phases and steps
 
+**Progress**
+
+| Phase | Status |
+|---|---|
+| 1. Scaffold, tooling, i18n, theme, sura map, auth, CLI | [x] Done |
+| 2. Local DB, outbox, sync API, sync engine | [x] Done |
+| 3. Classes and students | [x] Done |
+| 4. Lessons (attendance and evaluation) | [ ] Next, waiting for go-ahead |
+| 5. Student profile, monthly stats, chart | [ ] Not started |
+| 6. PWA and offline hardening, settings, E2E, README, deployment | [ ] Not started |
+
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
-### Phase 1: Scaffold, tooling, i18n and direction, theme, sura map, auth, tenants, CLI
+### [x] Phase 1: Scaffold, tooling, i18n and direction, theme, sura map, auth, tenants, CLI
 
 - [x] **1.1 Scaffold.** Next 15.5 App Router, TS strict (plus `noUncheckedIndexedAccess`), `src/`, pnpm, `.nvmrc`, `engines`, scripts (`dev`, `build`, `start`, `lint`, `typecheck`, `test`, `format`), `.gitignore`. Existing README and LICENSE are kept.
   *Done when* `pnpm build` and `pnpm typecheck` pass.
@@ -397,7 +408,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* the YAML is valid (actionlint run locally via npx). It runs for real on the first PR to `main`.
 - [x] **1.15 Phase wrap-up.** Update PLAN.md and write the summary. **Stop for go-ahead.**
 
-### Phase 2: Local DB, outbox, sync API, sync engine
+### [x] Phase 2: Local DB, outbox, sync API, sync engine
 
 - [x] **2.1 Dexie schema.** Per-user DB (`qct-<userId>`) with the tables and indexes in §4, plus `outbox`, `rejected`, `meta`.
   *Done when* the fake-indexeddb tests can open, write and read every table.
@@ -425,7 +436,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* each state is verified manually by toggling offline in DevTools and blocking the API.
 - [x] **2.11 Phase wrap-up. Stop.**
 
-### Phase 3: Classes and students
+### [x] Phase 3: Classes and students
 
 - [x] **3.1 App shell.** Header (title, sync indicator, search), bottom navigation within thumb reach, safe areas, query-param routes, loading skeletons, empty states.
   *Done when* the shell is navigable on 360 px and on tablet and desktop widths (two-column at ≥ md).
@@ -435,13 +446,13 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* every path works and is reflected after a sync on a second browser profile.
 - [x] **3.4 Students.** Add and edit (full name `dir="auto"`, birth year, note, memorization direction, class pre-selected), move to another class, archive or unarchive. List of archived students per class.
   *Done when* Zod validation messages are localized and a move to another class syncs.
-- [x] **3.5 Global student search** with Arabic normalization (reuses `normalizeArabic`).
+- [x] **3.5 Global student search** with Arabic normalization (reuses `normalizeForSearch`).
   *Done when* "محمد" matches "مُحَمَّد" and partial names match.
 - [x] **3.6 Phase wrap-up. Stop.**
 
-### Phase 4: Lessons (attendance and evaluation)
+### [ ] Phase 4: Lessons (attendance and evaluation)
 
-- [ ] **4.1 Date domain.** `todayInTz(tz)`, `weekdayOf(date)`, `monthKey(date)`, `ageFrom(birthYear, today)`.
+- [ ] **4.1 Date domain.** `todayInTz(tz)`, `weekdayOf(date)`, `monthKey(date)`, `ageFrom(birthYear, today)`. *(`todayInTimeZone` and `ageFromBirthYear` were already built and tested in Phase 3. This step adds `weekdayOf` and `monthKey`.)*
   *Done when* the tests cover the Hebron date line around midnight and DST changes.
 - [ ] **4.2 Start or open a lesson.** "درس جديد" uses the deterministic lesson ID and opens today's lesson if it exists. A date picker allows past dates. The date can be changed, but not to a date that already has a lesson.
   *Done when* a double tap or a second device never creates a duplicate (the same ID merges) and the tests on ID derivation pass.
@@ -462,7 +473,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* an old lesson can be reopened and edited.
 - [ ] **4.8 Phase wrap-up. Stop.**
 
-### Phase 5: Student profile, monthly stats, chart
+### [ ] Phase 5: Student profile, monthly stats, chart
 
 - [ ] **5.1 Monthly stats** (pure).
   *Done when* the tests cover: month taken from the evaluating lesson's date, nulls ignored, 1-decimal rounding, "no data", attendance counts, deleted items excluded, and an item moving month when its lesson's date changes.
@@ -473,7 +484,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* edits recompute the stats live.
 - [ ] **5.6 Phase wrap-up. Stop.**
 
-### Phase 6: PWA and offline hardening, settings, E2E, README, deployment
+### [ ] Phase 6: PWA and offline hardening, settings, E2E, README, deployment
 
 - [ ] **6.1 Serwist.** *(Added from step 3.2: in-app navigation fetches each route's React Server Components payload (`?_rsc=…`), so the service worker must cache those per pathname, ignoring the query string, as well as the HTML. Otherwise navigating offline to a page not yet visited fails.)*
   - Precache the build assets and fonts.
