@@ -504,7 +504,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - **Offline run:** go offline mid-lesson, keep working, reconnect, then check that the server has the data, using a second browser context that logs in fresh.
   - **LTR smoke:** cookie `en` with `ENABLED_LOCALES=ar,en`; `dir=ltr` on the main screens, and no horizontal overflow at 360 px.
 - [x] **6.5 README.** Local setup (local MongoDB, `.env`, `pnpm db:indexes`, `pnpm user:create`), scripts, architecture summary, testing on an iPhone (needs HTTPS, so an Amplify branch or a tunnel), and deployment.
-- [ ] **6.6 Deployment prep (to be discussed).**
+- [x] **6.6 Deployment prep (to be discussed).** *(Prepared; not deployed.)*
   - `amplify.yml`: Node 22, `corepack enable`, `pnpm install --frozen-lockfile`, `pnpm build`.
   - SSR env vars written to `.env.production` at build time (an Amplify requirement).
   - Atlas network access, the `BETTER_AUTH_URL` and secret, and an env checklist.
@@ -588,3 +588,6 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - The LTR smoke accounts are created with `locale: "en"`. Sign-in copies `user.locale` into the cookie, so a cookie set by the test beforehand was overwritten.
   - Score-tap latency, measured in the page in the production build: Chromium 6–21 ms, Playwright's WebKit on Windows 207–268 ms (the IndexedDB write and live query). The score picker now shows the tapped score at once and follows the stored value as soon as it changes; a failed write rolls it back. After the change: WebKit 3–40 ms, Chromium 1–19 ms. The main flow records it as the `score-tap-ms` annotation.
   - A temporary check script committed by mistake in Phase 1 (`login-check2.tmp.mjs`) was removed.
+- 2026-10-05 (step 6.6):
+  - `amplify.yml` is prepared but nothing is deployed. Node comes from `.nvmrc`, and pnpm installs with `node-linker=hoisted` on Amplify only, because its SSR packaging can miss packages behind pnpm's symlinks. The server env vars are written to `.env.production` before the build.
+  - The README's deployment checklist covers Atlas (user, `0.0.0.0/0` network access since Amplify compute has no fixed IP, indexes, the teacher account), Amplify's env vars, a first sign-in to check argon2 and the hoisted install, the iPhone offline check, and the rate-limit client IP behind CloudFront.
