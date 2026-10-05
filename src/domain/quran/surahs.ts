@@ -22,6 +22,12 @@ export interface Surah {
 
 export const SURAH_COUNT = 114;
 
+export const SURAH_NAME_LOCALES: readonly SurahNameLocale[] = ["ar", "en"];
+
+export function isSurahNameLocale(locale: string): locale is SurahNameLocale {
+  return (SURAH_NAME_LOCALES as readonly string[]).includes(locale);
+}
+
 /** The locale used when a sura has no name in the requested locale. */
 export const SURAH_NAME_FALLBACK_LOCALE: SurahNameLocale = "ar";
 
@@ -174,8 +180,6 @@ export function getAyahCount(number: number): number | undefined {
 export function getSurahName(number: number, locale: string): string | undefined {
   const surah = SURAH_MAP.get(number);
   if (!surah) return undefined;
-  const name = Object.hasOwn(surah.names, locale)
-    ? surah.names[locale as SurahNameLocale]
-    : undefined;
+  const name = isSurahNameLocale(locale) ? surah.names[locale] : undefined;
   return name || surah.names[SURAH_NAME_FALLBACK_LOCALE];
 }

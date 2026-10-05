@@ -364,7 +364,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* `pnpm test` runs a smoke test.
 - [x] **1.4 Sura map.** `SURAHS`, `SURAH_MAP`, `getSurah`, `getSurahName` (falls back to `ar`), `getAyahCount`, `isValidSurah` (from the brief's table, verbatim).
   *Done when* the tests pass: 114 entries, 1..114 in order with no gaps, total 6236, spot checks, non-empty names, locale fallback.
-- [ ] **1.5 Ayah validation and Arabic search.** `validateAyahRange` returns codes and params. `normalizeArabic` strips tashkeel and tatweel and folds أإآ→ا, ة→ه, ى→ي. `searchSurahs(query, locale)` matches by number, the localized name, and always Arabic.
+- [x] **1.5 Ayah validation and Arabic search.** `validateAyahRange` returns codes and params. `normalizeArabic` strips tashkeel and tatweel and folds أإآ→ا, ة→ه, ى→ي. `searchSurahs(query, locale)` matches by number, the localized name, and always Arabic.
   *Done when* the tests for every rule and edge case pass (first and last ayah, 0, negative, above the count, from > to, non-integer, sura 0 and 115; "الاسراء" finds 17).
 - [ ] **1.6 i18n core.** `i18n/config.ts` (`ENABLED_LOCALES`, `DEFAULT_LOCALE`), `getDirection`, `request.ts` (cookie → enabled → default), formats (`latn`, Gregorian), `ar.json` + `en.json` (glossary values, validation errors), key-parity test, direction test.
   *Done when* the tests pass and a page renders `<html lang="ar" dir="rtl">`. With `ENABLED_LOCALES=ar,en` and cookie `en`, it renders `lang="en" dir="ltr"`.
@@ -514,3 +514,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
     - `Student.memorizationDirection` and `Tenant.timezone` added
     - CI runs lint and typecheck only
     - Docs live at the repo root
+- 2026-10-05 (step 1.5):
+  - `validateAyahRange` returns `params: { surah, ayahCount }` for `AYAH_OUT_OF_RANGE` instead of `{ surahName, ayahCount }`. The i18n layer resolves `surahName` from the number in the active locale, which keeps the domain locale-free.
+  - Every error also carries `field` (`surah` / `fromAyah` / `toAyah`), so the form can show it under the right input.
+  - The normalizer is `normalizeForSearch` (Arabic and Latin), not `normalizeArabic`. It also handles ٱ, Arabic-Indic digits and punctuation.
