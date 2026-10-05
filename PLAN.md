@@ -479,7 +479,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* the tests cover: month taken from the evaluating lesson's date, nulls ignored, 1-decimal rounding, "no data", attendance counts, deleted items excluded, and an item moving month when its lesson's date changes.
 - [x] **5.2 Profile header.** Name, class, age, note, direction, current pending homework.
 - [x] **5.3 Month summaries,** newest first.
-- [ ] **5.4 Chart.** Last 12 months with data, memorization and behavior lines, axis reversed in RTL, dark mode, accessible table fallback.
+- [x] **5.4 Chart.** Last 12 months with data, memorization and behavior lines, axis reversed in RTL, dark mode, accessible table fallback.
 - [ ] **5.5 Month history.** Evaluated rows (date, weekday, sura, from–to, both scores) plus absences with excuse notes. Tapping a row edits it in a sheet.
   *Done when* edits recompute the stats live.
 - [ ] **5.6 Phase wrap-up. Stop.**
@@ -560,3 +560,9 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - Deleting a lesson deletes its attendance and the homework assigned in it. Homework evaluated in it goes back to pending. Homework assigned in it but evaluated in a later lesson is kept, with `assignedLessonId` cleared, so that later lesson's history isn't lost.
   - The lesson note is an autosaving field on the lesson page.
 - 2026-10-05 (step 4.8): On the evaluation screen, the two score grids sit side by side only when the card itself is wide (a container query). With two cards per row at 1024px, the buttons had shrunk to about 32px.
+- 2026-10-05 (step 5.4):
+  - The chart is shadcn `chart` with Recharts 3.8 (the version shadcn pins).
+  - In RTL the X axis is reversed and the Y axis sits on the right.
+  - The SVG is `aria-hidden`, and screen readers get an equivalent table.
+  - That table first widened the page by up to 164px, because a `<table>` ignores the 1px width `sr-only` sets. `sr-only` now goes on a wrapping div.
+  - `<main>` also has `overflow-x: clip` as a general guard against horizontal scrolling.

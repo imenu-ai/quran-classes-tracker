@@ -72,7 +72,7 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
           </div>
         </header>
 
-        <main className="flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-8">
+        <main className="flex-1 overflow-x-clip pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-8">
           {children}
         </main>
       </div>

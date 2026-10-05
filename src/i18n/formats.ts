@@ -11,6 +11,7 @@ export const formats = {
     lessonDateShort: { day: "numeric", month: "numeric", year: "numeric", timeZone: "UTC" },
     weekday: { weekday: "long", timeZone: "UTC" },
     month: { month: "long", year: "numeric", timeZone: "UTC" },
+    monthShort: { month: "short", year: "2-digit", timeZone: "UTC" },
   },
   number: {
     // Monthly averages: one decimal place.
