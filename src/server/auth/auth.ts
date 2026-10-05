@@ -1,8 +1,9 @@
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { nextCookies } from "better-auth/next-js";
+import { createAuthMiddleware } from "better-auth/api";
 import { username } from "better-auth/plugins/username";
-import { DEFAULT_LOCALE } from "@/i18n/config";
+import { DEFAULT_LOCALE, isLocale, LOCALE_COOKIE } from "@/i18n/config";
 import { COLLECTIONS } from "../collections";
 import { getDb } from "../db";
 import { getServerEnv } from "../env";
@@ -84,6 +85,21 @@ function createAuth() {
       cookiePrefix: "qct",
       // Amplify (CloudFront) passes the client IP in x-forwarded-for.
       ipAddress: { ipAddressHeaders: ["x-forwarded-for"] },
+    },
+
+    hooks: {
+      // Copies the user's saved locale into the locale cookie on sign-in, so
+      // the very next page render uses it (no locale in the URL).
+      after: createAuthMiddleware(async (ctx) => {
+        const newSession = ctx.context.newSession;
+        if (ctx.path !== "/sign-in/username" || !newSession) return;
+        const locale = newSession.user.locale;
+        ctx.setCookie(LOCALE_COOKIE, isLocale(locale) ? locale : DEFAULT_LOCALE, {
+          path: "/",
+          sameSite: "lax",
+          maxAge: SESSION_EXPIRES_IN,
+        });
+      }),
     },
 
     plugins: [

@@ -391,7 +391,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - Prompts for the password if it's omitted; checks the username rules; refuses duplicates.
 
   *Done when* running it locally creates an account that can log in (integration test plus manual check).
-- [ ] **1.13 Login and logout.** `/login` page with username and password, localized errors including rate limiting. On success it sets `NEXT_LOCALE` from `user.locale`. Logout. A placeholder home page shows the display name.
+- [x] **1.13 Login and logout.** `/login` page with username and password, localized errors including rate limiting. On success it sets `NEXT_LOCALE` from `user.locale`. Logout. A placeholder home page shows the display name.
   *Done when* the manual flow works in dev, in Arabic RTL, at 360 px.
 - [ ] **1.14 CI.** `.github/workflows/ci.yml`: on `push` and `pull_request` to `main`, pnpm install → lint → typecheck.
   *Done when* the YAML is valid (actionlint run locally via npx). It runs for real on the first PR to `main`.

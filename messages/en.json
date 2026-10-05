@@ -55,6 +55,29 @@
   },
   "common": {
     "noValue": "—",
-    "close": "Close"
+    "close": "Close",
+    "loading": "Loading…"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Enter your username and password",
+      "username": "Username",
+      "password": "Password",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password"
+    },
+    "errors": {
+      "invalidCredentials": "Incorrect username or password",
+      "rateLimited": "Too many attempts. Try again in a minute",
+      "offline": "Signing in needs an internet connection",
+      "generic": "Couldn't sign in. Please try again"
+    },
+    "logout": "Sign out"
+  },
+  "home": {
+    "greeting": "Welcome, {name}"
   }
 }

@@ -73,6 +73,8 @@ describe("Better Auth (username + password)", () => {
     expect(cookie).toMatch(/qct\.session_token=/);
     expect(cookie).toMatch(/HttpOnly/i);
     expect(cookie).toMatch(new RegExp(`Max-Age=${SESSION_EXPIRES_IN}`));
+    // The user's locale is copied into the locale cookie at login.
+    expect(cookie).toMatch(/NEXT_LOCALE=ar/);
   });
 
   it("normalizes the username (case-insensitive)", async () => {
@@ -83,6 +85,7 @@ describe("Better Auth (username + password)", () => {
   it("rejects a wrong password with 401", async () => {
     const response = await signIn({ username: "teacher", password: "wrong-password" }, ip);
     expect(response.status).toBe(401);
+    expect(response.headers.get("set-cookie") ?? "").not.toMatch(/NEXT_LOCALE/);
   });
 
   it("rejects an unknown username with the same 401", async () => {
