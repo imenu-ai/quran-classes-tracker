@@ -403,7 +403,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* the fake-indexeddb tests can open, write and read every table.
 - [x] **2.2 `localRepo` and outbox.** `create` / `update` / `softDelete` write the record and the outbox entry in one transaction, with a strictly increasing `updatedAt`, coalescing and `rev`.
   *Done when* the tests show atomicity (a failed write leaves no outbox entry), coalescing, and that a `rev` change during push keeps the entry.
-- [ ] **2.3 Pure LWW rules** (`shared/sync/lww.ts`): `shouldApplyIncoming(local, incoming, hasPendingOutbox)` and the server's `isNewer(stored, incoming)` with a tie-break.
+- [x] **2.3 Pure LWW rules** (`shared/sync/lww.ts`): `shouldApplyIncoming(local, incoming, hasPendingOutbox)` and the server's `isNewer(stored, incoming)` with a tie-break.
   *Done when* the tests cover newer, older, equal plus tie, and deleted versus edited.
 - [ ] **2.4 Version allocation.** `allocateVersions(tenantId, n)` with `inFlight`, `release()`, `watermark()`.
   *Done when* integration tests show concurrent allocations never collide, and the watermark stays below unreleased versions (stale entries > 30 s are ignored).
