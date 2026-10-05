@@ -431,7 +431,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* the shell is navigable on 360 px and on tablet and desktop widths (two-column at ≥ md).
 - [x] **3.2 Home.** Class cards via `useLiveQuery` (student count, "lesson today" badge), empty state with "create class".
   *Done when* creating a class offline appears instantly and syncs once back online.
-- [ ] **3.3 Class management.** Create, rename, archive. Archiving is blocked with active students, with "move students" or "archive all" options.
+- [x] **3.3 Class management.** Create, rename, archive. Archiving is blocked with active students, with "move students" or "archive all" options.
   *Done when* every path works and is reflected after a sync on a second browser profile.
 - [ ] **3.4 Students.** Add and edit (full name `dir="auto"`, birth year, note, memorization direction, class pre-selected), move to another class, archive or unarchive. List of archived students per class.
   *Done when* Zod validation messages are localized and a move to another class syncs.

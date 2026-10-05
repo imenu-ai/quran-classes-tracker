@@ -1,13 +1,15 @@
 "use client";
 
-import { SearchX } from "lucide-react";
+import { Archive, SearchX } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { EmptyState } from "@/components/empty-state";
 import { PageContainer, PageHeader } from "@/components/shell/page";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useClass } from "@/client/data/classes";
+import { ClassActionsMenu } from "./class-actions-menu";
 
 /** A class: its students and actions (students arrive in step 3.4). */
 export function ClassView({ classId }: { classId: string | null }) {
@@ -43,7 +45,13 @@ export function ClassView({ classId }: { classId: string | null }) {
 
   return (
     <PageContainer>
-      <PageHeader title={cls.name} backHref="/" userText />
+      <PageHeader title={cls.name} backHref="/" userText actions={<ClassActionsMenu cls={cls} />} />
+      {cls.archivedAt !== null && (
+        <Badge variant="secondary" className="self-start">
+          <Archive aria-hidden />
+          {t("classes.archivedBadge")}
+        </Badge>
+      )}
     </PageContainer>
   );
 }

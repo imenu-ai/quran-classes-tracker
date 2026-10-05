@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { ArchivedClasses } from "@/components/classes/archived-classes";
 import { ClassCard } from "@/components/classes/class-card";
 import { ClassFormDrawer } from "@/components/classes/class-form-drawer";
 import { EmptyState } from "@/components/empty-state";
@@ -61,6 +62,8 @@ export default function HomePage() {
           ))}
         </ul>
       )}
+
+      {list && <ArchivedClasses classes={list.archived} />}
 
       <ClassFormDrawer
         open={creating}
