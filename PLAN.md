@@ -460,7 +460,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* marking 20 students takes ≤ 1 tap each and changes are autosaved.
 - [x] **4.4 Sura picker and ayah range.** Bottom drawer with cmdk; normalized search; rows like "2 · البقرة · 286 آية"; ayah inputs show "من 1 إلى 286", limit input to the range, and show localized errors live.
   *Done when* the rules from §5 of the brief hold in the UI (manual check plus component test).
-- [ ] **4.5 Next-homework suggestion** (pure).
+- [x] **4.5 Next-homework suggestion** (pure).
   *Done when* the tests cover forward and backward, continuing in the same sura, the end of a sura (next or previous sura), sura 114 and sura 1 boundaries, partial recitation, an existing pending item, and no history.
 - [ ] **4.6 Evaluation step.**
   - One card per present student, with unmarked students in a collapsed section.
