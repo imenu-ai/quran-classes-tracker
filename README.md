@@ -166,29 +166,90 @@ On the iPhone:
 
 ## Deployment
 
-Production runs on **AWS Amplify Hosting** (Next.js SSR) with **MongoDB Atlas**. Amplify supports SSR up to Next.js 15, which is why Next is pinned to 15. The build file, environment checklist and remaining open points are in [Deployment checklist](#deployment-checklist).
+Production runs on **AWS Amplify Hosting** (Next.js SSR, region `eu-central-1`) with **MongoDB Atlas**. Amplify supports SSR up to Next.js 15, which is why Next is pinned to 15.
 
-CI (GitHub Actions) runs lint and type-check on pushes and pull requests to `main`. Development happens on `dev`, and `dev` is merged into `main` through pull requests.
+| Piece                                                               | Where                                                                                                                                           |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Amplify app, its `main` branch and service role, and the build spec | CloudFormation stack [infra/amplify-stack.yml](infra/amplify-stack.yml)                                                                         |
+| Deploying that stack                                                | [.github/workflows/deploy-stack.yml](.github/workflows/deploy-stack.yml): only on a push to `main` that changes the stack file, or a manual run |
+| The role GitHub Actions deploys with (OIDC)                         | One-time bootstrap stack [infra/github-deploy-role.yml](infra/github-deploy-role.yml), deployed by hand                                         |
+| The app's environment variables                                     | One Secrets Manager secret (JSON), created by hand. The app only knows its ARN (`APP_SECRET_ARN`)                                               |
+| Building and releasing the app                                      | Amplify, automatically, on every merge to `main`                                                                                                |
+| CI (lint, type-check)                                               | [.github/workflows/ci.yml](.github/workflows/ci.yml), on pull requests to `main`                                                                |
 
-### Deployment checklist
+Development happens on `dev`, and `dev` is merged into `main` through pull requests.
 
-Not deployed yet; this is the prepared setup to go through together.
+**How the build gets its environment.** Amplify doesn't pass environment variables to the SSR runtime. So the build reads the secret with the service role, writes every key into `.env`, then runs `pnpm build`. Two consequences:
 
-**MongoDB Atlas**
+- After changing the secret, **redeploy** the app (Amplify console → the `main` branch → Redeploy this version) for it to take effect.
+- Values must not contain `#`, which `.env` files treat as the start of a comment. URL-encode it as `%23` in the Mongo password; `openssl rand -base64 32` never produces one.
 
-- [ ] Create a cluster and a database user with read/write on the app database only.
+To change the build, edit `BuildSpec` in `infra/amplify-stack.yml` and merge it to `main`. Don't add an `amplify.yml` to the repo: it would take precedence over the stack's build spec.
+
+### First deployment
+
+Not deployed yet. Do these in order.
+
+**1. MongoDB Atlas**
+
+- [ ] Create a cluster (ideally in or near `eu-central-1`) and a database user with read/write on the app database only.
 - [ ] Network access: Amplify's compute has no fixed outbound IP, so allow `0.0.0.0/0` and rely on a strong, generated database password.
-- [ ] From your machine, with `MONGODB_URI` set to the Atlas URI in the shell: `pnpm db:indexes`, then `pnpm user:create …` for the teacher.
+- [ ] From your machine, with `MONGODB_URI` (and `MONGODB_DB`) set to the Atlas values in the shell: `pnpm db:indexes`, then `pnpm user:create …` for the teacher.
 
-**Amplify**
+**2. The app secret.** In Secrets Manager (`eu-central-1`), create a secret of type "Other", in plaintext JSON:
 
-- [ ] Connect the GitHub repository and choose the `main` branch. Amplify detects Next.js SSR and uses [amplify.yml](amplify.yml).
-- [ ] Environment variables (App settings → Environment variables): `MONGODB_URI`, `MONGODB_DB`, `BETTER_AUTH_SECRET` (new random value, not the local one), `BETTER_AUTH_URL` (the production `https://` URL, no trailing slash), `ENABLED_LOCALES=ar`.
-      `amplify.yml` writes them into `.env.production` during the build, because Amplify doesn't pass them to the SSR runtime otherwise.
-- [ ] After the first deploy, sign in once. It exercises the parts most likely to differ on Amplify: the native argon2 password hashing (`@node-rs/argon2`) and the packages installed with pnpm's hoisted layout.
+```json
+{
+  "MONGODB_URI": "mongodb+srv://<user>:<password>@<cluster>.mongodb.net/?retryWrites=true&w=majority",
+  "MONGODB_DB": "quran_tracker",
+  "BETTER_AUTH_SECRET": "<new value from: openssl rand -base64 32>",
+  "BETTER_AUTH_URL": "https://example.invalid",
+  "ENABLED_LOCALES": "ar"
+}
+```
+
+`BETTER_AUTH_URL` is a placeholder until the app's URL exists (step 6). Copy the secret's **full ARN**.
+
+**3. The deploy role (once).** With admin credentials for the AWS account:
+
+```sh
+aws cloudformation deploy --region eu-central-1 \
+  --stack-name quran-classes-tracker-github-deploy \
+  --template-file infra/github-deploy-role.yml \
+  --capabilities CAPABILITY_IAM
+# Add --parameter-overrides CreateOidcProvider=false if the account already
+# has the token.actions.githubusercontent.com identity provider.
+aws cloudformation describe-stacks --region eu-central-1 \
+  --stack-name quran-classes-tracker-github-deploy --query "Stacks[0].Outputs"
+```
+
+**4. GitHub.**
+
+- [ ] Install the Amplify GitHub App for the `imenu-ai` organization, with access to this repository: <https://github.com/apps/aws-amplify-eu-central-1/installations/new>.
+- [ ] Create a classic personal access token with the `admin:repo_hook` scope. Amplify uses it to connect the repository when the app is created, and doesn't store it.
+- [ ] Add three repository secrets (Settings → Secrets and variables → Actions):
+  - `AWS_DEPLOY_ROLE_ARN`: the `DeployRoleArn` output from step 3.
+  - `AMPLIFY_GITHUB_TOKEN`: the token.
+  - `APP_SECRET_ARN`: the secret's ARN from step 2.
+
+**5. Merge `dev` into `main`.**
+
+- [ ] The "Deploy stack" workflow creates the stack: service role, Amplify app and `main` branch.
+- [ ] Amplify then builds `main` on each merge. If no build starts after the stack is created, start one from the Amplify console (`main` → Run build).
+
+**6. The app's URL.**
+
+- [ ] Copy the stack's `ProductionUrl` output (shown at the end of the workflow run), e.g. `https://main.d1234abcd.amplifyapp.com`.
+- [ ] Put it into the secret's `BETTER_AUTH_URL` (no trailing slash), then redeploy in the Amplify console.
+
+**7. Checks.**
+
+- [ ] Sign in once. It exercises the parts most likely to differ on Amplify: the native argon2 password hashing (`@node-rs/argon2`) and the packages installed with pnpm's hoisted layout.
 - [ ] Install the app on the iPhone from the production URL and run the manual offline check above.
 - [ ] Check the sign-in rate limit's client IP (below).
-- [ ] Optional: a custom domain. Update `BETTER_AUTH_URL` and redeploy.
+- [ ] Optional: a custom domain. Put it into `BETTER_AUTH_URL` and redeploy.
+
+**If the build fails at the start** asking for `AMPLIFY_MONOREPO_APP_ROOT` (the build spec uses the `applications:` / `appRoot: .` form), add that app environment variable with the value `.` in `infra/amplify-stack.yml`, next to `APP_SECRET_ARN`.
 
 **Sign-in rate limit behind CloudFront.** Sign-in is limited to 5 attempts a minute per client IP, taken from `x-forwarded-for`. Behind Amplify that header may carry a chain of IPs (`client, proxy`). Better Auth then finds no IP, and every user shares one bucket. That fails safe, but one person mistyping could briefly lock everyone out. After the first deploy:
 

@@ -525,7 +525,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 - [x] **7.3 Deploy workflow and OIDC role.**
   - `infra/github-deploy-role.yml`: a one-time bootstrap, deployed by hand. It creates the GitHub OIDC provider (optional) and a deploy role trusted only for this repo's `main`, allowed to manage this stack, the Amplify app and the service role.
   - `.github/workflows/deploy-stack.yml`: on a push to `main` that changes the stack file (or a manual run), it assumes the role and runs `aws cloudformation deploy`. It doesn't build the app.
-- [ ] **7.4 Docs.** README deployment section:
+- [x] **7.4 Docs.** README deployment section:
   - the secret's JSON;
   - the bootstrap;
   - the GitHub secrets;
@@ -615,3 +615,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - `amplify.yml` is prepared but nothing is deployed. Node comes from `.nvmrc`, and pnpm installs with `node-linker=hoisted` on Amplify only, because its SSR packaging can miss packages behind pnpm's symlinks. The server env vars are written to `.env.production` before the build.
   - The README's deployment checklist covers Atlas (user, `0.0.0.0/0` network access since Amplify compute has no fixed IP, indexes, the teacher account), Amplify's env vars, a first sign-in to check argon2 and the hoisted install, the iPhone offline check, and the rate-limit client IP behind CloudFront.
 - 2026-10-06 (Phase 7): Deployment moves to a CloudFormation stack deployed by GitHub Actions, with the env vars in Secrets Manager. Step 6.6's repo `amplify.yml` and manual Amplify console setup are replaced (6.6 marked `[~]`).
+- 2026-10-06 (steps 7.2–7.4):
+  - The build spec is the user's, with pnpm in place of npm (the repo has no `package-lock.json`): Node 22 via `nvm install`, corepack, a hoisted install, and the pnpm store cached.
+  - Checked by running the build spec's secret → `.env` script locally against a sample secret: the escaping survived embedding in the template. Values containing `#` are cut there, by Next's env loader too, because an unquoted `#` starts a comment. The README says to URL-encode it; none of the app's values need one.
+  - Not verifiable from here: `aws cloudformation validate-template` (no valid local AWS credentials) and the real deploy. `cfn-lint` passes on both templates.
