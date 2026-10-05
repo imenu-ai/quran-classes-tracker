@@ -38,6 +38,19 @@
       "INVALID_AYAH": "Invalid ayah number",
       "AYAH_OUT_OF_RANGE": "{surahName} has only {ayahCount, plural, one {# ayah} other {# ayahs}}",
       "FROM_AFTER_TO": "The first ayah must be before or equal to the last ayah"
+    },
+    "validation": {
+      "REQUIRED": "This field is required",
+      "NOT_INTEGER": "Enter a whole number",
+      "INVALID_TYPE": "Invalid value",
+      "TOO_SHORT": "Too short (minimum {minimum})",
+      "TOO_LONG": "Too long (maximum {maximum})",
+      "TOO_SMALL": "Must be at least {minimum}",
+      "TOO_LARGE": "Must be at most {maximum}",
+      "INVALID_FORMAT": "Invalid format",
+      "INVALID_VALUE": "Value not allowed",
+      "RATES_REQUIRE_EVALUATION": "Scores can only be entered when the homework is evaluated",
+      "INVALID": "Invalid value"
     }
   },
   "common": {
