@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useClass } from "@/client/data/classes";
 import { useLesson } from "@/client/data/lessons";
+import { AttendanceStep } from "./attendance-step";
 import { LessonActionsMenu } from "./lesson-actions-menu";
 import { useLessonDate } from "./use-lesson-date";
 
@@ -77,7 +78,9 @@ export function LessonView({ lessonId, step }: { lessonId: string | null; step: 
             {t("lessons.stepEvaluate")}
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="attendance" />
+        <TabsContent value="attendance">
+          <AttendanceStep lesson={lesson} onNext={() => setStep("evaluate")} />
+        </TabsContent>
         <TabsContent value="evaluate" />
       </Tabs>
     </PageContainer>
