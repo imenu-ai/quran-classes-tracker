@@ -493,7 +493,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - Manifest, icons (maskable plus `apple-touch-icon`), iOS meta tags, `viewport-fit=cover`.
 
   *Done when*, in a production build: visit once online → in DevTools, go offline → every page opens for any ID.
-- [ ] **6.2 Install and persistence.** iOS "Add to Home Screen" guide (shown in Safari only, dismissible), install button on Chromium, `navigator.storage.persist()`.
+- [x] **6.2 Install and persistence.** iOS "Add to Home Screen" guide (shown in Safari only, dismissible), install button on Chromium, `navigator.storage.persist()`.
 - [ ] **6.3 Settings.**
   - Display name, username (unique, validated) and password (current password required).
   - Theme toggle.

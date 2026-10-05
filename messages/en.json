@@ -268,5 +268,13 @@
   "offline": {
     "title": "You're offline",
     "description": "Open the app once while online; after that it works offline."
+  },
+  "install": {
+    "title": "Install the app on this device",
+    "description": "It opens like an app, works offline, and keeps your data on the device.",
+    "iosSteps": "Tap Share <share></share>, then “Add to Home Screen”.",
+    "shareButton": "Share button",
+    "button": "Install",
+    "dismiss": "Dismiss"
   }
 }

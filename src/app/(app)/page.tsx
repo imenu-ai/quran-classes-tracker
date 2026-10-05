@@ -9,6 +9,7 @@ import { ArchivedClasses } from "@/components/classes/archived-classes";
 import { ClassCard } from "@/components/classes/class-card";
 import { ClassFormDrawer } from "@/components/classes/class-form-drawer";
 import { EmptyState } from "@/components/empty-state";
+import { InstallBanner } from "@/components/install-banner";
 import { PageContainer, PageHeader } from "@/components/shell/page";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,6 +31,8 @@ export default function HomePage() {
   return (
     <PageContainer>
       <PageHeader title={t("classes.title")} actions={list?.active.length ? createButton : null} />
+
+      <InstallBanner />
 
       <Link
         href="/search"

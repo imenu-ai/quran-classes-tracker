@@ -14,6 +14,7 @@ import { openLocalDb, type LocalDb } from "./db/dexie";
 import { LocalStore } from "./db/local-store";
 import { getDeviceId, readSession, type SessionSnapshot } from "./session/session";
 import { SyncEngine, type SyncStatus } from "./sync/engine";
+import { requestPersistentStorage } from "./pwa/install";
 import { warmPageCache } from "./pwa/page-cache";
 import { attachSyncTriggers } from "./sync/triggers";
 
@@ -77,6 +78,8 @@ export function AppProvider({
       detach = attachSyncTriggers(engine, store);
       // Cache every page shell now, so pages not opened yet also work offline.
       if (navigator.onLine) void warmPageCache();
+      // Keep IndexedDB from being evicted (unsynced lessons live there).
+      void requestPersistentStorage();
       const next = { session, db, store, engine };
       setServices(next);
       // Development only: lets browser checks and E2E tests drive the real store.
