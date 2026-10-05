@@ -477,7 +477,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 
 - [x] **5.1 Monthly stats** (pure).
   *Done when* the tests cover: month taken from the evaluating lesson's date, nulls ignored, 1-decimal rounding, "no data", attendance counts, deleted items excluded, and an item moving month when its lesson's date changes.
-- [ ] **5.2 Profile header.** Name, class, age, note, direction, current pending homework.
+- [x] **5.2 Profile header.** Name, class, age, note, direction, current pending homework.
 - [ ] **5.3 Month summaries,** newest first.
 - [ ] **5.4 Chart.** Last 12 months with data, memorization and behavior lines, axis reversed in RTL, dark mode, accessible table fallback.
 - [ ] **5.5 Month history.** Evaluated rows (date, weekday, sura, from–to, both scores) plus absences with excuse notes. Tapping a row edits it in a sheet.

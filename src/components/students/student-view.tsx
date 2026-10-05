@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, ChartLine, SearchX } from "lucide-react";
+import { Archive, SearchX } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { EmptyState } from "@/components/empty-state";
@@ -10,16 +10,19 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApp } from "@/client/app-context";
 import { useClass } from "@/client/data/classes";
+import { useStudentProfile } from "@/client/data/profile";
 import { useStudent } from "@/client/data/students";
 import { ageFromBirthYear, todayInTimeZone } from "@/domain/dates/local-date";
+import { CurrentHomework } from "./current-homework";
 import { StudentActionsMenu } from "./student-actions-menu";
 
-/** Student header and actions. The monthly profile arrives in Phase 5. */
+/** Student profile: header, current homework, monthly statistics, chart and history. */
 export function StudentView({ studentId }: { studentId: string | null }) {
   const t = useTranslations();
   const { session } = useApp();
   const student = useStudent(studentId);
   const cls = useClass(student?.classId ?? null);
+  const profile = useStudentProfile(studentId);
 
   if (student === undefined) {
     return (
@@ -101,7 +104,7 @@ export function StudentView({ studentId }: { studentId: string | null }) {
         </Badge>
       )}
 
-      <EmptyState icon={ChartLine} title={t("students.profileComingSoon")} />
+      {profile && <CurrentHomework pending={profile.pending} />}
     </PageContainer>
   );
 }

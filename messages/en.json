@@ -164,8 +164,7 @@
     "notFound": "Student not found",
     "added": "Student added",
     "saved": "Changes saved",
-    "actions": "Student options",
-    "profileComingSoon": "The student profile and monthly statistics come in a later phase."
+    "actions": "Student options"
   },
   "search": {
     "title": "Find a student",
@@ -245,5 +244,24 @@
     "saved": "Homework saved",
     "deleted": "Homework deleted",
     "suggested": "Suggested after the last homework; change it if needed"
+  },
+  "profile": {
+    "currentHomework": "Current homework",
+    "noCurrentHomework": "No current homework",
+    "monthlyTitle": "Monthly statistics",
+    "noData": "No data yet. Statistics appear after the first evaluation or attendance.",
+    "absentDays": "Absent days",
+    "excusedDays": "Excused days",
+    "evaluatedItems": "Evaluated homework",
+    "chartTitle": "Memorization and behavior by month",
+    "chartTable": "Monthly averages table",
+    "month": "Month",
+    "historyTitle": "{month} record",
+    "noHistory": "Nothing recorded this month",
+    "scores": "Memorization {memorization} · Behavior {behavior}",
+    "editEvaluationTitle": "Edit evaluation",
+    "editAttendanceTitle": "Edit attendance",
+    "openLesson": "Open lesson",
+    "selectMonth": "Choose a month"
   }
 }

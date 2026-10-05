@@ -164,8 +164,7 @@
     "notFound": "الطالب غير موجود",
     "added": "تمت إضافة الطالب",
     "saved": "تم حفظ التعديلات",
-    "actions": "خيارات الطالب",
-    "profileComingSoon": "ملف الطالب والإحصائيات الشهرية ستأتي في مرحلة لاحقة."
+    "actions": "خيارات الطالب"
   },
   "search": {
     "title": "البحث عن طالب",
@@ -245,5 +244,24 @@
     "saved": "تم حفظ الواجب",
     "deleted": "تم حذف الواجب",
     "suggested": "مقترح بعد آخر واجب، ويمكنك تغييره"
+  },
+  "profile": {
+    "currentHomework": "الواجب الحالي",
+    "noCurrentHomework": "لا يوجد واجب حالي",
+    "monthlyTitle": "الإحصائيات الشهرية",
+    "noData": "لا توجد بيانات بعد. ستظهر الإحصائيات بعد أول تقييم أو تسجيل حضور.",
+    "absentDays": "أيام الغياب",
+    "excusedDays": "أيام الغياب بعذر",
+    "evaluatedItems": "الواجبات المقيَّمة",
+    "chartTitle": "معدل الحفظ والسلوك عبر الأشهر",
+    "chartTable": "جدول المعدلات الشهرية",
+    "month": "الشهر",
+    "historyTitle": "سجل {month}",
+    "noHistory": "لا يوجد سجل لهذا الشهر",
+    "scores": "الحفظ {memorization} · السلوك {behavior}",
+    "editEvaluationTitle": "تعديل التقييم",
+    "editAttendanceTitle": "تعديل الحضور",
+    "openLesson": "فتح الدرس",
+    "selectMonth": "اختر الشهر"
   }
 }

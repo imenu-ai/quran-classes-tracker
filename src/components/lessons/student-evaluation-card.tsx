@@ -1,10 +1,11 @@
 "use client";
 
 import { CheckCircle2, Mic, Pencil, Plus, Trash2, Undo2 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { DirectionalIcon } from "@/components/directional-icon";
+import { usePortionLabel } from "@/components/homework/use-portion-label";
 import {
   HomeworkFormDrawer,
   type HomeworkFormMode,
@@ -17,22 +18,9 @@ import {
   undoEvaluation,
   type EvaluationEntry,
 } from "@/client/data/homework";
-import { getSurahName } from "@/domain/quran/surahs";
-import { toAppLocale } from "@/i18n/config";
 import { cn } from "@/lib/utils";
 import type { HomeworkRecord } from "@/shared/schemas/homework";
 import { ScorePicker } from "./score-picker";
-
-function usePortionLabel() {
-  const t = useTranslations("evaluation");
-  const locale = toAppLocale(useLocale());
-  return (item: Pick<HomeworkRecord, "surah" | "fromAyah" | "toAyah">) =>
-    t("range", {
-      surah: getSurahName(item.surah, locale) ?? String(item.surah),
-      from: item.fromAyah,
-      to: item.toAyah,
-    });
-}
 
 const isComplete = (item: HomeworkRecord) =>
   item.memorizationRate !== null && item.behaviorRate !== null;
