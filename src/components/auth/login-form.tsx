@@ -3,7 +3,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useId, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,10 +25,15 @@ export function LoginForm() {
   const [error, setError] = useState<LoginErrorKey | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Set once the app is being entered, so only one path ever navigates
+  // (a late second redirect would yank the teacher back to the home page).
+  const entered = useRef(false);
+
   // Already signed in on the server (e.g. local data was cleared): remember
   // the session on this device again and go straight to the app.
   useEffect(() => {
-    if (!session.data) return;
+    if (!session.data || entered.current) return;
+    entered.current = true;
     void bootstrapSession()
       .then(() => router.replace("/"))
       .catch(() => {});
@@ -57,6 +62,8 @@ export function LoginForm() {
       // Remember the teacher on this device (the offline gate), then enter the
       // app; its first sync is a full pull. The server also set the locale
       // cookie, so refresh to render in that locale.
+      if (entered.current) return;
+      entered.current = true;
       await bootstrapSession();
       router.replace("/");
       router.refresh();
