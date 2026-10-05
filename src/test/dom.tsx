@@ -3,6 +3,7 @@ import { afterEach } from "vitest";
 import { NextIntlClientProvider } from "next-intl";
 import ar from "../../messages/ar.json";
 import { DEFAULT_TIME_ZONE, getIntlLocale } from "@/i18n/config";
+import { getDirection } from "@/i18n/direction";
 import { formats } from "@/i18n/formats";
 
 /**
@@ -42,7 +43,7 @@ export function renderArabic(ui: React.ReactElement) {
       formats={formats}
       timeZone={DEFAULT_TIME_ZONE}
     >
-      <div dir="rtl">{ui}</div>
+      <div dir={getDirection("ar")}>{ui}</div>
     </NextIntlClientProvider>,
   );
 }
