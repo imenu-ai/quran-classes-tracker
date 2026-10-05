@@ -358,7 +358,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 
 - [x] **1.1 Scaffold.** Next 15.5 App Router, TS strict (plus `noUncheckedIndexedAccess`), `src/`, pnpm, `.nvmrc`, `engines`, scripts (`dev`, `build`, `start`, `lint`, `typecheck`, `test`, `format`), `.gitignore`. Existing README and LICENSE are kept.
   *Done when* `pnpm build` and `pnpm typecheck` pass.
-- [ ] **1.2 Lint and format.** ESLint 9 flat config (next core-web-vitals + TS), Prettier + tailwind plugin, `better-tailwindcss/enforce-logical-properties: error`, and `no-restricted-syntax` blocking `dir="rtl"|"ltr"` literals.
+- [x] **1.2 Lint and format.** ESLint 9 flat config (next core-web-vitals + TS), Prettier + tailwind plugin, `better-tailwindcss/enforce-logical-properties: error`, and `no-restricted-syntax` blocking `dir="rtl"|"ltr"` literals.
   *Done when* a temporary fixture using `ml-2`, `text-left` and `dir="rtl"` fails lint (shown in the commit message), the fixture is removed, and lint is clean.
 - [ ] **1.3 Vitest setup.** Node and jsdom environments, path aliases.
   *Done when* `pnpm test` runs a smoke test.
