@@ -462,7 +462,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* the rules from §5 of the brief hold in the UI (manual check plus component test).
 - [x] **4.5 Next-homework suggestion** (pure).
   *Done when* the tests cover forward and backward, continuing in the same sura, the end of a sura (next or previous sura), sura 114 and sura 1 boundaries, partial recitation, an existing pending item, and no history.
-- [ ] **4.6 Evaluation step.**
+- [x] **4.6 Evaluation step.**
   - One card per present student, with unmarked students in a collapsed section.
   - Pending items, each with two 5×2 score grids (≥ 44 px targets) and an editable range.
   - "إضافة واجب للدرس القادم" (with the suggestion pre-filled) and "تسميع الآن".
