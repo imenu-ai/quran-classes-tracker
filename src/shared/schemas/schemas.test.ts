@@ -18,6 +18,7 @@ const base = {
   tenantId: "tenant-1",
   createdAt: 1_760_000_000_000,
   updatedAt: 1_760_000_000_000,
+  updatedBy: "device-1",
   deletedAt: null,
   serverVersion: 0,
 };

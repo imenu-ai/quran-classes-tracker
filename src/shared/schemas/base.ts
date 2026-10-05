@@ -20,6 +20,11 @@ export const syncableBaseSchema = z.object({
   tenantId: z.string().min(1),
   createdAt: epochMsSchema,
   updatedAt: epochMsSchema,
+  /**
+   * Device that made the last change. Breaks last-write-wins ties when two
+   * devices write the same record in the same millisecond.
+   */
+  updatedBy: z.string().min(1).max(64),
   deletedAt: epochMsSchema.nullable(),
   /** Assigned by the server; 0 until the record has been synced. */
   serverVersion: z.number().int().nonnegative(),

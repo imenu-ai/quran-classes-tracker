@@ -1,6 +1,6 @@
 # Implementation Plan: Quran Memorization Tracker (متابعة تحفيظ القرآن)
 
-Status: **Approved 2026-10-05. Phase 1 done, waiting for go-ahead on Phase 2** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
+Status: **Approved 2026-10-05. Phase 1 done; Phase 2 in progress** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
 
 Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bottom)
 
@@ -399,7 +399,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 
 ### Phase 2: Local DB, outbox, sync API, sync engine
 
-- [ ] **2.1 Dexie schema.** Per-user DB (`qct-<userId>`) with the tables and indexes in §4, plus `outbox`, `rejected`, `meta`.
+- [x] **2.1 Dexie schema.** Per-user DB (`qct-<userId>`) with the tables and indexes in §4, plus `outbox`, `rejected`, `meta`.
   *Done when* the fake-indexeddb tests can open, write and read every table.
 - [ ] **2.2 `localRepo` and outbox.** `create` / `update` / `softDelete` write the record and the outbox entry in one transaction, with a strictly increasing `updatedAt`, coalescing and `rev`.
   *Done when* the tests show atomicity (a failed write leaves no outbox entry), coalescing, and that a `rev` change during push keeps the entry.
@@ -520,3 +520,4 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - The normalizer is `normalizeForSearch` (Arabic and Latin), not `normalizeArabic`. It also handles ٱ, Arabic-Indic digits and punctuation.
 - 2026-10-05 (step 1.14): The workflow was validated with `@action-validator/cli` (GitHub workflow schema) instead of actionlint, because actionlint needs Docker or a native binary and the Docker daemon wasn't running. `pnpm typecheck` now runs `next typegen` first, so route types exist on a clean CI checkout.
 - 2026-10-05 (step 1.13): Arabic progress labels use "جاري" rather than "جارٍ". WebKit wrapped the tanween form onto two lines inside a button.
+- 2026-10-05 (step 2.1): Every syncable record gains **`updatedBy`**, the ID of the device that made the last change (generated once per device and stored in `meta`). Last-write-wins compares `updatedAt` first and breaks ties on `updatedBy`, the same way on the server and the client. This replaces the `_lwwTie` placeholder in §2.4. A retried push (same timestamp, same device) comes back "stale" and is cleared safely.
