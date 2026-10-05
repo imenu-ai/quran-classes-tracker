@@ -3,6 +3,7 @@
 import { Archive, SearchX } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { PageContainer, PageHeader } from "@/components/shell/page";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import { useStudentProfile } from "@/client/data/profile";
 import { useStudent } from "@/client/data/students";
 import { ageFromBirthYear, todayInTimeZone } from "@/domain/dates/local-date";
 import { CurrentHomework } from "./current-homework";
+import { MonthSummaries } from "./month-summaries";
 import { StudentActionsMenu } from "./student-actions-menu";
 
 /** Student profile: header, current homework, monthly statistics, chart and history. */
@@ -23,6 +25,9 @@ export function StudentView({ studentId }: { studentId: string | null }) {
   const student = useStudent(studentId);
   const cls = useClass(student?.classId ?? null);
   const profile = useStudentProfile(studentId);
+  const [month, setMonth] = useState<string | null>(null);
+  // Default to the newest month that has data.
+  const selectedMonth = month ?? profile?.months[0]?.month ?? null;
 
   if (student === undefined) {
     return (
@@ -104,7 +109,15 @@ export function StudentView({ studentId }: { studentId: string | null }) {
         </Badge>
       )}
 
-      {profile && <CurrentHomework pending={profile.pending} />}
+      {profile && (
+        <>
+          <CurrentHomework pending={profile.pending} />
+          <section className="flex flex-col gap-3">
+            <h2 className="text-lg font-semibold">{t("profile.monthlyTitle")}</h2>
+            <MonthSummaries months={profile.months} selected={selectedMonth} onSelect={setMonth} />
+          </section>
+        </>
+      )}
     </PageContainer>
   );
 }
