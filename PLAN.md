@@ -1,6 +1,6 @@
 # Implementation Plan: Quran Memorization Tracker (متابعة تحفيظ القرآن)
 
-Status: **Approved 2026-10-05. Phases 1–2 done, waiting for go-ahead on Phase 3** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
+Status: **Approved 2026-10-05. Phases 1–2 done; Phase 3 in progress** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
 
 Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bottom)
 
@@ -427,7 +427,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 
 ### Phase 3: Classes and students
 
-- [ ] **3.1 App shell.** Header (title, sync indicator, search), bottom navigation within thumb reach, safe areas, query-param routes, loading skeletons, empty states.
+- [x] **3.1 App shell.** Header (title, sync indicator, search), bottom navigation within thumb reach, safe areas, query-param routes, loading skeletons, empty states.
   *Done when* the shell is navigable on 360 px and on tablet and desktop widths (two-column at ≥ md).
 - [ ] **3.2 Home.** Class cards via `useLiveQuery` (student count, "lesson today" badge), empty state with "create class".
   *Done when* creating a class offline appears instantly and syncs once back online.
@@ -526,3 +526,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - A new `GET /api/me` endpoint supplies the tenant's name and time zone.
   - A browser can't reload a page while offline without a service worker. So the "offline reload" check moves to Phase 6. This step checked that the data stays on screen offline, and that a reload uses the saved snapshot without the login screen.
   - `withTenant` forwards Better Auth's renewed session cookie (step 2.7), so a teacher who mostly syncs keeps a live 400-day session.
+- 2026-10-05 (step 3.1):
+  - A minimal `/settings` page exists now, holding sign-out (moved from the temporary home) so the navigation is complete. Phase 6 fills in the rest.
+  - User text interpolated into a translated sentence is wrapped in `<bdi>` through next-intl rich text, so a name in one script doesn't reorder a sentence in the other.
+  - The Next.js dev badge is turned off because it covered the mobile navigation.
