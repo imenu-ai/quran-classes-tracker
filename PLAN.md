@@ -1,6 +1,6 @@
 # Implementation Plan: Quran Memorization Tracker (متابعة تحفيظ القرآن)
 
-Status: **Approved 2026-10-05. Phases 1–3 done; Phase 4 in progress** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
+Status: **Approved 2026-10-05. Phases 1–4 done, waiting for go-ahead on Phase 5** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
 
 Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bottom)
 
@@ -359,8 +359,8 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 1. Scaffold, tooling, i18n, theme, sura map, auth, CLI | [x] Done |
 | 2. Local DB, outbox, sync API, sync engine | [x] Done |
 | 3. Classes and students | [x] Done |
-| 4. Lessons (attendance and evaluation) | [ ] In progress |
-| 5. Student profile, monthly stats, chart | [ ] Not started |
+| 4. Lessons (attendance and evaluation) | [x] Done |
+| 5. Student profile, monthly stats, chart | [ ] Next, waiting for go-ahead |
 | 6. PWA and offline hardening, settings, E2E, README, deployment | [ ] Not started |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
@@ -450,7 +450,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* "محمد" matches "مُحَمَّد" and partial names match.
 - [x] **3.6 Phase wrap-up. Stop.**
 
-### [ ] Phase 4: Lessons (attendance and evaluation)
+### [x] Phase 4: Lessons (attendance and evaluation)
 
 - [x] **4.1 Date domain.** `todayInTz(tz)`, `weekdayOf(date)`, `monthKey(date)`, `ageFrom(birthYear, today)`. *(`todayInTimeZone` and `ageFromBirthYear` were already built and tested in Phase 3. This step adds `weekdayOf` and `monthKey`.)*
   *Done when* the tests cover the Hebron date line around midnight and DST changes.
@@ -471,7 +471,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* evaluating a student takes ≤ 3 taps when a pending item exists, and the progress tests pass.
 - [x] **4.7 Lesson history per class.** List of lessons; a lesson's note; soft delete after a confirmation.
   *Done when* an old lesson can be reopened and edited.
-- [ ] **4.8 Phase wrap-up. Stop.**
+- [x] **4.8 Phase wrap-up. Stop.**
 
 ### [ ] Phase 5: Student profile, monthly stats, chart
 
@@ -559,3 +559,4 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 - 2026-10-05 (step 4.7):
   - Deleting a lesson deletes its attendance and the homework assigned in it. Homework evaluated in it goes back to pending. Homework assigned in it but evaluated in a later lesson is kept, with `assignedLessonId` cleared, so that later lesson's history isn't lost.
   - The lesson note is an autosaving field on the lesson page.
+- 2026-10-05 (step 4.8): On the evaluation screen, the two score grids sit side by side only when the card itself is wide (a container query). With two cards per row at 1024px, the buttons had shrunk to about 32px.

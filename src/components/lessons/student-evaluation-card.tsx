@@ -56,7 +56,8 @@ export function StudentEvaluationCard({
   return (
     <article
       className={cn(
-        "flex flex-col gap-3 rounded-xl border bg-card p-3",
+        // A container, so score grids go side by side only when the CARD is wide.
+        "@container flex flex-col gap-3 rounded-xl border bg-card p-3",
         done && "border-success/50",
       )}
     >
@@ -104,7 +105,7 @@ export function StudentEvaluationCard({
                     </Button>
                   )}
                 </div>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 @lg:grid-cols-2">
                   <ScorePicker
                     label={t("glossary.memorizationRate")}
                     value={item.memorizationRate}
