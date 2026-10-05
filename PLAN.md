@@ -368,7 +368,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* the tests for every rule and edge case pass (first and last ayah, 0, negative, above the count, from > to, non-integer, sura 0 and 115; "الاسراء" finds 17).
 - [x] **1.6 i18n core.** `i18n/config.ts` (`ENABLED_LOCALES`, `DEFAULT_LOCALE`), `getDirection`, `request.ts` (cookie → enabled → default), formats (`latn`, Gregorian), `ar.json` + `en.json` (glossary values, validation errors), key-parity test, direction test.
   *Done when* the tests pass and a page renders `<html lang="ar" dir="rtl">`. With `ENABLED_LOCALES=ar,en` and cookie `en`, it renders `lang="en" dir="ltr"`.
-- [ ] **1.7 Theme and UI base.** Tailwind v4 tokens (green/teal, light and dark), `next-themes` (system default), locale-based fonts, `shadcn init --rtl`, base components (button, input, card, drawer, sheet, dropdown, sonner, badge, skeleton), Radix `DirectionProvider`, `<DirectionalIcon>`.
+- [x] **1.7 Theme and UI base.** Tailwind v4 tokens (green/teal, light and dark), `next-themes` (system default), locale-based fonts, `shadcn init --rtl`, base components (button, input, card, drawer, sheet, dropdown, sonner, badge, skeleton), Radix `DirectionProvider`, `<DirectionalIcon>`.
   *Done when* a temporary kitchen-sink page looks right in RTL, LTR, light and dark at 360 px (screenshots in the summary), and it is removed before the commit.
 - [ ] **1.8 Shared Zod schemas.** Base syncable schema plus the entity schemas. The homework schema calls `validateAyahRange` and emits custom issues with `{ code, params }`. Plus a `useErrorMessage()` helper that maps codes through i18n.
   *Done when* the tests show each invalid case yields the right code and valid records parse.

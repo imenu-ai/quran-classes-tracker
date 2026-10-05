@@ -41,6 +41,7 @@
     }
   },
   "common": {
-    "noValue": "—"
+    "noValue": "—",
+    "close": "Close"
   }
 }
