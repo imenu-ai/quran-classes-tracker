@@ -14,6 +14,7 @@ import { useLesson } from "@/client/data/lessons";
 import { AttendanceStep } from "./attendance-step";
 import { EvaluationStep } from "./evaluation-step";
 import { LessonActionsMenu } from "./lesson-actions-menu";
+import { LessonNoteField } from "./lesson-note-field";
 import { useLessonDate } from "./use-lesson-date";
 
 export type LessonStep = "attendance" | "evaluate";
@@ -69,6 +70,8 @@ export function LessonView({ lessonId, step }: { lessonId: string | null; step: 
           {cls.name}
         </p>
       )}
+
+      <LessonNoteField lesson={lesson} />
 
       <Tabs value={step} onValueChange={setStep} className="gap-4">
         <TabsList aria-label={t("lessons.steps")} className="h-12 w-full">

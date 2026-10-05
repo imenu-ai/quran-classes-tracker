@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { LessonDateDialog } from "@/components/lessons/lesson-date-dialog";
+import { LessonHistory } from "@/components/lessons/lesson-history";
 import { StartLessonButton } from "@/components/lessons/start-lesson-button";
 import { PageContainer, PageHeader } from "@/components/shell/page";
 import { ArchivedStudents, StudentList } from "@/components/students/student-list";
@@ -110,6 +111,8 @@ export function ClassView({ classId }: { classId: string | null }) {
           <StudentList students={students.active} />
         </>
       )}
+
+      <LessonHistory classId={cls.id} />
 
       <ArchivedStudents students={students.archived} />
 

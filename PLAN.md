@@ -469,7 +469,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - Progress "تم تقييم X من Y".
 
   *Done when* evaluating a student takes ≤ 3 taps when a pending item exists, and the progress tests pass.
-- [ ] **4.7 Lesson history per class.** List of lessons; a lesson's note; soft delete after a confirmation.
+- [x] **4.7 Lesson history per class.** List of lessons; a lesson's note; soft delete after a confirmation.
   *Done when* an old lesson can be reopened and edited.
 - [ ] **4.8 Phase wrap-up. Stop.**
 
@@ -499,7 +499,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - Theme toggle.
   - Sync details: pending count, last sync, rejected list with retry/discard, "sync now".
   - Logout with an unsynced-changes warning and a local wipe.
-- [ ] **6.4 Playwright.** Memory-server Mongo plus a production build; projects: iPhone 15 (WebKit), Pixel 7 (Chromium), Desktop.
+- [ ] **6.4 Playwright.** *(Added from step 4.7: measure, in a production build, how long the evaluation screen takes to reflect a tap. In the dev build on Windows WebKit it was about 1 s. Optimize the live query if a production build on a phone is noticeably slow.)* Memory-server Mongo plus a production build; projects: iPhone 15 (WebKit), Pixel 7 (Chromium), Desktop.
   - Main flow: login → class → students → lesson → attendance → evaluate → assign homework → profile.
   - **Offline run:** go offline mid-lesson, keep working, reconnect, then check that the server has the data, using a second browser context that logs in fresh.
   - **LTR smoke:** cookie `en` with `ENABLED_LOCALES=ar,en`; `dir=ltr` on the main screens, and no horizontal overflow at 360 px.
@@ -556,3 +556,6 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - Ayah inputs are limited to the number of digits of the sura's ayah count. They are not hard-clamped, because silently changing what the teacher typed would be confusing. Instead the localized error appears immediately.
   - The browser check of the picker happens in step 4.6, where it is first used in a screen.
   - Hardcoded English in shadcn's `dialog` and `command` was replaced with translations or required props.
+- 2026-10-05 (step 4.7):
+  - Deleting a lesson deletes its attendance and the homework assigned in it. Homework evaluated in it goes back to pending. Homework assigned in it but evaluated in a later lesson is kept, with `assignedLessonId` cleared, so that later lesson's history isn't lost.
+  - The lesson note is an autosaving field on the lesson page.

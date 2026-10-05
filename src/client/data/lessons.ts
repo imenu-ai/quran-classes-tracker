@@ -85,3 +85,74 @@ export function useClassLessons(classId: string | null) {
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [db, classId]);
 }
+
+/**
+ * Soft-deletes a lesson and what was recorded in it, in one transaction:
+ * - its attendance is deleted;
+ * - homework evaluated in it goes back to pending;
+ * - homework assigned in it is deleted, unless it was evaluated in another
+ *   lesson (then it stays, so that lesson's history is kept).
+ */
+export async function deleteLesson(store: LocalStore, lessonId: string) {
+  const { db } = store;
+  const tables = [db.lessons, db.attendance, db.homework, db.outbox, db.rejected, db.meta];
+  await db.transaction("rw", tables, async () => {
+    for (const record of await db.attendance.where("lessonId").equals(lessonId).toArray()) {
+      if (record.deletedAt === null) await store.softDelete("attendance", record.id);
+    }
+    const evaluated = await db.homework.where("evaluatedLessonId").equals(lessonId).toArray();
+    const assigned = await db.homework.where("assignedLessonId").equals(lessonId).toArray();
+    for (const item of assigned) {
+      if (item.deletedAt !== null) continue;
+      if (item.evaluatedLessonId !== null && item.evaluatedLessonId !== lessonId) {
+        await store.update("homework", item.id, { assignedLessonId: null });
+      } else {
+        await store.softDelete("homework", item.id);
+      }
+    }
+    for (const item of evaluated) {
+      if (item.deletedAt !== null || item.assignedLessonId === lessonId) continue;
+      await store.update("homework", item.id, {
+        evaluatedLessonId: null,
+        memorizationRate: null,
+        behaviorRate: null,
+      });
+    }
+    await store.softDelete("lessons", lessonId);
+  });
+}
+
+export interface LessonSummary {
+  lesson: LessonRecord;
+  present: number;
+  absent: number;
+  excused: number;
+  evaluated: number;
+}
+
+/** A class's lessons (newest first) with attendance and evaluation counts. */
+export function useClassLessonSummaries(classId: string | null) {
+  const { db } = useApp();
+  return useLiveQuery(async (): Promise<LessonSummary[]> => {
+    if (!classId) return [];
+    const lessons = (await db.lessons.where("classId").equals(classId).toArray())
+      .filter((lesson) => lesson.deletedAt === null)
+      .sort((a, b) => b.date.localeCompare(a.date));
+    const ids = lessons.map((lesson) => lesson.id);
+    const [attendance, homework] = await Promise.all([
+      db.attendance.where("lessonId").anyOf(ids).toArray(),
+      db.homework.where("evaluatedLessonId").anyOf(ids).toArray(),
+    ]);
+    return lessons.map((lesson) => {
+      const live = attendance.filter((a) => a.lessonId === lesson.id && a.deletedAt === null);
+      return {
+        lesson,
+        present: live.filter((a) => a.status === "present").length,
+        absent: live.filter((a) => a.status === "absent").length,
+        excused: live.filter((a) => a.status === "excused").length,
+        evaluated: homework.filter((h) => h.evaluatedLessonId === lesson.id && h.deletedAt === null)
+          .length,
+      };
+    });
+  }, [db, classId]);
+}

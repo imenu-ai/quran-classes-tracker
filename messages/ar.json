@@ -203,7 +203,10 @@
     "deleteConfirmTitle": "حذف الدرس؟",
     "deleteConfirm": "سيُحذف الدرس مع الحضور والواجبات المسجلة فيه، وتعود الواجبات التي قُيِّمت فيه إلى انتظار التقييم.",
     "deleted": "تم حذف الدرس",
-    "attendanceSummary": "حاضر {present} · غائب {absent} · بعذر {excused}"
+    "attendanceSummary": "حاضر {present} · غائب {absent} · بعذر {excused}",
+    "evaluatedCount": "{count, plural, zero {لا تقييمات} one {تقييم واحد} two {تقييمان} few {# تقييمات} many {# تقييمًا} other {# تقييم}}",
+    "showMore": "عرض المزيد",
+    "notePlaceholder": "ملاحظة على الدرس (اختياري)"
   },
   "attendance": {
     "markAllPresent": "تحديد الكل حاضر",
