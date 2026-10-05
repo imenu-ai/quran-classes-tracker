@@ -64,6 +64,20 @@ describe("attendance actions", () => {
     });
   });
 
+  it("updates an existing record that doesn't use the derived id (no duplicate)", async () => {
+    // e.g. imported or seeded data with a random id
+    const legacy = attendanceRecord(LESSON, S1, { status: "excused", excuseNote: "مريض" });
+    await db.attendance.put(legacy);
+    await setAttendance(store, LESSON, S1, "present");
+    await setExcuseNote(store, LESSON, S1, "تأخر");
+    await markAllPresent(store, LESSON, [S1]);
+    const records = await db.attendance.toArray();
+    expect(records).toHaveLength(1);
+    expect(records[0]).toMatchObject({ id: legacy.id, status: "present", excuseNote: "تأخر" });
+    await clearAttendance(store, LESSON, S1);
+    expect((await db.attendance.get(legacy.id))?.deletedAt).not.toBeNull();
+  });
+
   it("'mark all present' only fills in unmarked students", async () => {
     await setAttendance(store, LESSON, S2, "absent");
     await markAllPresent(store, LESSON, [S1, S2, S3]);

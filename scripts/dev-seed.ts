@@ -12,6 +12,7 @@ import { COLLECTIONS } from "@/server/collections";
 import { closeMongoClient, getDb } from "@/server/db";
 import { ensureIndexes } from "@/server/indexes";
 import { pushChanges } from "@/server/sync/push";
+import { attendanceIdFor, lessonIdFor } from "@/shared/ids";
 import type { PushMutation } from "@/shared/sync/protocol";
 import { loadEnv } from "./load-env";
 
@@ -83,7 +84,14 @@ function buildMutations(): PushMutation[] {
 
     const pending = new Map<string, Record<string, unknown>>();
     for (const date of LESSON_DATES) {
-      const lesson = { ...base(), classId: classRecord.id, date, note: "" };
+      // Same deterministic ids the app uses, so app edits update these records.
+      const lesson = {
+        ...base(),
+        id: lessonIdFor(classRecord.id, date),
+        classId: classRecord.id,
+        date,
+        note: "",
+      };
       add("lessons", lesson);
 
       for (const position of students) {
@@ -91,6 +99,7 @@ function buildMutations(): PushMutation[] {
         const status = roll < 0.8 ? "present" : roll < 0.9 ? "absent" : "excused";
         add("attendance", {
           ...base(),
+          id: attendanceIdFor(lesson.id, position.student.id),
           lessonId: lesson.id,
           studentId: position.student.id,
           status,

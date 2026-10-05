@@ -6,13 +6,12 @@ import {
   type StudentLessonHomework,
 } from "@/domain/homework/progress";
 import type { Portion } from "@/domain/homework/suggestion";
-import { attendanceIdFor } from "@/shared/ids";
 import type { HomeworkRecord } from "@/shared/schemas/homework";
 import type { LessonRecord } from "@/shared/schemas/lesson";
 import { useApp } from "../app-context";
 import type { LocalDb } from "../db/dexie";
 import type { LocalStore } from "../db/local-store";
-import { buildRoster, setAttendance, type LessonRosterEntry } from "./attendance";
+import { buildRoster, findAttendance, setAttendance, type LessonRosterEntry } from "./attendance";
 
 export interface EvaluationEntry extends LessonRosterEntry {
   homework: StudentLessonHomework<HomeworkRecord>;
@@ -85,7 +84,7 @@ const homeworkTables = (db: LocalDb) => [
 
 /** Evaluating a student who isn't marked yet marks them present. */
 async function ensurePresent(store: LocalStore, lessonId: string, studentId: string) {
-  const record = await store.db.attendance.get(attendanceIdFor(lessonId, studentId));
+  const record = await findAttendance(store.db, lessonId, studentId);
   if (!record || record.deletedAt !== null) {
     await setAttendance(store, lessonId, studentId, "present");
   }
