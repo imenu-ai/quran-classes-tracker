@@ -177,7 +177,46 @@
   "settings": {
     "title": "الإعدادات",
     "account": "الحساب",
-    "signedInAs": "مسجّل الدخول باسم <user>{name}</user>"
+    "signedInAs": "مسجّل الدخول باسم <user>{name}</user>",
+    "profileTitle": "الملف الشخصي",
+    "displayName": "الاسم الظاهر",
+    "username": "اسم المستخدم",
+    "usernameHint": "حروف إنجليزية وأرقام و _ أو . فقط (3 إلى 30)",
+    "profileSaved": "تم حفظ الملف الشخصي",
+    "passwordTitle": "كلمة المرور",
+    "currentPassword": "كلمة المرور الحالية",
+    "newPassword": "كلمة المرور الجديدة",
+    "confirmPassword": "تأكيد كلمة المرور الجديدة",
+    "changePassword": "تغيير كلمة المرور",
+    "passwordChanged": "تم تغيير كلمة المرور",
+    "passwordsDontMatch": "كلمتا المرور غير متطابقتين",
+    "passwordLengthHint": "8 أحرف على الأقل",
+    "themeTitle": "المظهر",
+    "themeSystem": "تلقائي",
+    "themeLight": "فاتح",
+    "themeDark": "داكن",
+    "syncTitle": "المزامنة",
+    "status": "الحالة",
+    "pending": "تغييرات بانتظار المزامنة",
+    "lastSynced": "آخر مزامنة",
+    "never": "لم تتم بعد",
+    "syncNow": "مزامنة الآن",
+    "rejectedTitle": "تغييرات رفضها الخادم",
+    "rejectedHint": "لم تُحفظ هذه التغييرات على الخادم. أعد المحاولة بعد تصحيحها، أو تجاهلها.",
+    "retry": "إعادة المحاولة",
+    "discard": "تجاهل",
+    "discardConfirmTitle": "تجاهل هذا التغيير؟",
+    "discardConfirm": "سيُحذف التغيير من هذا الجهاز ولن يُرسل إلى الخادم.",
+    "accountErrors": {
+      "offline": "هذا التغيير يحتاج إلى اتصال بالإنترنت",
+      "usernameTaken": "اسم المستخدم مستخدم من قبل",
+      "invalidUsername": "اسم المستخدم غير صالح",
+      "wrongPassword": "كلمة المرور الحالية غير صحيحة",
+      "passwordLength": "كلمة المرور يجب أن تكون من 8 إلى 128 حرفًا",
+      "rateLimited": "محاولات كثيرة. حاول مرة أخرى بعد دقيقة",
+      "sessionExpired": "انتهت الجلسة. سجّل الدخول من جديد",
+      "generic": "تعذّر حفظ التغيير. حاول مرة أخرى"
+    }
   },
   "lessons": {
     "otherDate": "درس بتاريخ سابق",
@@ -276,5 +315,16 @@
     "shareButton": "زر المشاركة",
     "button": "تثبيت",
     "dismiss": "إخفاء"
+  },
+  "tables": {
+    "classes": "حلقة",
+    "students": "طالب",
+    "lessons": "درس",
+    "attendance": "حضور",
+    "homework": "واجب"
+  },
+  "syncErrors": {
+    "FORBIDDEN": "هذا السجل يخص حسابًا آخر",
+    "REFERENCE_NOT_FOUND": "يرتبط بسجل غير موجود على الخادم"
   }
 }

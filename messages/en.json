@@ -177,7 +177,46 @@
   "settings": {
     "title": "Settings",
     "account": "Account",
-    "signedInAs": "Signed in as <user>{name}</user>"
+    "signedInAs": "Signed in as <user>{name}</user>",
+    "profileTitle": "Profile",
+    "displayName": "Display name",
+    "username": "Username",
+    "usernameHint": "Letters, numbers, _ or . only (3 to 30)",
+    "profileSaved": "Profile saved",
+    "passwordTitle": "Password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "changePassword": "Change password",
+    "passwordChanged": "Password changed",
+    "passwordsDontMatch": "The passwords don't match",
+    "passwordLengthHint": "At least 8 characters",
+    "themeTitle": "Appearance",
+    "themeSystem": "Automatic",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "syncTitle": "Sync",
+    "status": "Status",
+    "pending": "Changes waiting to sync",
+    "lastSynced": "Last synced",
+    "never": "Not yet",
+    "syncNow": "Sync now",
+    "rejectedTitle": "Changes the server refused",
+    "rejectedHint": "These changes weren't saved on the server. Retry after fixing them, or discard them.",
+    "retry": "Retry",
+    "discard": "Discard",
+    "discardConfirmTitle": "Discard this change?",
+    "discardConfirm": "The change will be removed from this device and not sent to the server.",
+    "accountErrors": {
+      "offline": "This change needs an internet connection",
+      "usernameTaken": "That username is already taken",
+      "invalidUsername": "That username isn't valid",
+      "wrongPassword": "The current password is incorrect",
+      "passwordLength": "The password must be 8 to 128 characters",
+      "rateLimited": "Too many attempts. Try again in a minute",
+      "sessionExpired": "Your session expired. Sign in again",
+      "generic": "Couldn't save the change. Please try again"
+    }
   },
   "lessons": {
     "otherDate": "Lesson on an earlier date",
@@ -276,5 +315,16 @@
     "shareButton": "Share button",
     "button": "Install",
     "dismiss": "Dismiss"
+  },
+  "tables": {
+    "classes": "Class",
+    "students": "Student",
+    "lessons": "Lesson",
+    "attendance": "Attendance",
+    "homework": "Homework"
+  },
+  "syncErrors": {
+    "FORBIDDEN": "This record belongs to another account",
+    "REFERENCE_NOT_FOUND": "It refers to a record missing on the server"
   }
 }
