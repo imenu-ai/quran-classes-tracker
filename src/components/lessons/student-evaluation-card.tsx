@@ -4,6 +4,7 @@ import { CheckCircle2, Mic, Pencil, Plus, Trash2, Undo2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { DirectionalIcon } from "@/components/directional-icon";
 import {
   HomeworkFormDrawer,
   type HomeworkFormMode,
