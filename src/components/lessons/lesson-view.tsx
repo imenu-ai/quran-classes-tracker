@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useClass } from "@/client/data/classes";
 import { useLesson } from "@/client/data/lessons";
 import { AttendanceStep } from "./attendance-step";
+import { EvaluationStep } from "./evaluation-step";
 import { LessonActionsMenu } from "./lesson-actions-menu";
 import { useLessonDate } from "./use-lesson-date";
 
@@ -81,7 +82,9 @@ export function LessonView({ lessonId, step }: { lessonId: string | null; step: 
         <TabsContent value="attendance">
           <AttendanceStep lesson={lesson} onNext={() => setStep("evaluate")} />
         </TabsContent>
-        <TabsContent value="evaluate" />
+        <TabsContent value="evaluate">
+          <EvaluationStep lesson={lesson} onBackToAttendance={() => setStep("attendance")} />
+        </TabsContent>
       </Tabs>
     </PageContainer>
   );
