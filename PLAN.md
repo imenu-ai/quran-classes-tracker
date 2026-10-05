@@ -458,7 +458,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* a double tap or a second device never creates a duplicate (the same ID merges) and the tests on ID derivation pass.
 - [x] **4.3 Attendance step.** Three-state segmented toggle per student, "تحديد الكل حاضر", excuse note shown for `excused`, unmark (soft delete).
   *Done when* marking 20 students takes ≤ 1 tap each and changes are autosaved.
-- [ ] **4.4 Sura picker and ayah range.** Bottom drawer with cmdk; normalized search; rows like "2 · البقرة · 286 آية"; ayah inputs show "من 1 إلى 286", limit input to the range, and show localized errors live.
+- [x] **4.4 Sura picker and ayah range.** Bottom drawer with cmdk; normalized search; rows like "2 · البقرة · 286 آية"; ayah inputs show "من 1 إلى 286", limit input to the range, and show localized errors live.
   *Done when* the rules from §5 of the brief hold in the UI (manual check plus component test).
 - [ ] **4.5 Next-homework suggestion** (pure).
   *Done when* the tests cover forward and backward, continuing in the same sura, the end of a sura (next or previous sura), sura 114 and sura 1 boundaries, partial recitation, an existing pending item, and no history.
@@ -551,3 +551,8 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - "تحديد الكل حاضر" marks only students not yet marked, so it never overrides an absence the teacher already set.
   - Tapping the selected status again clears it (soft delete; the same record is revived if marked again).
   - The roster is the class's active students plus anyone already recorded in that lesson, such as a student who later moved class.
+- 2026-10-05 (step 4.4):
+  - Component tests use jsdom and Testing Library, with polyfills for Radix, vaul and cmdk in `src/test/dom.tsx`.
+  - Ayah inputs are limited to the number of digits of the sura's ayah count. They are not hard-clamped, because silently changing what the teacher typed would be confusing. Instead the localized error appears immediately.
+  - The browser check of the picker happens in step 4.6, where it is first used in a screen.
+  - Hardcoded English in shadcn's `dialog` and `command` was replaced with translations or required props.
