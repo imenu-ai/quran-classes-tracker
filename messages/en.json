@@ -1,7 +1,8 @@
 {
   "app": {
     "name": "Quran Memorization Tracker",
-    "shortName": "Quran Tracker"
+    "shortName": "Quran Tracker",
+    "description": "Track students' Quran memorization: attendance, homework and monthly scores, even offline."
   },
   "glossary": {
     "class": "Class",
@@ -263,5 +264,9 @@
     "editAttendanceTitle": "Edit attendance",
     "openLesson": "Open lesson",
     "selectMonth": "Choose a month"
+  },
+  "offline": {
+    "title": "You're offline",
+    "description": "Open the app once while online; after that it works offline."
   }
 }

@@ -4,6 +4,7 @@ pnpm-lock.yaml
 coverage
 playwright-report
 test-results
-public/sw.js
+public/sw*
+public/swe-worker*
 BRIEF.md
 PLAN.md

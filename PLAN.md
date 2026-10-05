@@ -1,6 +1,6 @@
 # Implementation Plan: Quran Memorization Tracker (متابعة تحفيظ القرآن)
 
-Status: **Approved 2026-10-05. Phases 1–5 done, waiting for go-ahead on Phase 6** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
+Status: **Approved 2026-10-05. Phases 1–5 done; Phase 6 in progress** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
 
 Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bottom)
 
@@ -361,7 +361,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 3. Classes and students | [x] Done |
 | 4. Lessons (attendance and evaluation) | [x] Done |
 | 5. Student profile, monthly stats, chart | [x] Done |
-| 6. PWA and offline hardening, settings, E2E, README, deployment | [ ] Next, waiting for go-ahead |
+| 6. PWA and offline hardening, settings, E2E, README, deployment | [ ] In progress |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -486,7 +486,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 
 ### [ ] Phase 6: PWA and offline hardening, settings, E2E, README, deployment
 
-- [ ] **6.1 Serwist.** *(Added from step 3.2: in-app navigation fetches each route's React Server Components payload (`?_rsc=…`), so the service worker must cache those per pathname, ignoring the query string, as well as the HTML. Otherwise navigating offline to a page not yet visited fails.)*
+- [x] **6.1 Serwist.** *(Added from step 3.2: in-app navigation fetches each route's React Server Components payload (`?_rsc=…`), so the service worker must cache those per pathname, ignoring the query string, as well as the HTML. Otherwise navigating offline to a page not yet visited fails.)*
   - Precache the build assets and fonts.
   - Navigations: NetworkFirst with a 3 s timeout and `ignoreSearch`, falling back to an offline page.
   - Warm the page-shell cache after login.
@@ -573,3 +573,8 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
     - Attendance edits now find the existing record by lesson and student, whatever its ID, instead of creating a duplicate. The seed uses the deterministic IDs.
     - The login screen now navigates only once.
 - 2026-10-05 (step 5.6): History rows put the scores on a second line under the sura. At 360px, the scores had pushed the sura name down to a single letter.
+- 2026-10-05 (step 6.1):
+  - Next.js page-data requests (`RSC: 1`) are network-only rather than cached, which changes the note added in step 3.2. Offline, they fail fast, and Next.js falls back to a full page load, which the service worker serves from the page-shell cache. This is more reliable than caching that data, which depends on the page you're coming from. Verified: in-app links work offline.
+  - Page shells are cached by path only, and every shell is fetched into the cache after the service worker becomes ready.
+  - `reloadOnOnline` is off, so the page doesn't reload mid-lesson when the connection returns.
+  - The icons are generated from the Lucide book glyph on the theme teal. The scaffold's Next.js favicon was removed.
