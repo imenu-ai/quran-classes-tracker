@@ -435,7 +435,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* every path works and is reflected after a sync on a second browser profile.
 - [x] **3.4 Students.** Add and edit (full name `dir="auto"`, birth year, note, memorization direction, class pre-selected), move to another class, archive or unarchive. List of archived students per class.
   *Done when* Zod validation messages are localized and a move to another class syncs.
-- [ ] **3.5 Global student search** with Arabic normalization (reuses `normalizeArabic`).
+- [x] **3.5 Global student search** with Arabic normalization (reuses `normalizeArabic`).
   *Done when* "محمد" matches "مُحَمَّد" and partial names match.
 - [ ] **3.6 Phase wrap-up. Stop.**
 
@@ -531,3 +531,4 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - User text interpolated into a translated sentence is wrapped in `<bdi>` through next-intl rich text, so a name in one script doesn't reorder a sentence in the other.
   - The Next.js dev badge is turned off because it covered the mobile navigation.
 - 2026-10-05 (step 3.2): Without a service worker, navigating offline in the app fails, because Next.js fetches each route's payload from the network. The step 3.2 check therefore simulated "server unreachable" by failing every `/api/*` request. The class was created instantly, counted as pending, and synced once the server was back, and a second device then saw it. Step 6.1 now also requires caching the route payloads (`?_rsc`).
+- 2026-10-05 (step 3.5): Playwright's Windows WebKit wraps and clips Arabic text with heavy tashkeel (e.g. "مُحَمَّد التَّجْرِيبِي", and "جارٍ" in step 1.13), while Chromium renders it correctly. Real iOS uses a different text engine, so this is listed for a check on a real iPhone instead of being worked around in code.
