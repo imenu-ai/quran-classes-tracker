@@ -415,7 +415,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - **an invalid ayah range** → `rejected` with `AYAH_OUT_OF_RANGE`
 - [x] **2.6 Pull service.** Cross-collection, paginated, capped by the watermark, includes deleted records.
   *Done when* the tests cover pagination order, `hasMore`, deleted records included, tenant-scoped results, and the watermark cap.
-- [ ] **2.7 Sync routes.** `POST /api/sync/push` and `GET /api/sync/pull`: auth → 401 JSON, body limits, max 200 mutations.
+- [x] **2.7 Sync routes.** `POST /api/sync/push` and `GET /api/sync/pull`: auth → 401 JSON, body limits, max 200 mutations.
   *Done when* the route-handler tests cover 401, a 400 on a malformed body, and the happy path.
 - [ ] **2.8 Client sync engine.** Push → pull loop, Web Locks single-flight, triggers, backoff with jitter, `needsLogin` on 401 (outbox kept), rejected → dead-letter, apply pull with LWW, cursor saved.
   *Done when* tests with mocked fetch and fake-indexeddb cover: an offline write syncs later, 401 keeps the outbox, the backoff schedule, a rejection moving to `rejected`, a pulled newer record replacing a local one, and a pulled older record not overwriting a pending local edit.
