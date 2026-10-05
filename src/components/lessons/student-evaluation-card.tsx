@@ -98,15 +98,13 @@ export function StudentEvaluationCard({
                     label={t("glossary.memorizationRate")}
                     value={item.memorizationRate}
                     onChange={(score) =>
-                      void rateHomework(store, item, lessonId, "memorizationRate", score)
+                      rateHomework(store, item, lessonId, "memorizationRate", score)
                     }
                   />
                   <ScorePicker
                     label={t("glossary.behaviorRate")}
                     value={item.behaviorRate}
-                    onChange={(score) =>
-                      void rateHomework(store, item, lessonId, "behaviorRate", score)
-                    }
+                    onChange={(score) => rateHomework(store, item, lessonId, "behaviorRate", score)}
                   />
                 </div>
               </li>

@@ -216,14 +216,14 @@ function HistoryEditDrawer({
                       label={t("glossary.memorizationRate")}
                       value={row.item.memorizationRate}
                       onChange={(value) =>
-                        void rateHomework(store, row.item, row.lesson.id, "memorizationRate", value)
+                        rateHomework(store, row.item, row.lesson.id, "memorizationRate", value)
                       }
                     />
                     <ScorePicker
                       label={t("glossary.behaviorRate")}
                       value={row.item.behaviorRate}
                       onChange={(value) =>
-                        void rateHomework(store, row.item, row.lesson.id, "behaviorRate", value)
+                        rateHomework(store, row.item, row.lesson.id, "behaviorRate", value)
                       }
                     />
                   </>
