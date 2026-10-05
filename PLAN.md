@@ -362,7 +362,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* a temporary fixture using `ml-2`, `text-left` and `dir="rtl"` fails lint (shown in the commit message), the fixture is removed, and lint is clean.
 - [x] **1.3 Vitest setup.** Node and jsdom environments, path aliases.
   *Done when* `pnpm test` runs a smoke test.
-- [ ] **1.4 Sura map.** `SURAHS`, `SURAH_MAP`, `getSurah`, `getSurahName` (falls back to `ar`), `getAyahCount`, `isValidSurah` (from the brief's table, verbatim).
+- [x] **1.4 Sura map.** `SURAHS`, `SURAH_MAP`, `getSurah`, `getSurahName` (falls back to `ar`), `getAyahCount`, `isValidSurah` (from the brief's table, verbatim).
   *Done when* the tests pass: 114 entries, 1..114 in order with no gaps, total 6236, spot checks, non-empty names, locale fallback.
 - [ ] **1.5 Ayah validation and Arabic search.** `validateAyahRange` returns codes and params. `normalizeArabic` strips tashkeel and tatweel and folds أإآ→ا, ة→ه, ى→ي. `searchSurahs(query, locale)` matches by number, the localized name, and always Arabic.
   *Done when* the tests for every rule and edge case pass (first and last ayah, 0, negative, above the count, from > to, non-integer, sura 0 and 115; "الاسراء" finds 17).
