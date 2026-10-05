@@ -407,7 +407,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* the tests cover newer, older, equal plus tie, and deleted versus edited.
 - [x] **2.4 Version allocation.** `allocateVersions(tenantId, n)` with `inFlight`, `release()`, `watermark()`.
   *Done when* integration tests show concurrent allocations never collide, and the watermark stays below unreleased versions (stale entries > 30 s are ignored).
-- [ ] **2.5 Push service.** Zod validation per table, forced `tenantId`, reference checks (including earlier in the same batch), `updatedAt` clamp, conditional upsert, statuses `applied` / `stale` / `rejected` with codes.
+- [x] **2.5 Push service.** Zod validation per table, forced `tenantId`, reference checks (including earlier in the same batch), `updatedAt` clamp, conditional upsert, statuses `applied` / `stale` / `rejected` with codes.
   *Done when* integration tests cover:
   - LWW both ways, plus the tie
   - soft delete applied, and a later edit after a delete winning or losing by `updatedAt`

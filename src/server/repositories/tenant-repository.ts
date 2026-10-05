@@ -1,13 +1,14 @@
-import type {
-  Collection,
-  CountDocumentsOptions,
-  Db,
-  Document,
-  Filter,
-  FindOptions,
-  OptionalUnlessRequiredId,
-  UpdateFilter,
-  UpdateOptions,
+import {
+  MongoServerError,
+  type Collection,
+  type CountDocumentsOptions,
+  type Db,
+  type Document,
+  type Filter,
+  type FindOptions,
+  type OptionalUnlessRequiredId,
+  type UpdateFilter,
+  type UpdateOptions,
 } from "mongodb";
 import { SYNCABLE_COLLECTIONS, type SyncableCollection } from "../collections";
 
@@ -58,6 +59,41 @@ export class TenantRepository<TDoc extends TenantDocument> {
 
   updateOne(filter: Filter<TDoc>, update: UpdateFilter<TDoc>, options?: UpdateOptions) {
     return this.collection.updateOne(this.scope(filter), withoutTenantChange(update), options);
+  }
+
+  /**
+   * Inserts `doc`, or replaces this tenant's copy when `condition` matches it.
+   * Returns "conflict" when a document with this _id exists but the condition
+   * doesn't match (it's newer here, or it belongs to another tenant).
+   */
+  async upsertWhere(
+    id: string,
+    condition: Filter<TDoc>,
+    fields: Omit<TDoc, "_id" | "tenantId">,
+  ): Promise<"written" | "conflict"> {
+    try {
+      await this.collection.updateOne(
+        this.scope({ ...condition, _id: id } as Filter<TDoc>),
+        withoutTenantChange({ $set: fields } as UpdateFilter<TDoc>),
+        { upsert: true },
+      );
+      return "written";
+    } catch (error) {
+      if (error instanceof MongoServerError && error.code === 11000) return "conflict";
+      throw error;
+    }
+  }
+
+  /**
+   * Whether this _id is used by ANOTHER tenant. Returns only a yes/no, never
+   * the document, so a client can be refused without leaking anything.
+   */
+  async existsInOtherTenant(id: string): Promise<boolean> {
+    const count = await this.collection.countDocuments(
+      { _id: id, tenantId: { $ne: this.tenantId } } as Filter<TDoc>,
+      { limit: 1 },
+    );
+    return count > 0;
   }
 }
 
