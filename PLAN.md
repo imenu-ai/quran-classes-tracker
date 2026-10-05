@@ -1,6 +1,6 @@
 # Implementation Plan: Quran Memorization Tracker (متابعة تحفيظ القرآن)
 
-Status: **Approved 2026-10-05, Phase 1 in progress** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
+Status: **Approved 2026-10-05. Phase 1 done, waiting for go-ahead on Phase 2** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
 
 Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bottom)
 
@@ -395,7 +395,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* the manual flow works in dev, in Arabic RTL, at 360 px.
 - [x] **1.14 CI.** `.github/workflows/ci.yml`: on `push` and `pull_request` to `main`, pnpm install → lint → typecheck.
   *Done when* the YAML is valid (actionlint run locally via npx). It runs for real on the first PR to `main`.
-- [ ] **1.15 Phase wrap-up.** Update PLAN.md and write the summary. **Stop for go-ahead.**
+- [x] **1.15 Phase wrap-up.** Update PLAN.md and write the summary. **Stop for go-ahead.**
 
 ### Phase 2: Local DB, outbox, sync API, sync engine
 
