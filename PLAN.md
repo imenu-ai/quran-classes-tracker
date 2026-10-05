@@ -361,7 +361,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 3. Classes and students | [x] Done |
 | 4. Lessons (attendance and evaluation) | [x] Done |
 | 5. Student profile, monthly stats, chart | [x] Done |
-| 6. PWA and offline hardening, settings, E2E, README, deployment | [ ] In progress |
+| 6. PWA and offline hardening, settings, E2E, README, deployment | [x] Done |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -484,7 +484,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* edits recompute the stats live.
 - [x] **5.6 Phase wrap-up. Stop.**
 
-### [ ] Phase 6: PWA and offline hardening, settings, E2E, README, deployment
+### [x] Phase 6: PWA and offline hardening, settings, E2E, README, deployment
 
 - [x] **6.1 Serwist.** *(Added from step 3.2: in-app navigation fetches each route's React Server Components payload (`?_rsc=…`), so the service worker must cache those per pathname, ignoring the query string, as well as the HTML. Otherwise navigating offline to a page not yet visited fails.)*
   - Precache the build assets and fonts.
@@ -509,7 +509,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - SSR env vars written to `.env.production` at build time (an Amplify requirement).
   - Atlas network access, the `BETTER_AUTH_URL` and secret, and an env checklist.
   - *(Added from step 6.4.)* The sign-in rate limit's client IP behind CloudFront: Better Auth only trusts a single-value `x-forwarded-for` unless `trustedProxies` is set. Check the real header after the first deploy and configure `advanced.ipAddress`.
-- [ ] **6.7 Final wrap-up. Stop.**
+- [x] **6.7 Final wrap-up. Stop.**
 
 ---
 
