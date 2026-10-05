@@ -385,7 +385,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* integration tests show: correct password → session cookie; wrong password → 401; the (N+1)th attempt → 429.
 - [x] **1.11 Tenant context and repository layer.** `requireTenantContext()` (session → `{ userId, tenantId }` or a 401 response) and a `TenantRepository` that injects `tenantId` into every filter and write.
   *Done when* a test shows a repository read for tenant A never returns tenant B's documents, even when queried by `_id`.
-- [ ] **1.12 CLI `pnpm user:create`.**
+- [x] **1.12 CLI `pnpm user:create`.**
   - Arguments: `--tenant --username --password? --name [--locale ar] [--timezone Asia/Hebron]`.
   - Creates the tenant if missing, then the user, account and argon2 hash, with a placeholder email.
   - Prompts for the password if it's omitted; checks the username rules; refuses duplicates.
