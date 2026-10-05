@@ -1,0 +1,46 @@
+{
+  "app": {
+    "name": "Quran Memorization Tracker",
+    "shortName": "Quran Tracker"
+  },
+  "glossary": {
+    "class": "Class",
+    "student": "Student",
+    "lesson": "Lesson",
+    "newLesson": "New lesson",
+    "attendance": "Attendance",
+    "present": "Present",
+    "absent": "Absent",
+    "excused": "Excused",
+    "excuseNote": "Excuse note",
+    "homework": "Homework",
+    "memorizationRate": "Memorization",
+    "behaviorRate": "Behavior",
+    "surah": "Surah",
+    "ayahCount": "Ayah count",
+    "fromAyah": "From ayah",
+    "toAyah": "To ayah",
+    "day": "Day",
+    "date": "Date",
+    "monthlyMemorizationRate": "Monthly memorization rate",
+    "monthlyBehaviorRate": "Monthly behavior rate",
+    "attendedDays": "Attended days",
+    "notes": "Notes"
+  },
+  "quran": {
+    "ayahs": "{count, plural, one {# ayah} other {# ayahs}}",
+    "surahOption": "{number} · {name} · {ayahs}",
+    "ayahRangeHint": "From 1 to {ayahCount}"
+  },
+  "errors": {
+    "ayahRange": {
+      "SURAH_NOT_FOUND": "Surah not found",
+      "INVALID_AYAH": "Invalid ayah number",
+      "AYAH_OUT_OF_RANGE": "{surahName} has only {ayahCount, plural, one {# ayah} other {# ayahs}}",
+      "FROM_AFTER_TO": "The first ayah must be before or equal to the last ayah"
+    }
+  },
+  "common": {
+    "noValue": "—"
+  }
+}

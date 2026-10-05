@@ -1,0 +1,46 @@
+{
+  "app": {
+    "name": "متابعة تحفيظ القرآن",
+    "shortName": "تحفيظ القرآن"
+  },
+  "glossary": {
+    "class": "الحلقة",
+    "student": "الطالب",
+    "lesson": "الدرس",
+    "newLesson": "درس جديد",
+    "attendance": "الحضور",
+    "present": "حاضر",
+    "absent": "غائب",
+    "excused": "غائب بعذر",
+    "excuseNote": "سبب الغياب",
+    "homework": "الواجب",
+    "memorizationRate": "تقييم الحفظ",
+    "behaviorRate": "تقييم السلوك",
+    "surah": "السورة",
+    "ayahCount": "عدد الآيات",
+    "fromAyah": "من آية",
+    "toAyah": "إلى آية",
+    "day": "اليوم",
+    "date": "التاريخ",
+    "monthlyMemorizationRate": "معدل الحفظ الشهري",
+    "monthlyBehaviorRate": "معدل السلوك الشهري",
+    "attendedDays": "أيام الحضور",
+    "notes": "ملاحظات"
+  },
+  "quran": {
+    "ayahs": "{count, plural, few {# آيات} other {# آية}}",
+    "surahOption": "{number} · {name} · {ayahs}",
+    "ayahRangeHint": "من 1 إلى {ayahCount}"
+  },
+  "errors": {
+    "ayahRange": {
+      "SURAH_NOT_FOUND": "السورة غير موجودة",
+      "INVALID_AYAH": "رقم الآية غير صحيح",
+      "AYAH_OUT_OF_RANGE": "سورة {surahName} تحتوي على {ayahCount, plural, few {# آيات} other {# آية}} فقط",
+      "FROM_AFTER_TO": "آية البداية يجب أن تكون قبل أو تساوي آية النهاية"
+    }
+  },
+  "common": {
+    "noValue": "—"
+  }
+}
