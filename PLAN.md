@@ -503,7 +503,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - Main flow: login → class → students → lesson → attendance → evaluate → assign homework → profile.
   - **Offline run:** go offline mid-lesson, keep working, reconnect, then check that the server has the data, using a second browser context that logs in fresh.
   - **LTR smoke:** cookie `en` with `ENABLED_LOCALES=ar,en`; `dir=ltr` on the main screens, and no horizontal overflow at 360 px.
-- [ ] **6.5 README.** Local setup (local MongoDB, `.env`, `pnpm db:indexes`, `pnpm user:create`), scripts, architecture summary, testing on an iPhone (needs HTTPS, so an Amplify branch or a tunnel), and deployment.
+- [x] **6.5 README.** Local setup (local MongoDB, `.env`, `pnpm db:indexes`, `pnpm user:create`), scripts, architecture summary, testing on an iPhone (needs HTTPS, so an Amplify branch or a tunnel), and deployment.
 - [ ] **6.6 Deployment prep (to be discussed).**
   - `amplify.yml`: Node 22, `corepack enable`, `pnpm install --frozen-lockfile`, `pnpm build`.
   - SSR env vars written to `.env.production` at build time (an Amplify requirement).
