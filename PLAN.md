@@ -421,7 +421,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* tests with mocked fetch and fake-indexeddb cover: an offline write syncs later, 401 keeps the outbox, the backoff schedule, a rejection moving to `rejected`, a pulled newer record replacing a local one, and a pulled older record not overwriting a pending local edit.
 - [x] **2.9 Session bootstrap.** After login, save the user and tenant snapshot, run a full pull, and add the client gate in `(app)/layout`. A dev seed command (`pnpm dev:seed`) creates sample data for a user.
   *Done when*, manually: log in → data pulled → offline reload still shows the user (the shell is cached by the browser in dev; full SW comes in Phase 6).
-- [ ] **2.10 Sync indicator** in the header, covering all states.
+- [x] **2.10 Sync indicator** in the header, covering all states.
   *Done when* each state is verified manually by toggling offline in DevTools and blocking the API.
 - [ ] **2.11 Phase wrap-up. Stop.**
 

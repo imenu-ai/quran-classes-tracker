@@ -83,5 +83,16 @@
   "home": {
     "greeting": "Welcome, {name}",
     "localData": "Classes: {classes} · Students: {students}"
+  },
+  "sync": {
+    "connected": "Online",
+    "offline": "Offline",
+    "syncing": "Syncing…",
+    "error": "Sync failed, will retry",
+    "needsLogin": "Sign-in needed",
+    "pending": "{count, plural, one {# change waiting to sync} other {# changes waiting to sync}}",
+    "rejected": "{count, plural, one {# change rejected} other {# changes rejected}}",
+    "syncNow": "Sync now",
+    "signInAgain": "Sign in again"
   }
 }

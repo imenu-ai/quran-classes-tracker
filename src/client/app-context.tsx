@@ -74,7 +74,12 @@ export function AppProvider({
       const store = new LocalStore(db, { tenantId, deviceId });
       engine = new SyncEngine({ db });
       detach = attachSyncTriggers(engine, store);
-      setServices({ session, db, store, engine });
+      const next = { session, db, store, engine };
+      setServices(next);
+      // Development only: lets browser checks and E2E tests drive the real store.
+      if (process.env.NODE_ENV === "development") {
+        (globalThis as typeof globalThis & { __qct?: AppServices }).__qct = next;
+      }
     });
 
     return () => {
