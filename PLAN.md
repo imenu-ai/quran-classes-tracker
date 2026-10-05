@@ -1,6 +1,6 @@
 # Implementation Plan: Quran Memorization Tracker (متابعة تحفيظ القرآن)
 
-Status: **Approved 2026-10-05. Phases 1–4 done, waiting for go-ahead on Phase 5** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
+Status: **Approved 2026-10-05. Phases 1–4 done; Phase 5 in progress** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
 
 Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bottom)
 
@@ -360,7 +360,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 2. Local DB, outbox, sync API, sync engine | [x] Done |
 | 3. Classes and students | [x] Done |
 | 4. Lessons (attendance and evaluation) | [x] Done |
-| 5. Student profile, monthly stats, chart | [ ] Next, waiting for go-ahead |
+| 5. Student profile, monthly stats, chart | [ ] In progress |
 | 6. PWA and offline hardening, settings, E2E, README, deployment | [ ] Not started |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
@@ -475,7 +475,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 
 ### [ ] Phase 5: Student profile, monthly stats, chart
 
-- [ ] **5.1 Monthly stats** (pure).
+- [x] **5.1 Monthly stats** (pure).
   *Done when* the tests cover: month taken from the evaluating lesson's date, nulls ignored, 1-decimal rounding, "no data", attendance counts, deleted items excluded, and an item moving month when its lesson's date changes.
 - [ ] **5.2 Profile header.** Name, class, age, note, direction, current pending homework.
 - [ ] **5.3 Month summaries,** newest first.
