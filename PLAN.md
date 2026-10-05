@@ -401,7 +401,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 
 - [x] **2.1 Dexie schema.** Per-user DB (`qct-<userId>`) with the tables and indexes in §4, plus `outbox`, `rejected`, `meta`.
   *Done when* the fake-indexeddb tests can open, write and read every table.
-- [ ] **2.2 `localRepo` and outbox.** `create` / `update` / `softDelete` write the record and the outbox entry in one transaction, with a strictly increasing `updatedAt`, coalescing and `rev`.
+- [x] **2.2 `localRepo` and outbox.** `create` / `update` / `softDelete` write the record and the outbox entry in one transaction, with a strictly increasing `updatedAt`, coalescing and `rev`.
   *Done when* the tests show atomicity (a failed write leaves no outbox entry), coalescing, and that a `rev` change during push keeps the entry.
 - [ ] **2.3 Pure LWW rules** (`shared/sync/lww.ts`): `shouldApplyIncoming(local, incoming, hasPendingOutbox)` and the server's `isNewer(stored, incoming)` with a tie-break.
   *Done when* the tests cover newer, older, equal plus tie, and deleted versus edited.

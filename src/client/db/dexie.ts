@@ -1,4 +1,4 @@
-import Dexie, { type EntityTable } from "dexie";
+import Dexie, { type EntityTable, type Table } from "dexie";
 import type { ErrorParams } from "@/shared/schemas/errors";
 import type { SyncRecordMap, SyncTable } from "@/shared/sync/tables";
 
@@ -57,8 +57,8 @@ export class LocalDb extends Dexie {
   }
 
   /** The Dexie table for a syncable table name. */
-  syncTable<T extends SyncTable>(table: T): EntityTable<SyncRecordMap[T], "id"> {
-    return this[table] as unknown as EntityTable<SyncRecordMap[T], "id">;
+  syncTable<T extends SyncTable>(table: T): Table<SyncRecordMap[T], string, SyncRecordMap[T]> {
+    return this[table] as unknown as Table<SyncRecordMap[T], string, SyncRecordMap[T]>;
   }
 }
 
