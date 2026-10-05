@@ -1,6 +1,6 @@
 # Implementation Plan: Quran Memorization Tracker (متابعة تحفيظ القرآن)
 
-Status: **Approved 2026-10-05. Phases 1–2 done; Phase 3 in progress** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
+Status: **Approved 2026-10-05. Phases 1–3 done, waiting for go-ahead on Phase 4** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
 
 Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bottom)
 
@@ -437,7 +437,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* Zod validation messages are localized and a move to another class syncs.
 - [x] **3.5 Global student search** with Arabic normalization (reuses `normalizeArabic`).
   *Done when* "محمد" matches "مُحَمَّد" and partial names match.
-- [ ] **3.6 Phase wrap-up. Stop.**
+- [x] **3.6 Phase wrap-up. Stop.**
 
 ### Phase 4: Lessons (attendance and evaluation)
 
