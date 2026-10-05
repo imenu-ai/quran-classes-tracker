@@ -393,7 +393,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* running it locally creates an account that can log in (integration test plus manual check).
 - [x] **1.13 Login and logout.** `/login` page with username and password, localized errors including rate limiting. On success it sets `NEXT_LOCALE` from `user.locale`. Logout. A placeholder home page shows the display name.
   *Done when* the manual flow works in dev, in Arabic RTL, at 360 px.
-- [ ] **1.14 CI.** `.github/workflows/ci.yml`: on `push` and `pull_request` to `main`, pnpm install → lint → typecheck.
+- [x] **1.14 CI.** `.github/workflows/ci.yml`: on `push` and `pull_request` to `main`, pnpm install → lint → typecheck.
   *Done when* the YAML is valid (actionlint run locally via npx). It runs for real on the first PR to `main`.
 - [ ] **1.15 Phase wrap-up.** Update PLAN.md and write the summary. **Stop for go-ahead.**
 
@@ -518,3 +518,5 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - `validateAyahRange` returns `params: { surah, ayahCount }` for `AYAH_OUT_OF_RANGE` instead of `{ surahName, ayahCount }`. The i18n layer resolves `surahName` from the number in the active locale, which keeps the domain locale-free.
   - Every error also carries `field` (`surah` / `fromAyah` / `toAyah`), so the form can show it under the right input.
   - The normalizer is `normalizeForSearch` (Arabic and Latin), not `normalizeArabic`. It also handles ٱ, Arabic-Indic digits and punctuation.
+- 2026-10-05 (step 1.14): The workflow was validated with `@action-validator/cli` (GitHub workflow schema) instead of actionlint, because actionlint needs Docker or a native binary and the Docker daemon wasn't running. `pnpm typecheck` now runs `next typegen` first, so route types exist on a clean CI checkout.
+- 2026-10-05 (step 1.13): Arabic progress labels use "جاري" rather than "جارٍ". WebKit wrapped the tanween form onto two lines inside a button.
