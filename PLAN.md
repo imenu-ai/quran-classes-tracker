@@ -480,7 +480,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 - [x] **5.2 Profile header.** Name, class, age, note, direction, current pending homework.
 - [x] **5.3 Month summaries,** newest first.
 - [x] **5.4 Chart.** Last 12 months with data, memorization and behavior lines, axis reversed in RTL, dark mode, accessible table fallback.
-- [ ] **5.5 Month history.** Evaluated rows (date, weekday, sura, from–to, both scores) plus absences with excuse notes. Tapping a row edits it in a sheet.
+- [x] **5.5 Month history.** Evaluated rows (date, weekday, sura, from–to, both scores) plus absences with excuse notes. Tapping a row edits it in a sheet.
   *Done when* edits recompute the stats live.
 - [ ] **5.6 Phase wrap-up. Stop.**
 
@@ -566,3 +566,9 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - The SVG is `aria-hidden`, and screen readers get an equivalent table.
   - That table first widened the page by up to 164px, because a `<table>` ignores the 1px width `sr-only` sets. `sr-only` now goes on a wrapping div.
   - `<main>` also has `overflow-x: clip` as a general guard against horizontal scrolling.
+- 2026-10-05 (step 5.5):
+  - Tapping a history row opens a bottom sheet. An evaluation row has autosaving scores, "edit portion" and "open lesson". An absence row has the attendance toggle, the excuse note and "open lesson".
+  - The sheet tracks the record by ID, not by its row in the list. Setting an absence to "present" removes the row from the history; when the sheet depended on that row, its content vanished and the page stayed blocked behind it.
+  - Two fixes found during this check:
+    - Attendance edits now find the existing record by lesson and student, whatever its ID, instead of creating a duplicate. The seed uses the deterministic IDs.
+    - The login screen now navigates only once.

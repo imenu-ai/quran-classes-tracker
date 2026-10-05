@@ -17,7 +17,6 @@ import {
   setExcuseNote,
   summarizeAttendance,
   useLessonRoster,
-  type LessonRosterEntry,
 } from "@/client/data/attendance";
 import { cn } from "@/lib/utils";
 import {
@@ -37,10 +36,17 @@ const SELECTED: Record<AttendanceStatus, string> = {
 };
 
 /** Autosaving excuse note (written ~0.6 s after typing stops, and on blur). */
-function ExcuseNoteInput({ lessonId, entry }: { lessonId: string; entry: LessonRosterEntry }) {
+export function ExcuseNoteInput({
+  lessonId,
+  studentId,
+  saved,
+}: {
+  lessonId: string;
+  studentId: string;
+  saved: string;
+}) {
   const t = useTranslations("attendance");
   const { store } = useApp();
-  const saved = entry.attendance?.excuseNote ?? "";
   const [value, setValue] = useState(saved);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -49,7 +55,7 @@ function ExcuseNoteInput({ lessonId, entry }: { lessonId: string; entry: LessonR
   const save = (note: string) => {
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
-    if (note !== saved) void setExcuseNote(store, lessonId, entry.student.id, note);
+    if (note !== saved) void setExcuseNote(store, lessonId, studentId, note);
   };
 
   return (
@@ -165,7 +171,13 @@ export function AttendanceStep({ lesson, onNext }: { lesson: LessonRecord; onNex
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
-              {status === "excused" && <ExcuseNoteInput lessonId={lesson.id} entry={entry} />}
+              {status === "excused" && (
+                <ExcuseNoteInput
+                  lessonId={lesson.id}
+                  studentId={entry.student.id}
+                  saved={entry.attendance?.excuseNote ?? ""}
+                />
+              )}
             </li>
           );
         })}

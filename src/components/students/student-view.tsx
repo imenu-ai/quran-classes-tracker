@@ -15,6 +15,7 @@ import { useStudentProfile } from "@/client/data/profile";
 import { useStudent } from "@/client/data/students";
 import { ageFromBirthYear, todayInTimeZone } from "@/domain/dates/local-date";
 import { CurrentHomework } from "./current-homework";
+import { MonthHistory } from "./month-history";
 import { MonthSummaries } from "./month-summaries";
 import { MonthlyChart } from "./monthly-chart";
 import { StudentActionsMenu } from "./student-actions-menu";
@@ -118,6 +119,9 @@ export function StudentView({ studentId }: { studentId: string | null }) {
             <MonthlyChart months={profile.months} />
             <MonthSummaries months={profile.months} selected={selectedMonth} onSelect={setMonth} />
           </section>
+          {selectedMonth && (
+            <MonthHistory profile={profile} month={selectedMonth} student={student} />
+          )}
         </>
       )}
     </PageContainer>
