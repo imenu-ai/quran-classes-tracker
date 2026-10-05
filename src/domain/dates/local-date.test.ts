@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isLocalDate, todayInTimeZone } from "./local-date";
+import { ageFromBirthYear, isLocalDate, todayInTimeZone } from "./local-date";
 
 describe("isLocalDate", () => {
   it.each(["2026-10-05", "2024-02-29", "2026-12-31", "2026-01-01"])("accepts %s", (value) => {
@@ -36,5 +36,17 @@ describe("todayInTimeZone", () => {
 
   it("always returns a valid local date", () => {
     expect(isLocalDate(todayInTimeZone("Asia/Hebron"))).toBe(true);
+  });
+});
+
+describe("ageFromBirthYear", () => {
+  it("subtracts the birth year from the current year", () => {
+    expect(ageFromBirthYear(2014, "2026-10-05")).toBe(12);
+    expect(ageFromBirthYear(2014, "2026-01-01")).toBe(12);
+  });
+
+  it("never goes below zero", () => {
+    expect(ageFromBirthYear(2026, "2026-10-05")).toBe(0);
+    expect(ageFromBirthYear(2027, "2026-10-05")).toBe(0);
   });
 });

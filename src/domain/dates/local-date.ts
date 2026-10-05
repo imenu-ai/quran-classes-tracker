@@ -28,3 +28,11 @@ export function todayInTimeZone(timeZone: string, now: Date = new Date()): Local
     parts.find((part) => part.type === type)?.value ?? "";
   return `${get("year")}-${get("month")}-${get("day")}`;
 }
+
+/**
+ * Age in years from a birth year, as of `today`. Only the birth year is
+ * known, so this is the age the student turns during the current year.
+ */
+export function ageFromBirthYear(birthYear: number, today: LocalDate): number {
+  return Math.max(0, Number(today.slice(0, 4)) - birthYear);
+}

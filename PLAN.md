@@ -433,7 +433,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* creating a class offline appears instantly and syncs once back online.
 - [x] **3.3 Class management.** Create, rename, archive. Archiving is blocked with active students, with "move students" or "archive all" options.
   *Done when* every path works and is reflected after a sync on a second browser profile.
-- [ ] **3.4 Students.** Add and edit (full name `dir="auto"`, birth year, note, memorization direction, class pre-selected), move to another class, archive or unarchive. List of archived students per class.
+- [x] **3.4 Students.** Add and edit (full name `dir="auto"`, birth year, note, memorization direction, class pre-selected), move to another class, archive or unarchive. List of archived students per class.
   *Done when* Zod validation messages are localized and a move to another class syncs.
 - [ ] **3.5 Global student search** with Arabic normalization (reuses `normalizeArabic`).
   *Done when* "محمد" matches "مُحَمَّد" and partial names match.

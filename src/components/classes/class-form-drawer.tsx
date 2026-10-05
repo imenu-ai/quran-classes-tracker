@@ -79,7 +79,10 @@ export function ClassFormDrawer({
                 maxLength={CLASS_NAME_MAX}
                 placeholder={t("classes.namePlaceholder")}
                 value={name}
-                onChange={(event) => setName(event.target.value)}
+                onChange={(event) => {
+                  setName(event.target.value);
+                  setError(null);
+                }}
                 aria-invalid={error ? true : undefined}
               />
               {error && <FieldError>{error}</FieldError>}
