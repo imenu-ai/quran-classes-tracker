@@ -516,7 +516,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 ### [ ] Phase 7: Deployment (CloudFormation + Amplify)
 
 - [x] **7.1 CI on pull requests.** `ci.yml` runs lint and type-check on pull requests to `main` only, not on the push after the merge.
-- [ ] **7.2 Amplify stack.** `infra/amplify-stack.yml`:
+- [x] **7.2 Amplify stack.** `infra/amplify-stack.yml`:
   - Amplify service role, trusted by `amplify.amazonaws.com`. It may read the app secret only, and write CloudWatch logs under `/aws/amplify/*`.
   - Amplify app (`WEB_COMPUTE`), connected to the GitHub repo, with `APP_SECRET_ARN` as an env var and the build spec (secret → `.env`, pnpm, Node 22).
   - `main` branch, production stage, auto-build on.
