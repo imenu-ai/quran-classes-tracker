@@ -1,6 +1,6 @@
 # Implementation Plan: Quran Memorization Tracker (متابعة تحفيظ القرآن)
 
-Status: **Approved 2026-10-05. Phase 1 done; Phase 2 in progress** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
+Status: **Approved 2026-10-05. Phases 1–2 done, waiting for go-ahead on Phase 3** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
 
 Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bottom)
 
@@ -423,7 +423,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when*, manually: log in → data pulled → offline reload still shows the user (the shell is cached by the browser in dev; full SW comes in Phase 6).
 - [x] **2.10 Sync indicator** in the header, covering all states.
   *Done when* each state is verified manually by toggling offline in DevTools and blocking the API.
-- [ ] **2.11 Phase wrap-up. Stop.**
+- [x] **2.11 Phase wrap-up. Stop.**
 
 ### Phase 3: Classes and students
 
