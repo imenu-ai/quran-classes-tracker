@@ -413,7 +413,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - soft delete applied, and a later edit after a delete winning or losing by `updatedAt`
   - **tenant isolation**: a cross-tenant `_id` collision → `FORBIDDEN`, and a reference to another tenant's student → `REFERENCE_NOT_FOUND`
   - **an invalid ayah range** → `rejected` with `AYAH_OUT_OF_RANGE`
-- [ ] **2.6 Pull service.** Cross-collection, paginated, capped by the watermark, includes deleted records.
+- [x] **2.6 Pull service.** Cross-collection, paginated, capped by the watermark, includes deleted records.
   *Done when* the tests cover pagination order, `hasMore`, deleted records included, tenant-scoped results, and the watermark cap.
 - [ ] **2.7 Sync routes.** `POST /api/sync/push` and `GET /api/sync/pull`: auth → 401 JSON, body limits, max 200 mutations.
   *Done when* the route-handler tests cover 401, a 400 on a malformed body, and the happy path.
