@@ -405,7 +405,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* the tests show atomicity (a failed write leaves no outbox entry), coalescing, and that a `rev` change during push keeps the entry.
 - [x] **2.3 Pure LWW rules** (`shared/sync/lww.ts`): `shouldApplyIncoming(local, incoming, hasPendingOutbox)` and the server's `isNewer(stored, incoming)` with a tie-break.
   *Done when* the tests cover newer, older, equal plus tie, and deleted versus edited.
-- [ ] **2.4 Version allocation.** `allocateVersions(tenantId, n)` with `inFlight`, `release()`, `watermark()`.
+- [x] **2.4 Version allocation.** `allocateVersions(tenantId, n)` with `inFlight`, `release()`, `watermark()`.
   *Done when* integration tests show concurrent allocations never collide, and the watermark stays below unreleased versions (stale entries > 30 s are ignored).
 - [ ] **2.5 Push service.** Zod validation per table, forced `tenantId`, reference checks (including earlier in the same batch), `updatedAt` clamp, conditional upsert, statuses `applied` / `stale` / `rejected` with codes.
   *Done when* integration tests cover:
