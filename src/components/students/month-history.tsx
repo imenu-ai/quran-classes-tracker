@@ -112,15 +112,16 @@ export function MonthHistory({
                     <span className="text-muted-foreground tabular-nums">{date}</span>
                   </span>
                   {row.kind === "evaluation" ? (
-                    <>
-                      <bdi className="min-w-0 flex-1 truncate font-medium">{label(row.item)}</bdi>
-                      <span className="shrink-0 text-sm tabular-nums">
+                    // Sura on the first line, scores below: both stay readable at 360 px.
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <bdi className="truncate font-medium">{label(row.item)}</bdi>
+                      <span className="text-sm text-muted-foreground tabular-nums">
                         {t("profile.scores", {
                           memorization: score(row.item.memorizationRate),
                           behavior: score(row.item.behaviorRate),
                         })}
                       </span>
-                    </>
+                    </span>
                   ) : (
                     <span className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                       <Badge

@@ -1,6 +1,6 @@
 # Implementation Plan: Quran Memorization Tracker (متابعة تحفيظ القرآن)
 
-Status: **Approved 2026-10-05. Phases 1–4 done; Phase 5 in progress** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
+Status: **Approved 2026-10-05. Phases 1–5 done, waiting for go-ahead on Phase 6** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
 
 Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bottom)
 
@@ -360,8 +360,8 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 2. Local DB, outbox, sync API, sync engine | [x] Done |
 | 3. Classes and students | [x] Done |
 | 4. Lessons (attendance and evaluation) | [x] Done |
-| 5. Student profile, monthly stats, chart | [ ] In progress |
-| 6. PWA and offline hardening, settings, E2E, README, deployment | [ ] Not started |
+| 5. Student profile, monthly stats, chart | [x] Done |
+| 6. PWA and offline hardening, settings, E2E, README, deployment | [ ] Next, waiting for go-ahead |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -473,7 +473,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* an old lesson can be reopened and edited.
 - [x] **4.8 Phase wrap-up. Stop.**
 
-### [ ] Phase 5: Student profile, monthly stats, chart
+### [x] Phase 5: Student profile, monthly stats, chart
 
 - [x] **5.1 Monthly stats** (pure).
   *Done when* the tests cover: month taken from the evaluating lesson's date, nulls ignored, 1-decimal rounding, "no data", attendance counts, deleted items excluded, and an item moving month when its lesson's date changes.
@@ -482,7 +482,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 - [x] **5.4 Chart.** Last 12 months with data, memorization and behavior lines, axis reversed in RTL, dark mode, accessible table fallback.
 - [x] **5.5 Month history.** Evaluated rows (date, weekday, sura, from–to, both scores) plus absences with excuse notes. Tapping a row edits it in a sheet.
   *Done when* edits recompute the stats live.
-- [ ] **5.6 Phase wrap-up. Stop.**
+- [x] **5.6 Phase wrap-up. Stop.**
 
 ### [ ] Phase 6: PWA and offline hardening, settings, E2E, README, deployment
 
@@ -572,3 +572,4 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - Two fixes found during this check:
     - Attendance edits now find the existing record by lesson and student, whatever its ID, instead of creating a duplicate. The seed uses the deterministic IDs.
     - The login screen now navigates only once.
+- 2026-10-05 (step 5.6): History rows put the scores on a second line under the sura. At 360px, the scores had pushed the sura name down to a single letter.
