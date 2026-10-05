@@ -93,6 +93,41 @@ export class LocalStore {
     });
   }
 
+  /**
+   * Creates the record with this id, or updates it if it exists. A soft-
+   * deleted record is revived. Used for records with deterministic ids
+   * (attendance, lessons), which may already exist from an earlier tap or
+   * from another device.
+   */
+  async upsert<T extends SyncTable>(
+    table: T,
+    id: string,
+    fields: RecordFields<T>,
+  ): Promise<SyncRecordMap[T]> {
+    return this.write(table, async (timestamp) => {
+      const current = await this.db.syncTable(table).get(id);
+      if (!current) {
+        return {
+          ...fields,
+          id,
+          tenantId: this.options.tenantId,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+          updatedBy: this.options.deviceId,
+          deletedAt: null,
+          serverVersion: 0,
+        } as SyncRecordMap[T];
+      }
+      return {
+        ...current,
+        ...fields,
+        deletedAt: null,
+        updatedAt: timestamp,
+        updatedBy: this.options.deviceId,
+      } as SyncRecordMap[T];
+    });
+  }
+
   /** Soft delete: the record stays (with deletedAt) so history and sync keep working. */
   async softDelete<T extends SyncTable>(table: T, id: string): Promise<SyncRecordMap[T]> {
     return this.setDeleted(table, id, true);

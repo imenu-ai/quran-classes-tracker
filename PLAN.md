@@ -454,7 +454,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 
 - [x] **4.1 Date domain.** `todayInTz(tz)`, `weekdayOf(date)`, `monthKey(date)`, `ageFrom(birthYear, today)`. *(`todayInTimeZone` and `ageFromBirthYear` were already built and tested in Phase 3. This step adds `weekdayOf` and `monthKey`.)*
   *Done when* the tests cover the Hebron date line around midnight and DST changes.
-- [ ] **4.2 Start or open a lesson.** "درس جديد" uses the deterministic lesson ID and opens today's lesson if it exists. A date picker allows past dates. The date can be changed, but not to a date that already has a lesson.
+- [x] **4.2 Start or open a lesson.** "درس جديد" uses the deterministic lesson ID and opens today's lesson if it exists. A date picker allows past dates. The date can be changed, but not to a date that already has a lesson.
   *Done when* a double tap or a second device never creates a duplicate (the same ID merges) and the tests on ID derivation pass.
 - [ ] **4.3 Attendance step.** Three-state segmented toggle per student, "تحديد الكل حاضر", excuse note shown for `excused`, unmark (soft delete).
   *Done when* marking 20 students takes ≤ 1 tap each and changes are autosaved.
@@ -543,3 +543,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - The Next.js dev badge is turned off because it covered the mobile navigation.
 - 2026-10-05 (step 3.2): Without a service worker, navigating offline in the app fails, because Next.js fetches each route's payload from the network. The step 3.2 check therefore simulated "server unreachable" by failing every `/api/*` request. The class was created instantly, counted as pending, and synced once the server was back, and a second device then saw it. Step 6.1 now also requires caching the route payloads (`?_rsc`).
 - 2026-10-05 (step 3.5): Playwright's Windows WebKit wraps and clips Arabic text with heavy tashkeel (e.g. "مُحَمَّد التَّجْرِيبِي", and "جارٍ" in step 1.13), while Chromium renders it correctly. Real iOS uses a different text engine, so this is listed for a check on a real iPhone instead of being worked around in code.
+- 2026-10-05 (step 4.2):
+  - "Mark all present" and lesson start follow §2.2: lesson IDs come from UUIDv5(class:date), with revive or fresh-ID handling. `LocalStore.upsert` was added for records with deterministic IDs.
+  - The lesson date can't be in the future.
+  - `next.config` reads its build directory from `NEXT_DIST_DIR` (default `.next`). My browser checks run on port 3001 with `.next-check`, so they never disturb a `pnpm dev` you have running on port 3000.

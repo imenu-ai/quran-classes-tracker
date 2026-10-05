@@ -131,6 +131,21 @@ describe("LocalStore + outbox", () => {
     expect(await db.outbox.get(created.id)).toMatchObject({ rev: 3 });
   });
 
+  it("upserts: creates with the given id, then updates and revives it", async () => {
+    const created = await store.upsert("classes", CLASS_ID, { name: "A", archivedAt: null });
+    expect(created).toMatchObject({ id: CLASS_ID, name: "A", createdAt: 1_000 });
+    await store.softDelete("classes", CLASS_ID);
+    clock = 5_000;
+    const revived = await store.upsert("classes", CLASS_ID, { name: "B", archivedAt: null });
+    expect(revived).toMatchObject({
+      name: "B",
+      deletedAt: null,
+      createdAt: 1_000,
+      updatedAt: 5_000,
+    });
+    expect(await db.outbox.get(CLASS_ID)).toMatchObject({ rev: 3 });
+  });
+
   it("throws for an unknown record", async () => {
     await expect(store.update("classes", CLASS_ID, { name: "x" })).rejects.toBeInstanceOf(
       LocalRecordNotFoundError,
