@@ -1,6 +1,6 @@
 # Implementation Plan: Quran Memorization Tracker (متابعة تحفيظ القرآن)
 
-Status: **Draft, awaiting approval** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
+Status: **Approved 2026-10-05, Phase 1 in progress** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
 
 Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bottom)
 
@@ -35,9 +35,9 @@ Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bo
 | 23 | Commits | Conventional Commits, with a Claude co-author trailer. |
 | 24 | Docs location | `BRIEF.md` and `PLAN.md` at the repo root, committed on `dev`. |
 
-### Open items (please confirm)
-- **O1. English messages.** You said "just `ar` for now". The brief also asks for an `en.json` with English translations, a key-parity test and an LTR Playwright smoke test, all hidden from users. **My recommendation is to keep them.** They're cheap, and they're the only real proof that the layout is direction-agnostic. If you meant to drop `en.json`, I'll remove those three items and keep only the direction plumbing.
-- **O2. Pushing.** Should I push `dev` to `origin` after each step or phase, or do you push yourself?
+### Resolved open items
+- **O1:** Keep a hidden `en.json`, the key-parity test and the LTR Playwright smoke test. Only `ar` is enabled (`ENABLED_LOCALES=ar`).
+- **O2:** The user pushes `dev` himself. Claude only commits locally.
 
 ---
 
@@ -356,7 +356,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 
 ### Phase 1: Scaffold, tooling, i18n and direction, theme, sura map, auth, tenants, CLI
 
-- [ ] **1.1 Scaffold.** Next 15.5 App Router, TS strict (plus `noUncheckedIndexedAccess`), `src/`, pnpm, `.nvmrc`, `engines`, scripts (`dev`, `build`, `start`, `lint`, `typecheck`, `test`, `format`), `.gitignore`. Existing README and LICENSE are kept.
+- [x] **1.1 Scaffold.** Next 15.5 App Router, TS strict (plus `noUncheckedIndexedAccess`), `src/`, pnpm, `.nvmrc`, `engines`, scripts (`dev`, `build`, `start`, `lint`, `typecheck`, `test`, `format`), `.gitignore`. Existing README and LICENSE are kept.
   *Done when* `pnpm build` and `pnpm typecheck` pass.
 - [ ] **1.2 Lint and format.** ESLint 9 flat config (next core-web-vitals + TS), Prettier + tailwind plugin, `better-tailwindcss/enforce-logical-properties: error`, and `no-restricted-syntax` blocking `dir="rtl"|"ltr"` literals.
   *Done when* a temporary fixture using `ml-2`, `text-left` and `dir="rtl"` fails lint (shown in the commit message), the fixture is removed, and lint is clean.
