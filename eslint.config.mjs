@@ -35,6 +35,10 @@ const eslintConfig = [
         "error",
         { ignore: [DIRECTION_NEUTRAL_CLASSES] },
       ],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_", ignoreRestSiblings: true },
+      ],
       // `dir` must come from getDirection(locale), or be "auto" for user text.
       "no-restricted-syntax": [
         "error",
