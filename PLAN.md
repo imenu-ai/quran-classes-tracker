@@ -522,7 +522,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - `main` branch, production stage, auto-build on.
   - Outputs: app ID, default domain, production URL.
   - The repo `amplify.yml` is deleted: it would take precedence over the stack's build spec.
-- [ ] **7.3 Deploy workflow and OIDC role.**
+- [x] **7.3 Deploy workflow and OIDC role.**
   - `infra/github-deploy-role.yml`: a one-time bootstrap, deployed by hand. It creates the GitHub OIDC provider (optional) and a deploy role trusted only for this repo's `main`, allowed to manage this stack, the Amplify app and the service role.
   - `.github/workflows/deploy-stack.yml`: on a push to `main` that changes the stack file (or a manual run), it assumes the role and runs `aws cloudformation deploy`. It doesn't build the app.
 - [ ] **7.4 Docs.** README deployment section:
