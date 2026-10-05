@@ -13,7 +13,7 @@ export async function startTestMongo() {
   process.env.BETTER_AUTH_SECRET ??= "test-secret-test-secret-test-secret-123";
   process.env.BETTER_AUTH_URL ??= "http://localhost:3000";
   resetServerEnvForTests();
-  const db = await getDb();
+  const db = getDb();
 
   return {
     db,

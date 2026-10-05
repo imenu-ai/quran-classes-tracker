@@ -374,7 +374,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   *Done when* the tests show each invalid case yields the right code and valid records parse.
 - [x] **1.9 Server env and DB.** `server/env.ts` (Zod-validated env), cached `MongoClient`, `.env.example`, `pnpm db:indexes` (idempotent).
   *Done when* the script runs twice against local Mongo with no error, and an integration test on the memory server checks the indexes exist.
-- [ ] **1.10 Better Auth.**
+- [x] **1.10 Better Auth.**
   - Mongo adapter; models renamed to `users` / `auth_sessions` / `auth_accounts` / `auth_verifications`.
   - Username plugin; email sign-in and sign-up paths disabled.
   - argon2id hashing; 400-day session with `updateAge` of 1 day.

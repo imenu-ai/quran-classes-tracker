@@ -8,7 +8,7 @@ import { loadEnv } from "./load-env";
 
 async function main() {
   loadEnv();
-  await ensureIndexes(await getDb());
+  await ensureIndexes(getDb());
   const total = Object.values(INDEXES).reduce((sum, list) => sum + list.length, 0);
   console.log(`Indexes ensured: ${total} across ${Object.keys(INDEXES).length} collections.`);
 }

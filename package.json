@@ -19,6 +19,8 @@
     "db:indexes": "tsx scripts/db-indexes.ts"
   },
   "dependencies": {
+    "@node-rs/argon2": "^2.2.1",
+    "better-auth": "1.7.7",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.4.0",
     "lucide-react": "^1.52.0",
