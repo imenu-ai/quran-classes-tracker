@@ -30,10 +30,11 @@ Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bo
 | 18 | Time zone | Stored on the tenant (default `Asia/Hebron`) and used for "today". |
 | 19 | Hosting | **AWS Amplify Hosting + MongoDB Atlas**, set up later. |
 | 20 | Local DB | Local MongoDB, no Docker. Tests use `mongodb-memory-server`, so they need no setup. |
-| 21 | CI | GitHub Actions: **lint + type-check only**, on `main` only. Unit/E2E tests are still written and run locally. |
+| 21 | CI | GitHub Actions: **lint + type-check only**, on pull requests to `main` (changed in Phase 7; was "on `main`"). Unit/E2E tests are still written and run locally. |
 | 22 | Branches | `dev` for development, PR `dev` → `main` for production. |
 | 23 | Commits | Conventional Commits, with a Claude co-author trailer. |
 | 24 | Docs location | `BRIEF.md` and `PLAN.md` at the repo root, committed on `dev`. |
+| 25 | Deployment (2026-10-06) | The Amplify app (service role, app, `main` branch) is a **CloudFormation stack** in **eu-central-1**. A GitHub Actions workflow deploys it with an **OIDC role**, only when the stack file changes. The app's env vars live in **one Secrets Manager JSON secret** created manually; its ARN is the app env var `APP_SECRET_ARN`, and the build writes the secret into `.env`. Amplify auto-builds `main` on merge. Amplify's GitHub token is a GitHub Actions secret passed as a NoEcho parameter. The build spec lives in the stack (pnpm). |
 
 ### Resolved open items
 - **O1:** Keep a hidden `en.json`, the key-parity test and the LTR Playwright smoke test. Only `ar` is enabled (`ENABLED_LOCALES=ar`).
@@ -362,6 +363,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 4. Lessons (attendance and evaluation) | [x] Done |
 | 5. Student profile, monthly stats, chart | [x] Done |
 | 6. PWA and offline hardening, settings, E2E, README, deployment | [x] Done |
+| 7. Deployment (CloudFormation + Amplify) | [ ] In progress |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -504,12 +506,33 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - **Offline run:** go offline mid-lesson, keep working, reconnect, then check that the server has the data, using a second browser context that logs in fresh.
   - **LTR smoke:** cookie `en` with `ENABLED_LOCALES=ar,en`; `dir=ltr` on the main screens, and no horizontal overflow at 360 px.
 - [x] **6.5 README.** Local setup (local MongoDB, `.env`, `pnpm db:indexes`, `pnpm user:create`), scripts, architecture summary, testing on an iPhone (needs HTTPS, so an Amplify branch or a tunnel), and deployment.
-- [x] **6.6 Deployment prep (to be discussed).** *(Prepared; not deployed.)*
+- [~] **6.6 Deployment prep (to be discussed).** *(Prepared; not deployed. Replaced by Phase 7.)*
   - `amplify.yml`: Node 22, `corepack enable`, `pnpm install --frozen-lockfile`, `pnpm build`.
   - SSR env vars written to `.env.production` at build time (an Amplify requirement).
   - Atlas network access, the `BETTER_AUTH_URL` and secret, and an env checklist.
   - *(Added from step 6.4.)* The sign-in rate limit's client IP behind CloudFront: Better Auth only trusts a single-value `x-forwarded-for` unless `trustedProxies` is set. Check the real header after the first deploy and configure `advanced.ipAddress`.
 - [x] **6.7 Final wrap-up. Stop.**
+
+### [ ] Phase 7: Deployment (CloudFormation + Amplify)
+
+- [ ] **7.1 CI on pull requests.** `ci.yml` runs lint and type-check on pull requests to `main` only, not on the push after the merge.
+- [ ] **7.2 Amplify stack.** `infra/amplify-stack.yml`:
+  - Amplify service role, trusted by `amplify.amazonaws.com`. It may read the app secret only, and write CloudWatch logs under `/aws/amplify/*`.
+  - Amplify app (`WEB_COMPUTE`), connected to the GitHub repo, with `APP_SECRET_ARN` as an env var and the build spec (secret → `.env`, pnpm, Node 22).
+  - `main` branch, production stage, auto-build on.
+  - Outputs: app ID, default domain, production URL.
+  - The repo `amplify.yml` is deleted: it would take precedence over the stack's build spec.
+- [ ] **7.3 Deploy workflow and OIDC role.**
+  - `infra/github-deploy-role.yml`: a one-time bootstrap, deployed by hand. It creates the GitHub OIDC provider (optional) and a deploy role trusted only for this repo's `main`, allowed to manage this stack, the Amplify app and the service role.
+  - `.github/workflows/deploy-stack.yml`: on a push to `main` that changes the stack file (or a manual run), it assumes the role and runs `aws cloudformation deploy`. It doesn't build the app.
+- [ ] **7.4 Docs.** README deployment section:
+  - the secret's JSON;
+  - the bootstrap;
+  - the GitHub secrets;
+  - the first merge;
+  - `BETTER_AUTH_URL` after the first deploy, and rebuilding after a secret change;
+  - the existing post-deploy checks.
+- [ ] **7.5 Final wrap-up. Stop.** Nothing is deployed by Claude: the user merges to `main`.
 
 ---
 
@@ -591,3 +614,4 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 - 2026-10-05 (step 6.6):
   - `amplify.yml` is prepared but nothing is deployed. Node comes from `.nvmrc`, and pnpm installs with `node-linker=hoisted` on Amplify only, because its SSR packaging can miss packages behind pnpm's symlinks. The server env vars are written to `.env.production` before the build.
   - The README's deployment checklist covers Atlas (user, `0.0.0.0/0` network access since Amplify compute has no fixed IP, indexes, the teacher account), Amplify's env vars, a first sign-in to check argon2 and the hoisted install, the iPhone offline check, and the rate-limit client IP behind CloudFront.
+- 2026-10-06 (Phase 7): Deployment moves to a CloudFormation stack deployed by GitHub Actions, with the env vars in Secrets Manager. Step 6.6's repo `amplify.yml` and manual Amplify console setup are replaced (6.6 marked `[~]`).
