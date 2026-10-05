@@ -36,3 +36,21 @@ export function todayInTimeZone(timeZone: string, now: Date = new Date()): Local
 export function ageFromBirthYear(birthYear: number, today: LocalDate): number {
   return Math.max(0, Number(today.slice(0, 4)) - birthYear);
 }
+
+/**
+ * The calendar date as a Date at 00:00 UTC. Format it with timeZone "UTC"
+ * (the named formats in i18n/formats.ts do) so the day never shifts.
+ */
+export function localDateToUtcDate(date: LocalDate): Date {
+  return new Date(`${date}T00:00:00Z`);
+}
+
+/** Day of the week: 0 = Sunday … 6 = Saturday. */
+export function weekdayOf(date: LocalDate): number {
+  return localDateToUtcDate(date).getUTCDay();
+}
+
+/** "YYYY-MM": the month a date belongs to (used for monthly statistics). */
+export function monthKey(date: LocalDate): string {
+  return date.slice(0, 7);
+}

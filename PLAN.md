@@ -1,6 +1,6 @@
 # Implementation Plan: Quran Memorization Tracker (متابعة تحفيظ القرآن)
 
-Status: **Approved 2026-10-05. Phases 1–3 done, waiting for go-ahead on Phase 4** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
+Status: **Approved 2026-10-05. Phases 1–3 done; Phase 4 in progress** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-05
 
 Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bottom)
 
@@ -359,7 +359,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 1. Scaffold, tooling, i18n, theme, sura map, auth, CLI | [x] Done |
 | 2. Local DB, outbox, sync API, sync engine | [x] Done |
 | 3. Classes and students | [x] Done |
-| 4. Lessons (attendance and evaluation) | [ ] Next, waiting for go-ahead |
+| 4. Lessons (attendance and evaluation) | [ ] In progress |
 | 5. Student profile, monthly stats, chart | [ ] Not started |
 | 6. PWA and offline hardening, settings, E2E, README, deployment | [ ] Not started |
 
@@ -452,7 +452,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 
 ### [ ] Phase 4: Lessons (attendance and evaluation)
 
-- [ ] **4.1 Date domain.** `todayInTz(tz)`, `weekdayOf(date)`, `monthKey(date)`, `ageFrom(birthYear, today)`. *(`todayInTimeZone` and `ageFromBirthYear` were already built and tested in Phase 3. This step adds `weekdayOf` and `monthKey`.)*
+- [x] **4.1 Date domain.** `todayInTz(tz)`, `weekdayOf(date)`, `monthKey(date)`, `ageFrom(birthYear, today)`. *(`todayInTimeZone` and `ageFromBirthYear` were already built and tested in Phase 3. This step adds `weekdayOf` and `monthKey`.)*
   *Done when* the tests cover the Hebron date line around midnight and DST changes.
 - [ ] **4.2 Start or open a lesson.** "درس جديد" uses the deterministic lesson ID and opens today's lesson if it exists. A date picker allows past dates. The date can be changed, but not to a date that already has a lesson.
   *Done when* a double tap or a second device never creates a duplicate (the same ID merges) and the tests on ID derivation pass.
