@@ -523,7 +523,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - Outputs: app ID, default domain, production URL.
   - The repo `amplify.yml` is deleted: it would take precedence over the stack's build spec.
 - [x] **7.3 Deploy workflow and OIDC role.**
-  - `infra/github-deploy-role.yml`: a one-time bootstrap, deployed by hand. It creates the GitHub OIDC provider (optional) and a deploy role trusted for any workflow run in this repo (widened on 2026-10-06; see the change log), allowed to manage this stack, the Amplify app and the service role.
+  - `infra/github-deploy-role.yml`: a one-time bootstrap, deployed by hand. It creates the GitHub OIDC provider (optional) and a deploy role trusted only for the deploy job's `production` environment on `main` (see the change log), allowed to manage this stack, the Amplify app and the service role.
   - `.github/workflows/deploy-stack.yml`: on a push to `main` that changes the stack file (or a manual run), it assumes the role and runs `aws cloudformation deploy`. It doesn't build the app.
 - [x] **7.4 Docs.** README deployment section:
   - the secret's JSON;
@@ -623,3 +623,9 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - `sub` now accepts `repo:imenu-ai/quran-classes-tracker:*`: any branch, environment or event in this repo, instead of only `main`.
   - `aud` also accepts GitHub's default audience, `https://github.com/imenu-ai`.
   - Trade-off: a workflow on any branch of this repo can now deploy the stack. Forks still can't, because they get no ID token.
+- 2026-10-06 (step 7.3, trust narrowed again): Following the user's existing deploy roles, the trust uses a GitHub environment, with three exact conditions:
+  - `sub` = `repo:imenu-ai/quran-classes-tracker:environment:production`
+  - `ref` = `refs/heads/main`
+  - `aud` = `sts.amazonaws.com`
+
+  The deploy job declares `environment: production`. This replaces the wildcard above.

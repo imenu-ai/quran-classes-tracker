@@ -25,6 +25,9 @@ env:
 jobs:
   deploy:
     name: Deploy the Amplify stack
+    # The deploy role trusts only this environment on main
+    # (infra/github-deploy-role.yml).
+    environment: production
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
