@@ -1,0 +1,113 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  One-time bootstrap, deployed by hand: the role GitHub Actions assumes (OIDC)
+  to deploy infra/amplify-stack.yml. Trusted only for this repository's main
+  branch, and allowed to manage only that stack, its Amplify app and its
+  service role.
+
+Parameters:
+  GitHubRepository:
+    Type: String
+    Default: imenu-ai/quran-classes-tracker
+    Description: owner/name of the GitHub repository.
+  DeployBranch:
+    Type: String
+    Default: main
+  StackName:
+    Type: String
+    Default: quran-classes-tracker-amplify
+    Description: Must match STACK_NAME in .github/workflows/deploy-stack.yml.
+  CreateOidcProvider:
+    Type: String
+    AllowedValues: ["true", "false"]
+    Default: "true"
+    Description: >-
+      "false" if this AWS account already has the
+      token.actions.githubusercontent.com OIDC provider (there can be only one).
+
+Conditions:
+  ShouldCreateOidcProvider: !Equals [!Ref CreateOidcProvider, "true"]
+
+Resources:
+  GitHubOidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    Condition: ShouldCreateOidcProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+
+  GitHubDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: !Sub GitHub Actions deploys the ${StackName} stack
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubRepository}:ref:refs/heads/${DeployBranch}
+      Policies:
+        - PolicyName: deploy-amplify-stack
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: Stack
+                Effect: Allow
+                Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:UpdateStack
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DescribeStackEvents
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:DeleteChangeSet
+                Resource: !Sub arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${StackName}/*
+              - Sid: Templates
+                Effect: Allow
+                Action:
+                  - cloudformation:GetTemplateSummary
+                  - cloudformation:ValidateTemplate
+                Resource: "*"
+              # CloudFormation creates the app and branch with these credentials.
+              - Sid: Amplify
+                Effect: Allow
+                Action: amplify:*
+                Resource: !Sub arn:${AWS::Partition}:amplify:${AWS::Region}:${AWS::AccountId}:apps/*
+              # The stack's service role: CloudFormation names it <stack>-<id>-<suffix>.
+              - Sid: ServiceRole
+                Effect: Allow
+                Action:
+                  - iam:CreateRole
+                  - iam:DeleteRole
+                  - iam:GetRole
+                  - iam:UpdateRole
+                  - iam:UpdateRoleDescription
+                  - iam:UpdateAssumeRolePolicy
+                  - iam:PutRolePolicy
+                  - iam:DeleteRolePolicy
+                  - iam:GetRolePolicy
+                  - iam:ListRolePolicies
+                  - iam:ListAttachedRolePolicies
+                  - iam:TagRole
+                  - iam:UntagRole
+                Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${StackName}-*
+              - Sid: PassServiceRoleToAmplify
+                Effect: Allow
+                Action: iam:PassRole
+                Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${StackName}-*
+                Condition:
+                  StringEquals:
+                    iam:PassedToService: amplify.amazonaws.com
+
+Outputs:
+  DeployRoleArn:
+    Description: Put this into the GitHub repository secret AWS_DEPLOY_ROLE_ARN.
+    Value: !GetAtt GitHubDeployRole.Arn

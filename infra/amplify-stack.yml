@@ -1,0 +1,136 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  Quran classes tracker: the AWS Amplify Hosting app (Next.js SSR), its service
+  role and the production branch. Deployed by .github/workflows/deploy-stack.yml
+  when this file changes on main.
+
+Parameters:
+  AppName:
+    Type: String
+    Default: quran-classes-tracker
+  RepositoryUrl:
+    Type: String
+    Default: https://github.com/imenu-ai/quran-classes-tracker
+  GitHubAccessToken:
+    Type: String
+    NoEcho: true
+    MinLength: 1
+    Description: GitHub personal access token Amplify uses to connect the repository.
+  AppSecretArn:
+    Type: String
+    AllowedPattern: "^arn:aws[a-z-]*:secretsmanager:[a-z0-9-]+:[0-9]{12}:secret:.+$"
+    Description: >-
+      Full ARN of the Secrets Manager secret (created manually) that holds the
+      app's environment variables as one JSON object.
+  ProductionBranch:
+    Type: String
+    Default: main
+
+Resources:
+  # Amplify uses this role during builds: the build reads the app secret with
+  # the AWS CLI. It also writes the build and SSR logs.
+  AmplifyServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: !Sub Amplify service role for ${AppName}
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: amplify.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: read-app-secret
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: !Ref AppSecretArn
+        - PolicyName: write-logs
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/amplify/*
+              - Effect: Allow
+                Action: logs:DescribeLogGroups
+                Resource: "*"
+
+  AmplifyApp:
+    Type: AWS::Amplify::App
+    Properties:
+      Name: !Ref AppName
+      Repository: !Ref RepositoryUrl
+      AccessToken: !Ref GitHubAccessToken
+      Platform: WEB_COMPUTE
+      IAMServiceRole: !GetAtt AmplifyServiceRole.Arn
+      EnvironmentVariables:
+        - Name: APP_SECRET_ARN
+          Value: !Ref AppSecretArn
+      # The build writes the secret's JSON into .env (Amplify doesn't pass env
+      # vars to the SSR runtime). Changing the secret needs a rebuild.
+      # Not wrapped in !Sub: ${...} below is shell and JavaScript.
+      BuildSpec: |
+        version: 1
+        applications:
+          - appRoot: .
+            frontend:
+              phases:
+                preBuild:
+                  commands:
+                    - nvm install
+                    - export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+                    - corepack enable
+                    - pnpm config set store-dir .pnpm-store
+                    - pnpm install --frozen-lockfile --config.node-linker=hoisted
+                build:
+                  commands:
+                    - |
+                      echo "Creating .env from single Secrets Manager JSON secret"
+                      : > .env
+                      SECRET_ID="$APP_SECRET_ARN"
+                      if [ -z "$SECRET_ID" ]; then
+                        echo "APP_SECRET_ARN not set"
+                        exit 1
+                      fi
+                      SECRET_STRING="$(aws secretsmanager get-secret-value --secret-id "$SECRET_ID" --region "$AWS_REGION" --query 'SecretString' --output text 2>/dev/null || true)"
+                      if [ -z "$SECRET_STRING" ] || [ "$SECRET_STRING" = "None" ]; then
+                        echo "Failed to retrieve SecretString for $SECRET_ID"
+                        exit 1
+                      fi
+                      SECRET_STRING="$SECRET_STRING" node -e "const fs=require('fs');const raw=process.env.SECRET_STRING||'';let obj;try{obj=JSON.parse(raw);}catch(e){console.error('Invalid JSON in secret payload');process.exit(1);}const lines=Object.entries(obj).map(([k,v])=>{const val=String(v).replace(/\r?\n/g,'\\\\n');return \`\${k}=\${val}\`;});if(lines.length){fs.appendFileSync('.env',lines.join('\n')+'\\n');}"
+                      echo "Generated $(wc -l < .env) entries in .env"
+                    - pnpm build
+              artifacts:
+                baseDirectory: .next
+                files:
+                  - '**/*'
+              cache:
+                paths:
+                  - .pnpm-store/**/*
+                  - .next/cache/**/*
+
+  ProductionBranchResource:
+    Type: AWS::Amplify::Branch
+    Properties:
+      AppId: !GetAtt AmplifyApp.AppId
+      BranchName: !Ref ProductionBranch
+      Stage: PRODUCTION
+      Framework: Next.js - SSR
+      EnableAutoBuild: true
+      EnablePullRequestPreview: false
+
+Outputs:
+  AppId:
+    Value: !GetAtt AmplifyApp.AppId
+  DefaultDomain:
+    Value: !GetAtt AmplifyApp.DefaultDomain
+  ProductionUrl:
+    Description: Put this into the secret's BETTER_AUTH_URL, then rebuild.
+    Value: !Sub https://${ProductionBranch}.${AmplifyApp.DefaultDomain}

@@ -1,0 +1,57 @@
+name: Deploy stack
+
+# Deploys the Amplify CloudFormation stack (infra/amplify-stack.yml) when it
+# changes on main. It doesn't build the app: Amplify builds main by itself.
+on:
+  push:
+    branches: [main]
+    paths:
+      - infra/amplify-stack.yml
+      - .github/workflows/deploy-stack.yml
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-stack
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-central-1
+  STACK_NAME: quran-classes-tracker-amplify
+
+jobs:
+  deploy:
+    name: Deploy the Amplify stack
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy
+        env:
+          GITHUB_ACCESS_TOKEN: ${{ secrets.AMPLIFY_GITHUB_TOKEN }}
+          APP_SECRET_ARN: ${{ secrets.APP_SECRET_ARN }}
+        run: |
+          aws cloudformation deploy \
+            --stack-name "$STACK_NAME" \
+            --template-file infra/amplify-stack.yml \
+            --capabilities CAPABILITY_IAM \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+              "GitHubAccessToken=$GITHUB_ACCESS_TOKEN" \
+              "AppSecretArn=$APP_SECRET_ARN"
+
+      - name: Show outputs
+        run: |
+          aws cloudformation describe-stacks \
+            --stack-name "$STACK_NAME" \
+            --query "Stacks[0].Outputs" \
+            --output table
