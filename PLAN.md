@@ -523,7 +523,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - Outputs: app ID, default domain, production URL.
   - The repo `amplify.yml` is deleted: it would take precedence over the stack's build spec.
 - [x] **7.3 Deploy workflow and OIDC role.**
-  - `infra/github-deploy-role.yml`: a one-time bootstrap, deployed by hand. It creates the GitHub OIDC provider (optional) and a deploy role trusted only for this repo's `main`, allowed to manage this stack, the Amplify app and the service role.
+  - `infra/github-deploy-role.yml`: a one-time bootstrap, deployed by hand. It creates the GitHub OIDC provider (optional) and a deploy role trusted for any workflow run in this repo (widened on 2026-10-06; see the change log), allowed to manage this stack, the Amplify app and the service role.
   - `.github/workflows/deploy-stack.yml`: on a push to `main` that changes the stack file (or a manual run), it assumes the role and runs `aws cloudformation deploy`. It doesn't build the app.
 - [x] **7.4 Docs.** README deployment section:
   - the secret's JSON;
@@ -619,3 +619,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - The build spec is the user's, with pnpm in place of npm (the repo has no `package-lock.json`): Node 22 via `nvm install`, corepack, a hoisted install, and the pnpm store cached.
   - Checked by running the build spec's secret → `.env` script locally against a sample secret: the escaping survived embedding in the template. Values containing `#` are cut there, by Next's env loader too, because an unquoted `#` starts a comment. The README says to URL-encode it; none of the app's values need one.
   - Not verifiable from here: `aws cloudformation validate-template` (no valid local AWS credentials) and the real deploy. `cfn-lint` passes on both templates.
+- 2026-10-06 (step 7.3, after the first deploy attempt): The deploy role's trust is widened, because the first run was refused (`Not authorized to perform sts:AssumeRoleWithWebIdentity`).
+  - `sub` now accepts `repo:imenu-ai/quran-classes-tracker:*`: any branch, environment or event in this repo, instead of only `main`.
+  - `aud` also accepts GitHub's default audience, `https://github.com/imenu-ai`.
+  - Trade-off: a workflow on any branch of this repo can now deploy the stack. Forks still can't, because they get no ID token.
