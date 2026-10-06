@@ -25,10 +25,24 @@ env:
 jobs:
   deploy:
     name: Deploy the Amplify stack
+    # The deploy role trusts only this environment on main
+    # (infra/github-deploy-role.yml).
+    environment: production
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+
+      # Prints the claims the deploy role's trust policy checks (never the
+      # token itself), to compare when AWS refuses the role.
+      - name: Show OIDC claims
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const token = await core.getIDToken("sts.amazonaws.com");
+            const claims = JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString());
+            const { sub, aud, ref, environment, repository } = claims;
+            core.info(JSON.stringify({ sub, aud, ref, environment, repository }, null, 2));
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:

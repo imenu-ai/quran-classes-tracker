@@ -227,7 +227,8 @@ aws cloudformation describe-stacks --region eu-central-1 \
 
 - [ ] Install the Amplify GitHub App for the `imenu-ai` organization, with access to this repository: <https://github.com/apps/aws-amplify-eu-central-1/installations/new>.
 - [ ] Create a classic personal access token with the `admin:repo_hook` scope. Amplify uses it to connect the repository when the app is created, and doesn't store it.
-- [ ] Add three repository secrets (Settings → Secrets and variables → Actions):
+- [ ] Create the environment `production` (Settings → Environments → New environment). Under "Deployment branches and tags", allow `main` only. The deploy role trusts only jobs in this environment running on `main`.
+- [ ] Add three secrets to the `production` environment (or as repository secrets):
   - `AWS_DEPLOY_ROLE_ARN`: the `DeployRoleArn` output from step 3.
   - `AMPLIFY_GITHUB_TOKEN`: the token.
   - `APP_SECRET_ARN`: the secret's ARN from step 2.

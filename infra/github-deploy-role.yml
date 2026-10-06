@@ -1,15 +1,19 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >-
   One-time bootstrap, deployed by hand: the role GitHub Actions assumes (OIDC)
-  to deploy infra/amplify-stack.yml. Trusted only for this repository's main
-  branch, and allowed to manage only that stack, its Amplify app and its
-  service role.
+  to deploy infra/amplify-stack.yml. Trusted only for jobs in this repository
+  that use the deploy environment and run on the deploy branch, and allowed to
+  manage only that stack, its Amplify app and its service role.
 
 Parameters:
   GitHubRepository:
     Type: String
     Default: imenu-ai/quran-classes-tracker
     Description: owner/name of the GitHub repository.
+  DeployEnvironment:
+    Type: String
+    Default: production
+    Description: GitHub environment of the deploy job (deploy-stack.yml).
   DeployBranch:
     Type: String
     Default: main
@@ -49,10 +53,13 @@ Resources:
             Principal:
               Federated: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
             Action: sts:AssumeRoleWithWebIdentity
+            # With an environment, the subject claim names the environment, not
+            # the branch, so the branch is checked through the ref claim.
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
-                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubRepository}:ref:refs/heads/${DeployBranch}
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubRepository}:environment:${DeployEnvironment}
+                token.actions.githubusercontent.com:ref: !Sub refs/heads/${DeployBranch}
       Policies:
         - PolicyName: deploy-amplify-stack
           PolicyDocument:
