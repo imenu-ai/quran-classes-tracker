@@ -629,3 +629,4 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - `aud` = `sts.amazonaws.com`
 
   The deploy job declares `environment: production`. This replaces the wildcard above.
+- 2026-10-06 (step 7.3, root cause of the refused role): the `imenu-ai` org puts immutable IDs in the OIDC subject. The token's `sub` was `repo:imenu-ai@155732539/quran-classes-tracker@1405484269:environment:production`, not `repo:imenu-ai/quran-classes-tracker:…`. The trust now accepts both forms. The deploy workflow prints the claims (never the token) before assuming the role, for future debugging.

@@ -10,6 +10,12 @@ Parameters:
     Type: String
     Default: imenu-ai/quran-classes-tracker
     Description: owner/name of the GitHub repository.
+  GitHubRepositoryWithIds:
+    Type: String
+    Default: imenu-ai@155732539/quran-classes-tracker@1405484269
+    Description: >-
+      owner@ownerId/name@repoId, the form GitHub puts in the subject claim when
+      the organization uses immutable identifiers (as imenu-ai does).
   DeployEnvironment:
     Type: String
     Default: production
@@ -58,7 +64,11 @@ Resources:
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
-                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubRepository}:environment:${DeployEnvironment}
+                # Both subject formats: with the owner/repo IDs (what imenu-ai
+                # sends) and the plain one, in case that setting changes.
+                token.actions.githubusercontent.com:sub:
+                  - !Sub repo:${GitHubRepositoryWithIds}:environment:${DeployEnvironment}
+                  - !Sub repo:${GitHubRepository}:environment:${DeployEnvironment}
                 token.actions.githubusercontent.com:ref: !Sub refs/heads/${DeployBranch}
       Policies:
         - PolicyName: deploy-amplify-stack
