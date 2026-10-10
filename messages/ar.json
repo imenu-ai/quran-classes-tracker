@@ -381,7 +381,17 @@
     "editEvaluationTitle": "تعديل التقييم",
     "editAttendanceTitle": "تعديل الحضور",
     "openLesson": "فتح الدرس",
-    "selectMonth": "اختر الشهر"
+    "selectMonth": "اختر الشهر",
+    "dateHeader": "التاريخ",
+    "memorizationShort": "الحفظ",
+    "behaviorShort": "السلوك",
+    "average": "المعدل",
+    "olderMonth": "الشهر السابق",
+    "newerMonth": "الشهر التالي",
+    "tableCaption": "سجل {month}",
+    "editRow": "تعديل سجل {date}",
+    "editPostponedTitle": "تسميع مؤجل",
+    "attendanceSummary": "أيام الحضور: {present} · الغياب: {absent} · الغياب بعذر: {excused}"
   },
   "offline": {
     "title": "لا يوجد اتصال",

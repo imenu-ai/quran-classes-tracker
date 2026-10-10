@@ -381,7 +381,17 @@
     "editEvaluationTitle": "Edit evaluation",
     "editAttendanceTitle": "Edit attendance",
     "openLesson": "Open lesson",
-    "selectMonth": "Choose a month"
+    "selectMonth": "Choose a month",
+    "dateHeader": "Date",
+    "memorizationShort": "Mem.",
+    "behaviorShort": "Beh.",
+    "average": "Average",
+    "olderMonth": "Previous month",
+    "newerMonth": "Next month",
+    "tableCaption": "Record for {month}",
+    "editRow": "Edit the record of {date}",
+    "editPostponedTitle": "Postponed recitation",
+    "attendanceSummary": "Present: {present} · Absent: {absent} · Excused: {excused}"
   },
   "offline": {
     "title": "You're offline",

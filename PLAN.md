@@ -591,7 +591,7 @@ See §0 #33–36.
 - [x] **9.2 The today card on the student page.**
   - Attendance for today; the score grids for each pending item; postpone and undo; "recite now"; "add homework for the next day" with the suggestion.
   - Today's lesson is created only on the first write (`startLesson`). Without `lessons.run`, view only.
-- [ ] **9.3 The month table.** Month switcher, one row per day (date, portion, marks, status), an averages row, and the existing edit sheet on tapping a row. It replaces the chart, month cards and history list.
+- [x] **9.3 The month table.** Month switcher, one row per day (date, portion, marks, status), an averages row, and the existing edit sheet on tapping a row. It replaces the chart, month cards and history list.
 - [ ] **9.4 Simplify the class page and home cards.** The class page is the student list only; class cards lose "درس جديد". The lesson screens and the `/lesson` route are removed.
 - [ ] **9.5 E2E, docs, wrap-up. Stop.** `main-flow` and `offline` rewritten for the student page, `roles` and `ltr-smoke` updated, README and skills.
 
@@ -740,3 +740,8 @@ See §0 #33–36.
   - The today card reads today's lesson if it exists, and otherwise uses its derived id (`lessonIdFor`) without creating anything. Every write first calls `startLesson`, which creates the lesson, returns the existing one, or revives a deleted one. The homework drawer accepts a function for the lesson id for the same reason.
   - When the student is marked absent or excused, the homework part is hidden. Otherwise a score would contradict the absence: marking present on evaluation doesn't override an existing status.
   - The current-homework box on the student page is removed; the today card covers it.
+- 2026-10-10 (step 9.3):
+  - The table has one row per recorded thing, not per calendar day. A day with a mark and a postponement shows two rows; the date stays in each so every row is tappable.
+  - The month switcher covers the months with data plus the current month.
+  - The chart is gone, so `recharts` and the shadcn `chart` component are removed. The first-load-size question about lazy-loading the chart (Phase 5) no longer applies.
+  - The student's details (class, birth year, direction, note) move to the bottom of the page.

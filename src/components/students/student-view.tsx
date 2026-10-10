@@ -3,7 +3,6 @@
 import { Archive, SearchX } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { PageContainer, PageHeader } from "@/components/shell/page";
 import { Badge } from "@/components/ui/badge";
@@ -15,13 +14,14 @@ import { useClass } from "@/client/data/classes";
 import { useStudentProfile } from "@/client/data/profile";
 import { useStudent } from "@/client/data/students";
 import { ageFromBirthYear, todayInTimeZone } from "@/domain/dates/local-date";
-import { MonthHistory } from "./month-history";
-import { MonthSummaries } from "./month-summaries";
-import { MonthlyChart } from "./monthly-chart";
+import { MonthTable } from "./month-table";
 import { StudentActionsMenu } from "./student-actions-menu";
 import { StudentToday } from "./student-today";
 
-/** Student profile: header, current homework, monthly statistics, chart and history. */
+/**
+ * The student's page in his class: his month as a simple table, then today
+ * (attendance, marks, postponing, next day's homework), then his details.
+ */
 export function StudentView({ studentId }: { studentId: string | null }) {
   const t = useTranslations();
   const { session } = useApp();
@@ -29,9 +29,6 @@ export function StudentView({ studentId }: { studentId: string | null }) {
   const student = useStudent(studentId);
   const cls = useClass(student?.classId ?? null);
   const profile = useStudentProfile(studentId);
-  const [month, setMonth] = useState<string | null>(null);
-  // Default to the newest month that has data.
-  const selectedMonth = month ?? profile?.months[0]?.month ?? null;
 
   if (student === undefined) {
     return (
@@ -71,6 +68,23 @@ export function StudentView({ studentId }: { studentId: string | null }) {
         actions={access.can("students.manage") ? <StudentActionsMenu student={student} /> : null}
       />
 
+      {student.archivedAt !== null && (
+        <Badge variant="secondary" className="self-start">
+          <Archive aria-hidden />
+          {t("students.archivedBadge")}
+        </Badge>
+      )}
+
+      {profile && access.can("reports.view") && (
+        // Without lessons.run the table is shown, not edited.
+        <fieldset disabled={!access.can("lessons.run")} className="min-w-0">
+          <MonthTable profile={profile} student={student} />
+        </fieldset>
+      )}
+
+      {/* Today: attendance, marks, postponing and the next day's homework. */}
+      {student.archivedAt === null && <StudentToday student={student} />}
+
       <dl className="grid grid-cols-2 gap-3 rounded-xl border bg-card p-4 text-sm md:grid-cols-4">
         <div className="flex flex-col gap-1">
           <dt className="text-muted-foreground">{t("students.class")}</dt>
@@ -105,40 +119,6 @@ export function StudentView({ studentId }: { studentId: string | null }) {
           </div>
         )}
       </dl>
-
-      {student.archivedAt !== null && (
-        <Badge variant="secondary" className="self-start">
-          <Archive aria-hidden />
-          {t("students.archivedBadge")}
-        </Badge>
-      )}
-
-      {profile && (
-        <>
-          {access.can("reports.view") && (
-            <>
-              <section className="flex flex-col gap-3">
-                <h2 className="text-lg font-semibold">{t("profile.monthlyTitle")}</h2>
-                <MonthlyChart months={profile.months} />
-                <MonthSummaries
-                  months={profile.months}
-                  selected={selectedMonth}
-                  onSelect={setMonth}
-                />
-              </section>
-              {selectedMonth && (
-                // Without lessons.run the history is shown, not edited.
-                <fieldset disabled={!access.can("lessons.run")} className="min-w-0">
-                  <MonthHistory profile={profile} month={selectedMonth} student={student} />
-                </fieldset>
-              )}
-            </>
-          )}
-        </>
-      )}
-
-      {/* Today: attendance, marks, postponing and the next day's homework. */}
-      {student.archivedAt === null && <StudentToday student={student} />}
     </PageContainer>
   );
 }

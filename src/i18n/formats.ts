@@ -10,6 +10,8 @@ export const formats = {
     lessonDate: { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" },
     lessonDateShort: { day: "numeric", month: "numeric", year: "numeric", timeZone: "UTC" },
     weekday: { weekday: "long", timeZone: "UTC" },
+    // Month table rows: "الأحد 5".
+    dayShort: { weekday: "short", day: "numeric", timeZone: "UTC" },
     month: { month: "long", year: "numeric", timeZone: "UTC" },
     monthShort: { month: "short", year: "2-digit", timeZone: "UTC" },
   },
