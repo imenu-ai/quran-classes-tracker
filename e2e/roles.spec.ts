@@ -75,7 +75,10 @@ test("admin registers, adds a teacher with limited access, and changes it", asyn
     .click();
   await expect(teacher.getByRole("link", { name: /طالب الصباح/ })).toBeVisible();
   await expect(teacher.getByRole("button", { name: ar.students.add })).toHaveCount(0);
-  await expect(teacher.getByRole("button", { name: ar.glossary.newLesson })).toBeVisible();
+  // He may run lessons: the student's page lets him mark today.
+  await teacher.getByRole("link", { name: /طالب الصباح/ }).click();
+  await teacher.waitForURL(/\/student\?id=/);
+  await expect(teacher.getByRole("button", { name: ar.evaluation.reciteNow })).toBeEnabled();
 
   // 5. The admin moves him to the evening class; his device follows.
   await page.getByRole("link", { name: /الأستاذ سالم/ }).click();

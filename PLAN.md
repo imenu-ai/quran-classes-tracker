@@ -390,7 +390,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 6. PWA and offline hardening, settings, E2E, README, deployment | [x] Done |
 | 7. Deployment (CloudFormation + Amplify) | [x] Done |
 | 8. Centers, roles and permissions | [x] Done |
-| 9. Simpler class and student screens, postponed recitation | [ ] In progress |
+| 9. Simpler class and student screens, postponed recitation | [x] Done |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -579,7 +579,7 @@ The database is wiped for this phase (local and Atlas); there is no migration. S
 - [x] **8.7 Password reset by email.** SES sender, Better Auth reset flow, `/forgot-password` and `/reset-password`, SSR compute role in the stack, `EMAIL_FROM`.
 - [x] **8.8 E2E, docs, wrap-up. Stop.** Existing specs on the new login; a roles spec; README, skills, CLAUDE.md.
 
-### [ ] Phase 9: Simpler class and student screens, postponed recitation
+### [x] Phase 9: Simpler class and student screens, postponed recitation
 
 See §0 #33–36.
 
@@ -593,7 +593,7 @@ See §0 #33–36.
   - Today's lesson is created only on the first write (`startLesson`). Without `lessons.run`, view only.
 - [x] **9.3 The month table.** Month switcher, one row per day (date, portion, marks, status), an averages row, and the existing edit sheet on tapping a row. It replaces the chart, month cards and history list.
 - [x] **9.4 Simplify the class page and home cards.** The class page is the student list only; class cards lose "درس جديد". The lesson screens and the `/lesson` route are removed.
-- [ ] **9.5 E2E, docs, wrap-up. Stop.** `main-flow` and `offline` rewritten for the student page, `roles` and `ltr-smoke` updated, README and skills.
+- [x] **9.5 E2E, docs, wrap-up. Stop.** `main-flow` and `offline` rewritten for the student page, `roles` and `ltr-smoke` updated, README and skills.
 
 ---
 
@@ -749,4 +749,12 @@ See §0 #33–36.
 - 2026-10-10 (Phase 9 browser check; two fixes):
   - **Absent after postponed.** Marking a student absent or excused now cancels his postponements in that lesson (`setStudentAttendance`); a postponement means he was there.
   - **Sync order.** The outbox pushed by the time an entry was first queued. A still-unsynced homework item scored in today's lesson, created just then, reached the server before the lesson and was rejected (`REFERENCE_NOT_FOUND`). With today's lesson created on the first mark, this would hit anyone marking offline. Pushes now go in table order (classes, students, lessons, attendance, homework), then oldest first; the server also writes each batch in that order.
+- 2026-10-10 (step 9.5):
+  - `main-flow` spans two days with Playwright's clock: day one, a recitation on the spot, its marks, next-day homework and an absence; day two, the homework due, postponed, undone and marked.
+  - `offline` marks a student and an absence offline, then checks both from a fresh login.
+  - `roles` checks that the teacher can mark on the student page.
+  - 51 message keys used only by the removed screens are deleted (the brief's glossary is kept whole).
+- 2026-10-10 (Phase 9 E2E; two more fixes):
+  - **A score tapped just before "back" could be lost offline.** Offline, an in-app link becomes a full page load, which aborts IndexedDB transactions still in flight. `LocalStore` now knows when it's busy, and a navigation guard holds in-app link clicks until the writes are saved, then navigates; it's capped at 2 s. The browser's own back gesture can't be held.
+  - **The search page navigated on every load** (to the URL it was already on), which could cut off another navigation. It now updates the URL only when the query changes.
 

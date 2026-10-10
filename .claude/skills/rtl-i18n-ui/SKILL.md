@@ -25,8 +25,7 @@ Users see Arabic, written right to left. English (`messages/en.json`) is built, 
 - **Never write `dir="rtl"` or `dir="ltr"`.** Lint blocks it. `<html dir>` comes from `getDirection(locale)` (`src/i18n/direction.ts`). Put `dir="auto"` on user-entered text (student names, notes, search input) so mixed Arabic and English displays correctly.
 - **Icons that point somewhere** (back, next, chevrons, arrows) go through `<DirectionalIcon icon={ChevronLeft} />` (`src/components/directional-icon.tsx`). It mirrors them in RTL. Pick the icon as if for LTR: back = `ChevronLeft`/`ArrowLeft`, next = `ChevronRight`.
 - **Sheets, drawers and popovers** use logical sides (`side="start"`/`"end"`). The shadcn `Sheet` here was changed from left/right to start/end; keep it that way.
-- **Charts** (Recharts via `src/components/ui/chart.tsx`): in RTL the X axis is reversed and the Y axis sits on the right (see `monthly-chart`). Give the SVG `aria-hidden` and add an equivalent table for screen readers.
-  - Put `sr-only` on a wrapping `div`, never on the `<table>` itself: a table ignores the 1 px width and widened the page.
+- **Tables at 360 px** (see `month-table.tsx`): `table-fixed` with fixed widths for the date and number columns, so the text column wraps instead of widening the page. If you ever hide a table for screen readers only, put `sr-only` on a wrapping `div`: a `<table>` ignores the 1 px width.
 
 ## Numbers and dates
 
