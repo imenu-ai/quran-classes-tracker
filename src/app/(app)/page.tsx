@@ -13,6 +13,7 @@ import { InstallBanner } from "@/components/install-banner";
 import { PageContainer, PageHeader } from "@/components/shell/page";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAccess } from "@/client/access";
 import { useClassList } from "@/client/data/classes";
 
 export default function HomePage() {
@@ -20,13 +21,14 @@ export default function HomePage() {
   const router = useRouter();
   const list = useClassList();
   const [creating, setCreating] = useState(false);
+  const canCreate = useAccess().can("classes.manage");
 
-  const createButton = (
+  const createButton = canCreate ? (
     <Button size="lg" className="h-11" onClick={() => setCreating(true)}>
       <Plus aria-hidden />
       {t("classes.create")}
     </Button>
-  );
+  ) : null;
 
   return (
     <PageContainer>
@@ -52,8 +54,10 @@ export default function HomePage() {
       ) : list.active.length === 0 ? (
         <EmptyState
           icon={Users}
-          title={t("classes.emptyTitle")}
-          description={t("classes.emptyDescription")}
+          title={canCreate ? t("classes.emptyTitle") : t("classes.emptyAssignedTitle")}
+          description={
+            canCreate ? t("classes.emptyDescription") : t("classes.emptyAssignedDescription")
+          }
           action={createButton}
         />
       ) : (

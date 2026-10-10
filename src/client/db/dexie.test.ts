@@ -50,6 +50,7 @@ describe("LocalDb", () => {
       ...base,
       id: "a1",
       lessonId: "l1",
+      classId: "c1",
       studentId: "s1",
       status: "present",
       excuseNote: "",

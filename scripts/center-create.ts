@@ -1,22 +1,25 @@
 /**
- * Creates a teacher account (and the tenant if it doesn't exist yet).
+ * Creates a center and its first admin, and prints the center code. Centers
+ * normally register themselves at /register; this is for development and
+ * recovery.
  *
  * Usage:
- *   pnpm user:create --tenant "<name>" --username <u> --name "<display name>"
- *                    [--password <p>] [--locale ar] [--timezone Asia/Hebron]
+ *   pnpm center:create --center "<center name>" --name "<admin name>"
+ *                      --email <email> --username <u> [--password <p>]
+ *                      [--timezone Asia/Hebron] [--locale ar]
  *
  * Leave out --password to type it at a hidden prompt, so it doesn't end up in
  * your shell history.
  */
 import { createInterface } from "node:readline";
 import { parseArgs } from "node:util";
-import { AccountError, createTeacherAccount } from "@/server/accounts";
+import { CenterError, createCenter } from "@/server/centers";
 import { closeMongoClient, getDb } from "@/server/db";
 import { ensureIndexes } from "@/server/indexes";
 import { loadEnv } from "./load-env";
 
 const USAGE =
-  'Usage: pnpm user:create --tenant "<name>" --username <u> --name "<display name>" [--password <p>] [--locale ar] [--timezone Asia/Hebron]';
+  'Usage: pnpm center:create --center "<center name>" --name "<admin name>" --email <email> --username <u> [--password <p>] [--timezone Asia/Hebron] [--locale ar]';
 
 /** Reads a line from the terminal without echoing it. */
 function promptHidden(question: string): Promise<string> {
@@ -42,17 +45,18 @@ async function main() {
   loadEnv();
   const { values } = parseArgs({
     options: {
-      tenant: { type: "string" },
+      center: { type: "string" },
+      name: { type: "string" },
+      email: { type: "string" },
       username: { type: "string" },
       password: { type: "string" },
-      name: { type: "string" },
-      locale: { type: "string" },
       timezone: { type: "string" },
+      locale: { type: "string" },
     },
     strict: true,
   });
 
-  if (!values.tenant || !values.username || !values.name) {
+  if (!values.center || !values.name || !values.email || !values.username) {
     console.error(USAGE);
     process.exitCode = 1;
     return;
@@ -70,24 +74,24 @@ async function main() {
   }
 
   await ensureIndexes(getDb());
-  const result = await createTeacherAccount({
-    tenantName: values.tenant,
+  const result = await createCenter({
+    centerName: values.center,
+    adminName: values.name,
+    email: values.email,
     username: values.username,
     password,
-    name: values.name,
+    timezone: values.timezone ?? "Asia/Hebron",
     ...(values.locale ? { locale: values.locale as "ar" } : {}),
-    ...(values.timezone ? { timezone: values.timezone } : {}),
   });
 
-  console.log(
-    `${result.createdTenant ? "Created" : "Using existing"} tenant "${result.tenantName}" (${result.tenantId}).`,
-  );
-  console.log(`Created user "${result.username}" (${result.userId}).`);
+  console.log(`Created center "${result.centerName}" (${result.tenantId}).`);
+  console.log(`Center code: ${result.code}`);
+  console.log(`Admin username: ${result.username}`);
 }
 
 main()
   .catch((error: unknown) => {
-    if (error instanceof AccountError) console.error(error.message);
+    if (error instanceof CenterError) console.error(error.message);
     else console.error(error);
     process.exitCode = 1;
   })

@@ -77,6 +77,8 @@ export function useLessonEvaluation(lesson: LessonRecord) {
 const homeworkTables = (db: LocalDb) => [
   db.homework,
   db.attendance,
+  // Read when evaluating marks the student present (attendance takes the lesson's class).
+  db.lessons,
   db.outbox,
   db.rejected,
   db.meta,

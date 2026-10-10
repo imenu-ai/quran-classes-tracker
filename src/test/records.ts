@@ -54,6 +54,8 @@ export const attendanceRecord = (
 ): SyncRecordMap["attendance"] => ({
   ...base(overrides),
   lessonId,
+  // Pass the lesson's class when pushing to the server (it's checked there).
+  classId: "01900000-0000-7000-8000-000000000000",
   studentId,
   status: "present",
   excuseNote: "",

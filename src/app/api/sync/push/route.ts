@@ -8,13 +8,13 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /** POST /api/sync/push: apply a batch of local changes (see PLAN.md §2.4). */
-export const POST = withTenant(async (request, { tenantId }) => {
+export const POST = withTenant(async (request, { actor, accessVersion }) => {
   const body = await readJsonBody(request, MAX_PUSH_BODY_BYTES);
   if (!body.ok) return body.response;
 
   const parsed = pushRequestSchema.safeParse(body.value);
   if (!parsed.success) return badRequest("INVALID_REQUEST");
 
-  const results = await pushChanges(getDb(), tenantId, parsed.data.mutations);
-  return jsonResponse({ results });
+  const results = await pushChanges(getDb(), actor, parsed.data.mutations);
+  return jsonResponse({ results, accessVersion });
 });

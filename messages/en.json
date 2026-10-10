@@ -67,23 +67,85 @@
   "auth": {
     "login": {
       "title": "Sign in",
-      "subtitle": "Enter your username and password",
+      "subtitle": "Enter your center code, username and password",
       "username": "Username",
       "password": "Password",
       "submit": "Sign in",
       "submitting": "Signing in…",
       "showPassword": "Show password",
-      "hidePassword": "Hide password"
+      "hidePassword": "Hide password",
+      "centerCode": "Center code",
+      "centerCodeHint": "6 digits, from your center's admin",
+      "registerPrompt": "New center admin?",
+      "registerLink": "Register your center",
+      "forgotLink": "Forgot your password?"
     },
     "errors": {
       "invalidCredentials": "Incorrect username or password",
       "rateLimited": "Too many attempts. Try again in a minute",
       "offline": "Signing in needs an internet connection",
-      "generic": "Couldn't sign in. Please try again"
+      "generic": "Couldn't sign in. Please try again",
+      "accountDisabled": "This account is disabled. Contact your center's admin",
+      "invalidCenterCode": "The center code is 6 digits"
     },
     "logout": "Sign out",
     "logoutPending": "{count, plural, one {# change hasn't} other {# changes haven't}} been synced yet. Signing out will delete {count, plural, one {it} other {them}} from this device.",
-    "logoutAnyway": "Sign out anyway"
+    "logoutAnyway": "Sign out anyway",
+    "register": {
+      "title": "Register a new center",
+      "subtitle": "Create the admin account, then add teachers and choose what they can do",
+      "centerSection": "Center",
+      "centerName": "Center name",
+      "timezone": "Time zone",
+      "timezoneHint": "Used to tell what day it is",
+      "adminSection": "Admin account",
+      "adminName": "Your name",
+      "email": "Email",
+      "emailHint": "Only used to reset your password",
+      "username": "Username",
+      "usernameHint": "English letters, digits, _ or . only (3 to 30)",
+      "password": "Password",
+      "passwordHint": "At least 8 characters",
+      "submit": "Register center",
+      "submitting": "Registering…",
+      "haveAccount": "Already have an account?",
+      "loginLink": "Sign in",
+      "errors": {
+        "emailTaken": "This email is already registered",
+        "rateLimited": "Too many registrations from this device. Try again later",
+        "offline": "Registration needs an internet connection",
+        "generic": "Couldn't register the center. Try again"
+      },
+      "done": {
+        "title": "Center registered",
+        "codeLabel": "Center code",
+        "codeHint": "Keep this code and share it with your teachers; they type it before their username and password when signing in.",
+        "copy": "Copy code",
+        "copied": "Code copied",
+        "continue": "Enter the app"
+      }
+    },
+    "changePassword": {
+      "title": "Choose a new password",
+      "subtitle": "Your current password was set by your center's admin. Choose your own to continue.",
+      "submit": "Save and continue"
+    },
+    "forgot": {
+      "title": "Reset your password",
+      "subtitle": "For center admins: enter your email and we'll send you a link to set a new password.",
+      "teachersHint": "If you're a teacher, ask your center's admin to set a new password for you.",
+      "email": "Email",
+      "submit": "Send link",
+      "sent": "If this email is registered, a message will arrive within minutes. Check your spam folder too.",
+      "backToLogin": "Back to sign-in"
+    },
+    "reset": {
+      "title": "Set a new password",
+      "submit": "Save password",
+      "done": "Your password is set. Sign in with it now.",
+      "invalidLink": "This link is invalid or has expired. Request a new one.",
+      "requestNew": "Request a new link"
+    }
   },
   "sync": {
     "connected": "Online",
@@ -101,7 +163,8 @@
     "search": "Search",
     "settings": "Settings",
     "back": "Back",
-    "main": "Main navigation"
+    "main": "Main navigation",
+    "users": "Users"
   },
   "classes": {
     "title": "Classes",
@@ -132,7 +195,9 @@
     "renamed": "Class renamed",
     "archivedToast": "Class archived",
     "unarchivedToast": "Class restored",
-    "actions": "Class options"
+    "actions": "Class options",
+    "emptyAssignedTitle": "No classes assigned to you",
+    "emptyAssignedDescription": "Ask your center's admin to assign you a class."
   },
   "students": {
     "title": "Students",
@@ -215,8 +280,21 @@
       "passwordLength": "The password must be 8 to 128 characters",
       "rateLimited": "Too many attempts. Try again in a minute",
       "sessionExpired": "Your session expired. Sign in again",
-      "generic": "Couldn't save the change. Please try again"
-    }
+      "generic": "Couldn't save the change. Please try again",
+      "emailTaken": "This email is already registered"
+    },
+    "phone": "Phone number",
+    "phoneHint": "Optional",
+    "email": "Email",
+    "emailHint": "To reset your password if you forget it",
+    "centerTitle": "Center",
+    "centerName": "Center name",
+    "centerCode": "Center code",
+    "centerCodeHint": "Everyone types it at sign-in, before their username",
+    "copyCode": "Copy code",
+    "codeCopied": "Code copied",
+    "timezone": "Time zone",
+    "centerSaved": "Center settings saved"
   },
   "lessons": {
     "otherDate": "Lesson on an earlier date",
@@ -245,7 +323,8 @@
     "attendanceSummary": "Present {present} · Absent {absent} · Excused {excused}",
     "evaluatedCount": "{count, plural, =0 {No evaluations} one {# evaluation} other {# evaluations}}",
     "showMore": "Show more",
-    "notePlaceholder": "Note about this lesson (optional)"
+    "notePlaceholder": "Note about this lesson (optional)",
+    "viewOnly": "View only: you don't have permission to run lessons."
   },
   "attendance": {
     "markAllPresent": "Mark all present",
@@ -326,5 +405,76 @@
   "syncErrors": {
     "FORBIDDEN": "This record belongs to another account",
     "REFERENCE_NOT_FOUND": "It refers to a record missing on the server"
+  },
+  "users": {
+    "title": "Users",
+    "add": "Add user",
+    "newTitle": "New user",
+    "editTitle": "Edit user",
+    "you": "You",
+    "roleAdmin": "Admin",
+    "roleTeacher": "Teacher",
+    "statusDisabled": "Disabled",
+    "statusMustChange": "Hasn't changed the password yet",
+    "classCount": "{count, plural, =0 {No classes} one {# class} other {# classes}}",
+    "allClasses": "All classes",
+    "detailsSection": "Details",
+    "name": "Name",
+    "username": "Username",
+    "usernameHint": "Typed at sign-in with the center code. English letters, digits, _ or . only",
+    "phone": "Phone number",
+    "phoneHint": "Optional",
+    "password": "Temporary password",
+    "passwordHint": "Give it to the user; they'll be asked to change it at first sign-in. At least 8 characters",
+    "roleSection": "Role",
+    "roleAdminHint": "Sees every class, can do everything, and manages users",
+    "roleTeacherHint": "Works in the classes assigned to them, with the permissions you choose",
+    "permissionsSection": "Permissions",
+    "permissions": {
+      "classesManage": "Create, edit and archive classes",
+      "studentsManage": "Add, edit and move students",
+      "lessonsRun": "Run lessons: attendance, evaluation and homework",
+      "reportsView": "See students' monthly reports"
+    },
+    "classesSection": "Assigned classes",
+    "noClasses": "No classes yet. Create a class first, then assign it.",
+    "create": "Create user",
+    "save": "Save changes",
+    "created": "User created",
+    "saved": "Changes saved",
+    "accountSection": "Account",
+    "resetPassword": "Set a new password",
+    "resetPasswordDescription": "They'll be signed out on every device and asked to choose their own password at sign-in.",
+    "newPassword": "New password",
+    "setPassword": "Set",
+    "passwordSet": "Password set",
+    "disable": "Disable account",
+    "enable": "Enable account",
+    "disableConfirmTitle": "Disable this account?",
+    "disableConfirm": "They won't be able to sign in and will be signed out on every device. Their data stays in the center, and you can enable the account later.",
+    "disabledToast": "Account disabled",
+    "enabledToast": "Account enabled",
+    "notFound": "User not found",
+    "adminsOnly": "This page is for the center's admin only",
+    "errors": {
+      "usernameTaken": "This username is taken in this center",
+      "lastAdmin": "The center must keep at least one active admin",
+      "classNotFound": "Some classes haven't synced yet. Wait for the sync, then try again",
+      "offline": "Managing users needs an internet connection",
+      "generic": "Couldn't save. Try again",
+      "loadFailed": "Couldn't load the users"
+    },
+    "retry": "Try again",
+    "selfHint": "To change your own name or password, use Settings."
+  },
+  "email": {
+    "resetPassword": {
+      "subject": "Reset your password — Quran memorization tracker",
+      "greeting": "Hello {name},",
+      "body": "We received a request to set a new password for your account. Use the button to choose a new password.",
+      "button": "Set a new password",
+      "expiry": "This link expires in one hour.",
+      "ignore": "If you didn't ask for this, ignore this email; your current password hasn't changed."
+    }
   }
 }

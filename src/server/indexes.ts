@@ -3,7 +3,9 @@ import { COLLECTIONS } from "./collections";
 
 /** Every index the app relies on. Safe to apply repeatedly. */
 export const INDEXES: Record<string, IndexDescription[]> = {
-  [COLLECTIONS.tenants]: [{ key: { name: 1 }, name: "name_unique", unique: true }],
+  // Center names may repeat; the 6-digit code is what identifies a center.
+  [COLLECTIONS.tenants]: [{ key: { code: 1 }, name: "code_unique", unique: true }],
+  [COLLECTIONS.members]: [{ key: { tenantId: 1 }, name: "tenantId" }],
   [COLLECTIONS.users]: [
     { key: { username: 1 }, name: "username_unique", unique: true },
     { key: { email: 1 }, name: "email_unique", unique: true },
@@ -32,6 +34,7 @@ export const INDEXES: Record<string, IndexDescription[]> = {
   [COLLECTIONS.attendance]: [
     { key: { tenantId: 1, serverVersion: 1 }, name: "tenant_version" },
     { key: { tenantId: 1, lessonId: 1 }, name: "tenant_lesson" },
+    { key: { tenantId: 1, classId: 1 }, name: "tenant_class" },
     { key: { tenantId: 1, studentId: 1 }, name: "tenant_student" },
   ],
   [COLLECTIONS.homework]: [

@@ -1,6 +1,8 @@
 /** MongoDB collection names, in one place. */
 export const COLLECTIONS = {
   tenants: "tenants",
+  /** Roles, permissions and assigned classes per user (Phase 8). */
+  members: "members",
   counters: "counters",
   // Better Auth models (renamed in src/server/auth/auth.ts).
   users: "users",

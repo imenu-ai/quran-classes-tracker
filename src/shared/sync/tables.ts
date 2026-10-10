@@ -46,6 +46,7 @@ export const REFERENCES: Record<SyncTable, readonly Reference[]> = {
   lessons: [{ field: "classId", table: "classes" }],
   attendance: [
     { field: "lessonId", table: "lessons" },
+    { field: "classId", table: "classes" },
     { field: "studentId", table: "students" },
   ],
   homework: [

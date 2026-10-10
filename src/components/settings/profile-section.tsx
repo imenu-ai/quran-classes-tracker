@@ -6,96 +6,159 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import type { ApiErrorCode } from "@/client/api";
 import { useApp } from "@/client/app-context";
-import { getAccountErrorKey } from "@/client/auth/account-errors";
-import { authClient } from "@/client/auth/auth-client";
+import { updateProfile } from "@/client/data/account";
 import { bootstrapSession } from "@/client/session/session";
+import { toWesternDigits } from "@/domain/text/digits";
+import { useErrorMessage } from "@/i18n/use-error-message";
+import { PHONE_MAX, updateProfileSchema, USERNAME_MAX } from "@/shared/access";
 import { NAME_MAX } from "@/shared/schemas/base";
+import { parseWithCodes, type FieldError as CodedError } from "@/shared/schemas/errors";
 
-const USERNAME_PATTERN = /^[a-zA-Z0-9_.]{3,30}$/;
+type FieldName = "name" | "username" | "phone" | "email";
 
-/** Display name and username (online only; the server enforces uniqueness). */
+/**
+ * The user's own name, username and phone, plus the email for admins
+ * (password reset). Online only: the server checks uniqueness in the center.
+ */
 export function ProfileSection() {
-  const t = useTranslations();
+  const t = useTranslations("settings");
+  const tCommon = useTranslations("common");
+  const errorMessage = useErrorMessage();
   const { session } = useApp();
-  const ids = { name: useId(), username: useId() };
-  const [name, setName] = useState(session.name);
-  const [username, setUsername] = useState(session.username);
-  const [errors, setErrors] = useState<{ name?: string; username?: string; form?: string }>({});
+  const isAdmin = session.role === "admin";
+  const id = useId();
+  const [errors, setErrors] = useState<Partial<Record<FieldName | "form", string>>>({});
   const [busy, setBusy] = useState(false);
+
+  function showFailure(code: ApiErrorCode, fieldErrors: readonly CodedError[]) {
+    if (code === "INVALID_INPUT") {
+      const next: Partial<Record<FieldName, string>> = {};
+      for (const error of fieldErrors) {
+        const field = error.path as FieldName;
+        if (!next[field]) next[field] = errorMessage(error);
+      }
+      return setErrors(next);
+    }
+    if (code === "USERNAME_TAKEN") return setErrors({ username: t("accountErrors.usernameTaken") });
+    if (code === "EMAIL_TAKEN") return setErrors({ email: t("accountErrors.emailTaken") });
+    setErrors({ form: t(`accountErrors.${code === "OFFLINE" ? "offline" : "generic"}`) });
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const next: typeof errors = {};
-    if (!name.trim()) next.name = t("errors.validation.REQUIRED");
-    if (!USERNAME_PATTERN.test(username.trim()))
-      next.username = t("settings.accountErrors.invalidUsername");
-    setErrors(next);
-    if (next.name || next.username) return;
+    const data = new FormData(event.currentTarget);
+    const text = (name: FieldName) => String(data.get(name) ?? "");
+    const parsed = parseWithCodes(updateProfileSchema, {
+      name: text("name"),
+      username: text("username"),
+      phone: toWesternDigits(text("phone")),
+      ...(isAdmin ? { email: text("email") } : {}),
+    });
+    setErrors({});
+    if (!parsed.success) return showFailure("INVALID_INPUT", parsed.errors);
+
+    // Only what changed, so an unchanged username or email is never re-checked.
+    const changes = Object.fromEntries(
+      Object.entries(parsed.data).filter(
+        ([key, value]) => value !== (session as unknown as Record<string, unknown>)[key],
+      ),
+    );
+    if (Object.keys(changes).length === 0) {
+      toast.success(t("profileSaved"));
+      return;
+    }
 
     setBusy(true);
     try {
-      const changes: { name?: string; username?: string } = {};
-      if (name.trim() !== session.name) changes.name = name.trim();
-      if (username.trim().toLowerCase() !== session.username) changes.username = username.trim();
-      if (Object.keys(changes).length > 0) {
-        const result = await authClient.updateUser(changes);
-        if (result.error) {
-          const key = getAccountErrorKey(result.error, navigator.onLine);
-          setErrors(
-            key === "usernameTaken" || key === "invalidUsername"
-              ? { username: t(`settings.accountErrors.${key}`) }
-              : { form: t(`settings.accountErrors.${key}`) },
-          );
-          return;
-        }
-        // Refresh the snapshot the app shows (name, normalized username).
-        await bootstrapSession();
-      }
-      toast.success(t("settings.profileSaved"));
-    } catch {
-      setErrors({
-        form: t(`settings.accountErrors.${getAccountErrorKey(null, navigator.onLine)}`),
-      });
+      const result = await updateProfile(changes);
+      if (!result.ok) return showFailure(result.code, result.errors);
+      // Refresh what the app shows (name, normalized username…).
+      await bootstrapSession().catch(() => {});
+      toast.success(t("profileSaved"));
     } finally {
       setBusy(false);
     }
   }
 
+  const fieldId = (name: FieldName) => `${id}-${name}`;
+  const field = (name: FieldName, label: string, input: React.ReactNode, hint?: string) => (
+    <Field data-invalid={errors[name] ? true : undefined}>
+      <FieldLabel htmlFor={fieldId(name)}>{label}</FieldLabel>
+      {input}
+      {hint && <FieldDescription>{hint}</FieldDescription>}
+      {errors[name] && <FieldError>{errors[name]}</FieldError>}
+    </Field>
+  );
+
   return (
     <section className="flex flex-col gap-3 rounded-xl border p-4">
-      <h2 className="font-semibold">{t("settings.profileTitle")}</h2>
+      <h2 className="font-semibold">{t("profileTitle")}</h2>
       <form onSubmit={submit} noValidate className="flex flex-col gap-4">
-        <Field data-invalid={errors.name ? true : undefined}>
-          <FieldLabel htmlFor={ids.name}>{t("settings.displayName")}</FieldLabel>
+        {field(
+          "name",
+          t("displayName"),
           <Input
-            id={ids.name}
+            id={fieldId("name")}
+            name="name"
             dir="auto"
             className="h-12"
             maxLength={NAME_MAX}
-            value={name}
-            onChange={(event) => setName(event.target.value)}
+            defaultValue={session.name}
             aria-invalid={errors.name ? true : undefined}
-          />
-          {errors.name && <FieldError>{errors.name}</FieldError>}
-        </Field>
-        <Field data-invalid={errors.username ? true : undefined}>
-          <FieldLabel htmlFor={ids.username}>{t("settings.username")}</FieldLabel>
+          />,
+        )}
+        {field(
+          "username",
+          t("username"),
           <Input
-            id={ids.username}
+            id={fieldId("username")}
+            name="username"
             dir="auto"
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
             className="h-12"
-            maxLength={30}
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
+            maxLength={USERNAME_MAX}
+            defaultValue={session.username}
             aria-invalid={errors.username ? true : undefined}
-          />
-          <FieldDescription>{t("settings.usernameHint")}</FieldDescription>
-          {errors.username && <FieldError>{errors.username}</FieldError>}
-        </Field>
+          />,
+          t("usernameHint"),
+        )}
+        {field(
+          "phone",
+          t("phone"),
+          <Input
+            id={fieldId("phone")}
+            name="phone"
+            type="tel"
+            inputMode="tel"
+            dir="auto"
+            className="h-12"
+            maxLength={PHONE_MAX}
+            defaultValue={session.phone}
+            aria-invalid={errors.phone ? true : undefined}
+          />,
+          t("phoneHint"),
+        )}
+        {isAdmin &&
+          field(
+            "email",
+            t("email"),
+            <Input
+              id={fieldId("email")}
+              name="email"
+              type="email"
+              dir="auto"
+              autoCapitalize="none"
+              spellCheck={false}
+              className="h-12"
+              defaultValue={session.email ?? ""}
+              aria-invalid={errors.email ? true : undefined}
+            />,
+            t("emailHint"),
+          )}
         {errors.form && (
           <p
             role="alert"
@@ -105,7 +168,7 @@ export function ProfileSection() {
           </p>
         )}
         <Button type="submit" className="h-11 self-start" disabled={busy}>
-          {t("common.save")}
+          {tCommon("save")}
         </Button>
       </form>
     </section>

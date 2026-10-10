@@ -8,6 +8,8 @@ export const EXCUSE_NOTE_MAX = 500;
 
 export const attendanceFieldsSchema = z.object({
   lessonId: idSchema,
+  /** Always the lesson's class (checked on push), so pulls can be scoped by class. */
+  classId: idSchema,
   studentId: idSchema,
   status: z.enum(ATTENDANCE_STATUSES),
   /** Only meaningful when status is "excused". */

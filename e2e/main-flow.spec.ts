@@ -1,4 +1,4 @@
-import { accountFor } from "./accounts";
+import { credentialsFor } from "./accounts";
 import { ar, expect, signIn, test, waitForSynced } from "./fixtures";
 import { addStudent, createClass, fill, setPortion, tapScore } from "./helpers";
 
@@ -6,7 +6,7 @@ test("lesson day: class → students → lesson → attendance → evaluate → 
   page,
   projectName,
 }, testInfo) => {
-  await signIn(page, accountFor("main", projectName));
+  await signIn(page, credentialsFor("main", projectName));
 
   // First use: empty state invites creating a class.
   await expect(page.getByText(ar.classes.emptyTitle)).toBeVisible();

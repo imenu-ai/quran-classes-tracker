@@ -1,10 +1,10 @@
 # متابعة تحفيظ القرآن (quran-classes-tracker)
 
-An offline-first PWA for a Quran memorization teacher. He records attendance, evaluates each student's recitation, assigns the next homework and reviews monthly progress. Everything works without a connection and syncs when one is back.
+An offline-first PWA for Quran memorization centers. Teachers record attendance, evaluate each student's recitation, assign the next homework and review monthly progress. Everything works without a connection and syncs when one is back.
 
 - **Arabic-first and RTL.** The UI has no hard-coded direction, and English (LTR) is built in but hidden.
 - **iPhone-first.** Also works on Android, iPad, Android tablets and laptops.
-- **Multi-tenant.** Every record belongs to a tenant, and the server enforces that on every query.
+- **Centers and roles.** A center admin registers the center and creates its users, choosing each teacher's classes and permissions. Every record belongs to one center, and the server enforces access on every request.
 
 The product brief is in [BRIEF.md](BRIEF.md). The full design (decisions, sync protocol, data model and phases) is in [PLAN.md](PLAN.md).
 
@@ -47,14 +47,14 @@ Node 22 (see `.nvmrc`) and pnpm 10 (pinned in `package.json`; run `corepack enab
    ```sh
    pnpm db:indexes
    ```
-5. **Create a teacher account.** There is no sign-up page: accounts are created with the CLI, which also creates the tenant if it doesn't exist.
+5. **Create a center and its admin.** The CLI prints the 6-digit center code used at sign-in.
    ```sh
-   pnpm user:create --tenant "مركز التحفيظ" --username teacher --name "الأستاذ محمد"
-   # optional: --password <p> (otherwise a hidden prompt), --locale ar, --timezone Asia/Hebron
+   pnpm center:create --center "مركز التحفيظ" --name "المدير" --email admin@example.com --username admin
+   # optional: --password <p> (otherwise a hidden prompt), --timezone Asia/Hebron, --locale ar
    ```
 6. **Optional sample data** (classes, students and a few months of lessons):
    ```sh
-   pnpm dev:seed --username teacher
+   pnpm dev:seed --center <center code>
    ```
 7. **Run it:**
    ```sh
@@ -76,10 +76,27 @@ The service worker is **off in development**. To try offline behaviour on your m
 | `pnpm test:e2e`                     | Playwright end-to-end tests (see below)                                  |
 | `pnpm format` / `pnpm format:check` | Prettier                                                                 |
 | `pnpm db:indexes`                   | Create or update MongoDB indexes                                         |
-| `pnpm user:create`                  | Create a teacher account (and tenant)                                    |
+| `pnpm center:create`                | Create a center and its admin (prints the center code)                   |
 | `pnpm dev:seed`                     | Fill a teacher's tenant with sample data                                 |
 
 The CLI scripts read `.env.local` then `.env`; variables already set in the shell win. To run one against Atlas, set `MONGODB_URI` in the shell.
+
+## Centers, users and sign-in
+
+- **Registering a center.** A center admin registers at `/register` (center name, time zone, his name, email, username, password). He gets a 6-digit **center code** to share with his teachers. It's also shown in Settings → Center.
+- **Signing in.** Everyone, admins included, types the **center code + username + password**. The code is remembered on the device. Usernames only need to be unique inside a center.
+- **Users.** The admin adds users in **Users** (admins only), and chooses for each teacher:
+  - his **classes**: he only sees and syncs these;
+  - his **permissions**: create and manage classes; add, edit and move students; run lessons (attendance, evaluation, homework); see students' monthly reports.
+
+  The admin can also make another user an admin, set a new password, or disable an account. A center always keeps at least one active admin.
+
+- **First sign-in.** A teacher must replace the password the admin chose before using the app.
+- **Own details.** Everyone edits their name, username, phone and password in Settings.
+- **Forgotten passwords.**
+  - An admin resets his own by email (`/forgot-password`, sent through Amazon SES).
+  - A teacher asks his admin, who sets a new one.
+- **How access is enforced.** The device hides what a user can't do. The server checks every sync: a teacher's writes need the matching permission and one of his classes, and pulls only return his classes. When an admin changes someone's classes or permissions, that user's devices rebuild their local copy at the next sync.
 
 ## Architecture in short
 
@@ -128,11 +145,12 @@ pnpm test:e2e    # end-to-end
 
 To reuse the last build: `SKIP_E2E_BUILD=1 pnpm test:e2e`.
 
-| Spec        | Covers                                                                                     | Projects                                                                 |
-| ----------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| `main-flow` | login → class → students → lesson → attendance → evaluate → homework → profile             | iPhone 15 (WebKit), Pixel 7, Desktop Chrome                              |
-| `offline`   | go offline mid-lesson, keep working, reload, reconnect; a second fresh login sees the data | Chromium only (Playwright can't drive service workers offline in WebKit) |
-| `ltr-smoke` | every main screen in English: `dir="ltr"` and no horizontal overflow at 360 px             | all three                                                                |
+| Spec        | Covers                                                                                                                                                   | Projects                                                                 |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `main-flow` | login → class → students → lesson → attendance → evaluate → homework → profile                                                                           | iPhone 15 (WebKit), Pixel 7, Desktop Chrome                              |
+| `offline`   | go offline mid-lesson, keep working, reload, reconnect; a second fresh login sees the data                                                               | Chromium only (Playwright can't drive service workers offline in WebKit) |
+| `roles`     | an admin registers, creates classes and a teacher with limited access; the teacher's forced password change, restricted view, reassignment and disabling | all three                                                                |
+| `ltr-smoke` | every main screen in English: `dir="ltr"` and no horizontal overflow at 360 px                                                                           | all three                                                                |
 
 The first time, install the browsers with `pnpm exec playwright install`. Playwright's WebKit on Windows is close to iOS Safari but not identical, so check on a real iPhone before a release (next section).
 
@@ -194,7 +212,9 @@ Not deployed yet. Do these in order.
 
 - [ ] Create a cluster (ideally in or near `eu-central-1`) and a database user with read/write on the app database only.
 - [ ] Network access: Amplify's compute has no fixed outbound IP, so allow `0.0.0.0/0` and rely on a strong, generated database password.
-- [ ] From your machine, with `MONGODB_URI` (and `MONGODB_DB`) set to the Atlas values in the shell: `pnpm db:indexes`, then `pnpm user:create …` for the teacher.
+- [ ] **If the database has data from before centers and roles (Phase 8), drop it.** Older users and records can't sign in or sync. The app had no real data then.
+- [ ] From your machine, with `MONGODB_URI` (and `MONGODB_DB`) set to the Atlas values in the shell: `pnpm db:indexes`.
+- [ ] The first center registers itself at `/register` once the app is live (step 6). `pnpm center:create` does the same from the command line.
 
 **2. The app secret.** In Secrets Manager (`eu-central-1`), create a secret of type "Other", in plaintext JSON:
 
@@ -204,11 +224,21 @@ Not deployed yet. Do these in order.
   "MONGODB_DB": "quran_tracker",
   "BETTER_AUTH_SECRET": "<new value from: openssl rand -base64 32>",
   "BETTER_AUTH_URL": "https://example.invalid",
-  "ENABLED_LOCALES": "ar"
+  "ENABLED_LOCALES": "ar",
+  "EMAIL_FROM": "متابعة التحفيظ <no-reply@your-domain.com>"
 }
 ```
 
-`BETTER_AUTH_URL` is a placeholder until the app's URL exists (step 6). Copy the secret's **full ARN**.
+- `BETTER_AUTH_URL` is a placeholder until the app's URL exists (step 6).
+- `EMAIL_FROM` is the sender of password reset emails. Its address must be verified in SES (next step). Without `EMAIL_FROM`, reset links are only logged, never sent.
+
+Copy the secret's **full ARN**.
+
+**2b. Amazon SES (password reset emails).** Center admins reset a forgotten password by email; teachers ask their admin.
+
+- [ ] In SES (`eu-central-1`) → Identities → Create identity. Prefer a **domain** (add the DKIM DNS records it shows); a single email address also works for testing.
+- [ ] Request **production access** (SES → Account dashboard). Until AWS approves it (usually about a day), SES is in sandbox mode and only sends to verified addresses.
+- [ ] The stack gives the running app a compute role that may send through any SES identity in this account and region. Nothing else to configure.
 
 **3. The deploy role (once).** With admin credentials for the AWS account:
 

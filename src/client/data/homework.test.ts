@@ -1,6 +1,7 @@
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { attendanceIdFor } from "@/shared/ids";
+import { lessonRecord } from "@/test/records";
 import { openLocalDb, type LocalDb } from "../db/dexie";
 import { LocalStore, LocalValidationError } from "../db/local-store";
 import { setAttendance } from "./attendance";
@@ -8,15 +9,20 @@ import { addHomework, rateHomework, undoEvaluation, updateHomework } from "./hom
 
 const LESSON = "01928c5e-7b3a-7cde-8f00-00000000aa01";
 const OLD_LESSON = "01928c5e-7b3a-7cde-8f00-00000000aa00";
+const CLASS = "01928c5e-7b3a-7cde-8f00-00000000cc01";
 const STUDENT = "01928c5e-7b3a-7cde-8f00-00000000bb01";
 
 describe("homework actions", () => {
   let db: LocalDb;
   let store: LocalStore;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     db = openLocalDb(`homework-${crypto.randomUUID()}`);
     store = new LocalStore(db, { tenantId: "t1", deviceId: "d1" });
+    await db.lessons.bulkPut([
+      lessonRecord(CLASS, { id: LESSON }),
+      lessonRecord(CLASS, { id: OLD_LESSON, date: "2026-10-01" }),
+    ]);
   });
 
   afterEach(async () => {

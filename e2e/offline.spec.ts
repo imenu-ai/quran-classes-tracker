@@ -1,4 +1,4 @@
-import { accountFor } from "./accounts";
+import { credentialsFor } from "./accounts";
 import { ar, expect, newContext, signIn, test, waitForSynced } from "./fixtures";
 import { addStudent, createClass, setPortion, tapScore } from "./helpers";
 
@@ -11,9 +11,9 @@ test("offline lesson: work offline, reconnect, and the server has everything", a
   // Playwright can only drive offline + service workers reliably in Chromium.
   // The iPhone (WebKit) offline path is covered by the manual check in the README.
   test.skip(browserName !== "chromium", "offline + service worker needs Chromium in Playwright");
-  const username = accountFor("offline", projectName);
+  const account = credentialsFor("offline", projectName);
 
-  await signIn(page, username);
+  await signIn(page, account);
   await createClass(page, "حلقة دون اتصال");
   await addStudent(page, "خالد دون اتصال", "2013");
   await waitForSynced(page);
@@ -47,7 +47,7 @@ test("offline lesson: work offline, reconnect, and the server has everything", a
   // A fresh device signs in and finds the offline work on the server.
   const otherContext = await newContext(browser);
   const other = await otherContext.newPage();
-  await signIn(other, username);
+  await signIn(other, account);
   await other.getByRole("link", { name: /حلقة دون اتصال/ }).click();
   await other.getByRole("link", { name: /خالد دون اتصال/ }).click();
   const month = other

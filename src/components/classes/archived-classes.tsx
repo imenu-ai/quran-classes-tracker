@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useAccess } from "@/client/access";
 import { useApp } from "@/client/app-context";
 import { unarchiveClass } from "@/client/data/classes";
 import { cn } from "@/lib/utils";
@@ -15,6 +16,7 @@ import type { ClassRecord } from "@/shared/schemas/class";
 export function ArchivedClasses({ classes }: { classes: readonly ClassRecord[] }) {
   const t = useTranslations();
   const { store } = useApp();
+  const canManage = useAccess().can("classes.manage");
   const [open, setOpen] = useState(false);
   const listId = useId();
 
@@ -50,10 +52,12 @@ export function ArchivedClasses({ classes }: { classes: readonly ClassRecord[] }
               >
                 {cls.name}
               </Link>
-              <Button variant="outline" className="h-10" onClick={() => void restore(cls.id)}>
-                <ArchiveRestore aria-hidden />
-                {t("classes.unarchive")}
-              </Button>
+              {canManage && (
+                <Button variant="outline" className="h-10" onClick={() => void restore(cls.id)}>
+                  <ArchiveRestore aria-hidden />
+                  {t("classes.unarchive")}
+                </Button>
+              )}
             </li>
           ))}
         </ul>

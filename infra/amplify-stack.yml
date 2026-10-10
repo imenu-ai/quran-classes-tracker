@@ -62,6 +62,30 @@ Resources:
                 Action: logs:DescribeLogGroups
                 Resource: "*"
 
+  # The running app (SSR compute) uses this role: it sends the password
+  # reset emails through SES. It can't read the secret (only the build can).
+  AmplifyComputeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: !Sub Amplify SSR compute role for ${AppName}
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: amplify.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: send-email
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ses:SendEmail
+                  - ses:SendRawEmail
+                Resource: !Sub arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:identity/*
+
   AmplifyApp:
     Type: AWS::Amplify::App
     Properties:
@@ -70,6 +94,7 @@ Resources:
       AccessToken: !Ref GitHubAccessToken
       Platform: WEB_COMPUTE
       IAMServiceRole: !GetAtt AmplifyServiceRole.Arn
+      ComputeRoleArn: !GetAtt AmplifyComputeRole.Arn
       EnvironmentVariables:
         - Name: APP_SECRET_ARN
           Value: !Ref AppSecretArn

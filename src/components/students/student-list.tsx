@@ -7,6 +7,7 @@ import { useId, useState } from "react";
 import { toast } from "sonner";
 import { DirectionalIcon } from "@/components/directional-icon";
 import { Button } from "@/components/ui/button";
+import { useAccess } from "@/client/access";
 import { useApp } from "@/client/app-context";
 import { unarchiveStudent } from "@/client/data/students";
 import { ageFromBirthYear, todayInTimeZone } from "@/domain/dates/local-date";
@@ -49,6 +50,7 @@ export function StudentList({ students }: { students: readonly StudentRecord[] }
 export function ArchivedStudents({ students }: { students: readonly StudentRecord[] }) {
   const t = useTranslations("students");
   const { store } = useApp();
+  const canManage = useAccess().can("students.manage");
   const [open, setOpen] = useState(false);
   const listId = useId();
 
@@ -84,10 +86,12 @@ export function ArchivedStudents({ students }: { students: readonly StudentRecor
               >
                 {student.fullName}
               </Link>
-              <Button variant="outline" className="h-10" onClick={() => void restore(student.id)}>
-                <ArchiveRestore aria-hidden />
-                {t("unarchive")}
-              </Button>
+              {canManage && (
+                <Button variant="outline" className="h-10" onClick={() => void restore(student.id)}>
+                  <ArchiveRestore aria-hidden />
+                  {t("unarchive")}
+                </Button>
+              )}
             </li>
           ))}
         </ul>

@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { attendanceIdFor } from "@/shared/ids";
-import { attendanceRecord, classRecord, studentRecord } from "@/test/records";
+import { attendanceRecord, classRecord, lessonRecord, studentRecord } from "@/test/records";
 import { openLocalDb, type LocalDb } from "../db/dexie";
 import { LocalStore } from "../db/local-store";
 import {
@@ -13,6 +13,7 @@ import {
   summarizeAttendance,
 } from "./attendance";
 
+const CLASS = "01928c5e-7b3a-7cde-8f00-00000000cc01";
 const LESSON = "01928c5e-7b3a-7cde-8f00-00000000aa01";
 const S1 = "01928c5e-7b3a-7cde-8f00-00000000bb01";
 const S2 = "01928c5e-7b3a-7cde-8f00-00000000bb02";
@@ -22,9 +23,10 @@ describe("attendance actions", () => {
   let db: LocalDb;
   let store: LocalStore;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     db = openLocalDb(`attendance-${crypto.randomUUID()}`);
     store = new LocalStore(db, { tenantId: "t1", deviceId: "d1" });
+    await db.lessons.put(lessonRecord(CLASS, { id: LESSON }));
   });
 
   afterEach(async () => {

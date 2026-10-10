@@ -39,7 +39,7 @@ describe("Better Auth (username + password)", () => {
       {
         name: "الأستاذ أحمد",
         email: "test-teacher@users.invalid",
-        username: "Teacher",
+        username: "123456:Teacher",
         tenantId: "tenant-a",
       },
       { method: "admin" },
@@ -63,11 +63,15 @@ describe("Better Auth (username + password)", () => {
   });
 
   it("signs in with the right password and sets a long-lived httpOnly session cookie", async () => {
-    const response = await signIn({ username: "teacher", password: PASSWORD }, ip);
+    const response = await signIn({ username: "123456:teacher", password: PASSWORD }, ip);
     expect(response.status).toBe(200);
 
     const body = (await response.json()) as { user: Record<string, unknown> };
-    expect(body.user).toMatchObject({ username: "teacher", tenantId: "tenant-a", locale: "ar" });
+    expect(body.user).toMatchObject({
+      username: "123456:teacher",
+      tenantId: "tenant-a",
+      locale: "ar",
+    });
 
     const cookie = response.headers.get("set-cookie") ?? "";
     expect(cookie).toMatch(/qct\.session_token=/);
@@ -78,25 +82,25 @@ describe("Better Auth (username + password)", () => {
   });
 
   it("normalizes the username (case-insensitive)", async () => {
-    const response = await signIn({ username: "TEACHER", password: PASSWORD }, ip);
+    const response = await signIn({ username: "123456:TEACHER", password: PASSWORD }, ip);
     expect(response.status).toBe(200);
   });
 
   it("rejects a wrong password with 401", async () => {
-    const response = await signIn({ username: "teacher", password: "wrong-password" }, ip);
+    const response = await signIn({ username: "123456:teacher", password: "wrong-password" }, ip);
     expect(response.status).toBe(401);
     expect(response.headers.get("set-cookie") ?? "").not.toMatch(/NEXT_LOCALE/);
   });
 
   it("rejects an unknown username with the same 401", async () => {
-    const response = await signIn({ username: "nobody", password: PASSWORD }, ip);
+    const response = await signIn({ username: "123456:nobody", password: PASSWORD }, ip);
     expect(response.status).toBe(401);
   });
 
   it(`rate-limits sign-in after ${SIGN_IN_RATE_LIMIT.max} attempts per window`, async () => {
     const statuses: number[] = [];
     for (let attempt = 0; attempt <= SIGN_IN_RATE_LIMIT.max; attempt++) {
-      statuses.push((await signIn({ username: "teacher", password: "wrong" }, ip)).status);
+      statuses.push((await signIn({ username: "123456:teacher", password: "wrong" }, ip)).status);
     }
     expect(statuses.slice(0, SIGN_IN_RATE_LIMIT.max).every((status) => status === 401)).toBe(true);
     expect(statuses.at(-1)).toBe(429);

@@ -7,6 +7,12 @@ describe("getLoginErrorKey", () => {
     expect(getLoginErrorKey({ status: 422 }, true)).toBe("invalidCredentials");
   });
 
+  it("reports a disabled account", () => {
+    expect(getLoginErrorKey({ status: 403, code: "ACCOUNT_DISABLED" }, true)).toBe(
+      "accountDisabled",
+    );
+  });
+
   it("reports rate limiting", () => {
     expect(getLoginErrorKey({ status: 429 }, true)).toBe("rateLimited");
   });

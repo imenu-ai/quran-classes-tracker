@@ -1,12 +1,23 @@
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { nextCookies } from "better-auth/next-js";
-import { createAuthMiddleware } from "better-auth/api";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { username } from "better-auth/plugins/username";
 import { DEFAULT_LOCALE, isLocale, LOCALE_COOKIE } from "@/i18n/config";
+import {
+  CENTER_CODE_LENGTH,
+  isCompositeUsername,
+  isLocalUsername,
+  PASSWORD_MAX,
+  PASSWORD_MIN,
+  USERNAME_MAX,
+  USERNAME_MIN,
+} from "@/shared/access";
 import { COLLECTIONS } from "../collections";
 import { getDb } from "../db";
 import { getServerEnv } from "../env";
+import { sendPasswordResetEmail } from "../email";
+import { membersCollection } from "../members";
 import { hashPassword, verifyPassword } from "./password";
 
 const DAY = 60 * 60 * 24;
@@ -14,10 +25,9 @@ const DAY = 60 * 60 * 24;
 /** Browsers cap cookie lifetimes at 400 days, so this is the longest useful session. */
 export const SESSION_EXPIRES_IN = 400 * DAY;
 
-export const USERNAME_MIN = 3;
-export const USERNAME_MAX = 30;
-export const PASSWORD_MIN = 8;
-export const PASSWORD_MAX = 128;
+/** Stored usernames are "<6-digit center code>:<username>" (unique per center). */
+const STORED_USERNAME_MIN = CENTER_CODE_LENGTH + 1 + USERNAME_MIN;
+const STORED_USERNAME_MAX = CENTER_CODE_LENGTH + 1 + USERNAME_MAX;
 
 /** Failed or successful sign-in attempts allowed per IP per window. */
 export const SIGN_IN_RATE_LIMIT = { window: 60, max: 5 };
@@ -36,6 +46,7 @@ function createAuth() {
       additionalFields: {
         tenantId: { type: "string", required: true, input: false },
         locale: { type: "string", required: false, defaultValue: DEFAULT_LOCALE, input: false },
+        phone: { type: "string", required: false, defaultValue: "", input: false },
       },
     },
     session: {
@@ -49,22 +60,36 @@ function createAuth() {
 
     emailAndPassword: {
       enabled: true,
-      // Accounts are created only by the admin CLI (`pnpm user:create`).
+      // Accounts are created by center registration and by admins
+      // (src/server/centers.ts), never by Better Auth's sign-up.
       disableSignUp: true,
       minPasswordLength: PASSWORD_MIN,
       maxPasswordLength: PASSWORD_MAX,
       password: { hash: hashPassword, verify: verifyPassword },
+      // Admins reset a forgotten password by email (teachers ask their admin).
+      sendResetPassword: async ({ user, url }) => {
+        await sendPasswordResetEmail({
+          to: user.email,
+          name: user.name,
+          url,
+          locale: (user as { locale?: string }).locale,
+        });
+      },
+      resetPasswordTokenExpiresIn: 60 * 60,
+      revokeSessionsOnPasswordReset: true,
     },
     // Username-only accounts: every email-based flow is switched off. The
     // email column holds a hidden placeholder that is never used.
     disabledPaths: [
       "/sign-up/email",
       "/sign-in/email",
-      "/request-password-reset",
-      "/reset-password",
       "/send-verification-email",
       "/verify-email",
       "/change-email",
+      // Name, username and phone change through PATCH /api/account, which keeps
+      // the "<code>:<username>" form; Better Auth's own update could break it.
+      "/update-user",
+      "/is-username-available",
     ],
 
     rateLimit: {
@@ -78,6 +103,8 @@ function createAuth() {
       customRules: {
         "/sign-in/username": SIGN_IN_RATE_LIMIT,
         "/change-password": { window: 60, max: 5 },
+        "/request-password-reset": { window: 60 * 15, max: 3 },
+        "/reset-password": { window: 60, max: 5 },
       },
     },
 
@@ -88,22 +115,60 @@ function createAuth() {
     },
 
     hooks: {
-      // Copies the user's saved locale into the locale cookie on sign-in, so
-      // the very next page render uses it (no locale in the URL).
+      // A disabled user can't sign in, even with the right password.
+      before: createAuthMiddleware(async (ctx) => {
+        if (ctx.path !== "/sign-in/username") return;
+        const raw: unknown = (ctx.body as { username?: unknown } | undefined)?.username;
+        if (typeof raw !== "string") return;
+        const user = await getDb()
+          .collection(COLLECTIONS.users)
+          .findOne({ username: raw.trim().toLowerCase() });
+        if (!user) return;
+        const member = await membersCollection(getDb()).findOne({ _id: String(user._id) });
+        if (member?.disabled) {
+          throw new APIError("FORBIDDEN", {
+            code: "ACCOUNT_DISABLED",
+            message: "This account is disabled",
+          });
+        }
+      }),
       after: createAuthMiddleware(async (ctx) => {
+        // Copies the user's saved locale into the locale cookie on sign-in, so
+        // the very next page render uses it (no locale in the URL).
         const newSession = ctx.context.newSession;
-        if (ctx.path !== "/sign-in/username" || !newSession) return;
-        const locale = newSession.user.locale;
-        ctx.setCookie(LOCALE_COOKIE, isLocale(locale) ? locale : DEFAULT_LOCALE, {
-          path: "/",
-          sameSite: "lax",
-          maxAge: SESSION_EXPIRES_IN,
-        });
+        if (ctx.path === "/sign-in/username" && newSession) {
+          const locale = newSession.user.locale;
+          ctx.setCookie(LOCALE_COOKIE, isLocale(locale) ? locale : DEFAULT_LOCALE, {
+            path: "/",
+            sameSite: "lax",
+            maxAge: SESSION_EXPIRES_IN,
+          });
+        }
+        // The password an admin chose has been replaced by the user's own.
+        if (ctx.path === "/change-password" && !(ctx.context.returned instanceof APIError)) {
+          const userId = ctx.context.session?.user.id ?? newSession?.user.id;
+          if (userId) {
+            await membersCollection(getDb()).updateOne(
+              { _id: userId },
+              { $set: { mustChangePassword: false, updatedAt: new Date() } },
+            );
+          }
+        }
       }),
     },
 
     plugins: [
-      username({ minUsernameLength: USERNAME_MIN, maxUsernameLength: USERNAME_MAX }),
+      username({
+        minUsernameLength: STORED_USERNAME_MIN,
+        maxUsernameLength: STORED_USERNAME_MAX,
+        // Checked after lowercasing: "<6 digits>:<a-z 0-9 _ .>".
+        validationOrder: { username: "post-normalization", displayUsername: "post-normalization" },
+        // Sign-in validates the raw input, so accept any case here; stored
+        // usernames are lowercased by the plugin's normalization.
+        usernameValidator: (value) => isCompositeUsername(value.toLowerCase()),
+        displayUsernameNormalization: (value) => value.trim().toLowerCase(),
+        displayUsernameValidator: isLocalUsername,
+      }),
       // Lets server actions set auth cookies; must stay last.
       nextCookies(),
     ],
