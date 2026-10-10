@@ -16,6 +16,7 @@ import {
 import { COLLECTIONS } from "../collections";
 import { getDb } from "../db";
 import { getServerEnv } from "../env";
+import { sendPasswordResetEmail } from "../email";
 import { membersCollection } from "../members";
 import { hashPassword, verifyPassword } from "./password";
 
@@ -65,14 +66,23 @@ function createAuth() {
       minPasswordLength: PASSWORD_MIN,
       maxPasswordLength: PASSWORD_MAX,
       password: { hash: hashPassword, verify: verifyPassword },
+      // Admins reset a forgotten password by email (teachers ask their admin).
+      sendResetPassword: async ({ user, url }) => {
+        await sendPasswordResetEmail({
+          to: user.email,
+          name: user.name,
+          url,
+          locale: (user as { locale?: string }).locale,
+        });
+      },
+      resetPasswordTokenExpiresIn: 60 * 60,
+      revokeSessionsOnPasswordReset: true,
     },
     // Username-only accounts: every email-based flow is switched off. The
     // email column holds a hidden placeholder that is never used.
     disabledPaths: [
       "/sign-up/email",
       "/sign-in/email",
-      "/request-password-reset",
-      "/reset-password",
       "/send-verification-email",
       "/verify-email",
       "/change-email",
@@ -93,6 +103,8 @@ function createAuth() {
       customRules: {
         "/sign-in/username": SIGN_IN_RATE_LIMIT,
         "/change-password": { window: 60, max: 5 },
+        "/request-password-reset": { window: 60 * 15, max: 3 },
+        "/reset-password": { window: 60, max: 5 },
       },
     },
 

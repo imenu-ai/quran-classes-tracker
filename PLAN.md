@@ -570,7 +570,7 @@ The database is wiped for this phase (local and Atlas); there is no migration. S
 - [x] **8.4 Access in the client.** `useAccess()`; actions hidden or read-only by permission; resync on a new `accessVersion`; forced password change and disabled accounts handled.
 - [x] **8.5 User management.** Admin API and `/users` screens: create, edit, assign classes and permissions, reset password, disable; keep at least one active admin.
 - [x] **8.6 Own profile and center settings.** `PATCH /api/account` (name, username, phone, admin email); a center section in Settings (name, time zone, code).
-- [ ] **8.7 Password reset by email.** SES sender, Better Auth reset flow, `/forgot-password` and `/reset-password`, SSR compute role in the stack, `EMAIL_FROM`.
+- [x] **8.7 Password reset by email.** SES sender, Better Auth reset flow, `/forgot-password` and `/reset-password`, SSR compute role in the stack, `EMAIL_FROM`.
 - [ ] **8.8 E2E, docs, wrap-up. Stop.** Existing specs on the new login; a roles spec; README, skills, CLAUDE.md.
 
 ---
@@ -701,3 +701,9 @@ The database is wiped for this phase (local and Atlas); there is no migration. S
     4. The admin moves him to the other class, and his device follows.
     5. Disabled, he's refused at sign-in with the "account disabled" message.
 - 2026-10-10 (step 8.6): The profile form sends only the fields that changed. The center code is shown to everyone in Settings → Center, since teachers may need to pass it on; only admins can edit the center's name and time zone. Checked in a browser: profile and center changes survive a reload, and a phone typed in Arabic-Indic digits is stored with Western digits.
+- 2026-10-10 (step 8.7):
+  - The reset email is in the user's language and direction (an RTL HTML part and a plain-text part), sent through SES v2.
+  - The running app gets SES permission from a new SSR compute role in the stack (`ComputeRoleArn`). The build's service role still reads the secret, and the compute role can't.
+  - The forgot-password page answers the same whether or not an email is registered.
+  - Rate limits: 3 reset requests per 15 minutes and 5 resets a minute per IP. Better Auth signs the user out everywhere after a reset, and a reset link works once.
+  - Checked in a browser: the link printed by the development server sets a new password, sign-in works with it, and a reused link shows "invalid or expired".

@@ -77,7 +77,8 @@
       "centerCode": "Center code",
       "centerCodeHint": "6 digits, from your center's admin",
       "registerPrompt": "New center admin?",
-      "registerLink": "Register your center"
+      "registerLink": "Register your center",
+      "forgotLink": "Forgot your password?"
     },
     "errors": {
       "invalidCredentials": "Incorrect username or password",
@@ -128,6 +129,22 @@
       "title": "Choose a new password",
       "subtitle": "Your current password was set by your center's admin. Choose your own to continue.",
       "submit": "Save and continue"
+    },
+    "forgot": {
+      "title": "Reset your password",
+      "subtitle": "For center admins: enter your email and we'll send you a link to set a new password.",
+      "teachersHint": "If you're a teacher, ask your center's admin to set a new password for you.",
+      "email": "Email",
+      "submit": "Send link",
+      "sent": "If this email is registered, a message will arrive within minutes. Check your spam folder too.",
+      "backToLogin": "Back to sign-in"
+    },
+    "reset": {
+      "title": "Set a new password",
+      "submit": "Save password",
+      "done": "Your password is set. Sign in with it now.",
+      "invalidLink": "This link is invalid or has expired. Request a new one.",
+      "requestNew": "Request a new link"
     }
   },
   "sync": {
@@ -449,5 +466,15 @@
     },
     "retry": "Try again",
     "selfHint": "To change your own name or password, use Settings."
+  },
+  "email": {
+    "resetPassword": {
+      "subject": "Reset your password — Quran memorization tracker",
+      "greeting": "Hello {name},",
+      "body": "We received a request to set a new password for your account. Use the button to choose a new password.",
+      "button": "Set a new password",
+      "expiry": "This link expires in one hour.",
+      "ignore": "If you didn't ask for this, ignore this email; your current password hasn't changed."
+    }
   }
 }

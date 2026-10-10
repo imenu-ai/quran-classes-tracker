@@ -179,6 +179,12 @@ export function LoginForm() {
             </Button>
           </div>
           {fieldError("password")}
+          <Link
+            href="/forgot-password"
+            className="self-start text-sm text-primary underline-offset-4 hover:underline"
+          >
+            {t("login.forgotLink")}
+          </Link>
         </div>
 
         {error && (

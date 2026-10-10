@@ -204,11 +204,21 @@ Not deployed yet. Do these in order.
   "MONGODB_DB": "quran_tracker",
   "BETTER_AUTH_SECRET": "<new value from: openssl rand -base64 32>",
   "BETTER_AUTH_URL": "https://example.invalid",
-  "ENABLED_LOCALES": "ar"
+  "ENABLED_LOCALES": "ar",
+  "EMAIL_FROM": "متابعة التحفيظ <no-reply@your-domain.com>"
 }
 ```
 
-`BETTER_AUTH_URL` is a placeholder until the app's URL exists (step 6). Copy the secret's **full ARN**.
+- `BETTER_AUTH_URL` is a placeholder until the app's URL exists (step 6).
+- `EMAIL_FROM` is the sender of password reset emails. Its address must be verified in SES (next step). Without `EMAIL_FROM`, reset links are only logged, never sent.
+
+Copy the secret's **full ARN**.
+
+**2b. Amazon SES (password reset emails).** Center admins reset a forgotten password by email; teachers ask their admin.
+
+- [ ] In SES (`eu-central-1`) → Identities → Create identity. Prefer a **domain** (add the DKIM DNS records it shows); a single email address also works for testing.
+- [ ] Request **production access** (SES → Account dashboard). Until AWS approves it (usually about a day), SES is in sandbox mode and only sends to verified addresses.
+- [ ] The stack gives the running app a compute role that may send through any SES identity in this account and region. Nothing else to configure.
 
 **3. The deploy role (once).** With admin credentials for the AWS account:
 

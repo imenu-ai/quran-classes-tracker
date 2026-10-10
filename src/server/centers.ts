@@ -24,6 +24,7 @@ import { getAuth } from "./auth/auth";
 import { hashPassword } from "./auth/password";
 import { COLLECTIONS } from "./collections";
 import { getDb } from "./db";
+import { placeholderEmail } from "./email";
 import { membersCollection, type MemberDoc } from "./members";
 import { tenantsCollection, type TenantDoc } from "./tenants";
 
@@ -58,9 +59,7 @@ function parse<T extends Parameters<typeof parseWithCodes>[0]>(schema: T, input:
   return result.data;
 }
 
-/** Teachers have no email; Better Auth still needs a unique one. */
-const placeholderEmail = () => `${uuidv7()}@users.invalid`;
-export const isPlaceholderEmail = (email: string) => email.endsWith("@users.invalid");
+export { isPlaceholderEmail } from "./email";
 
 const usersCollection = (db: Db) => db.collection(COLLECTIONS.users);
 
