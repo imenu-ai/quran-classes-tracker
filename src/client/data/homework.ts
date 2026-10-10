@@ -1,78 +1,8 @@
-import { useLiveQuery } from "dexie-react-hooks";
-import { useLocale } from "next-intl";
-import {
-  evaluationProgress,
-  splitLessonHomework,
-  type StudentLessonHomework,
-} from "@/domain/homework/progress";
 import type { Portion } from "@/domain/homework/suggestion";
 import { postponedLessonsOf, type HomeworkRecord } from "@/shared/schemas/homework";
-import type { LessonRecord } from "@/shared/schemas/lesson";
-import { useApp } from "../app-context";
 import type { LocalDb } from "../db/dexie";
 import type { LocalStore } from "../db/local-store";
-import { buildRoster, findAttendance, setAttendance, type LessonRosterEntry } from "./attendance";
-
-export interface EvaluationEntry extends LessonRosterEntry {
-  homework: StudentLessonHomework<HomeworkRecord>;
-  /** Every non-deleted homework item of the student (for the next suggestion). */
-  history: HomeworkRecord[];
-}
-
-export interface LessonEvaluation {
-  present: EvaluationEntry[];
-  /** Not marked yet: evaluating one of them marks them present. */
-  unmarked: EvaluationEntry[];
-  progress: { done: number; total: number };
-}
-
-/** Everything the evaluation step shows, live from the local database. */
-export function useLessonEvaluation(lesson: LessonRecord) {
-  const { db } = useApp();
-  const locale = useLocale();
-  return useLiveQuery(async (): Promise<LessonEvaluation> => {
-    const [classStudents, records] = await Promise.all([
-      db.students.where("classId").equals(lesson.classId).toArray(),
-      db.attendance.where("lessonId").equals(lesson.id).toArray(),
-    ]);
-    const recorded = await db.students.bulkGet(records.map((r) => r.studentId));
-    const roster = buildRoster(
-      classStudents,
-      [...classStudents, ...recorded.filter((s) => s !== undefined)],
-      records,
-      locale,
-    );
-
-    const studentIds = roster.map((entry) => entry.student.id);
-    const homework = await db.homework.where("studentId").anyOf(studentIds).toArray();
-    const lessonIds = [
-      ...new Set(homework.flatMap((h) => [h.assignedLessonId, h.evaluatedLessonId])),
-    ].filter((id): id is string => id !== null);
-    const lessons = await db.lessons.bulkGet(lessonIds);
-    const lessonDates = new Map(
-      lessons.filter((l) => l !== undefined).map((l) => [l.id, l.date] as const),
-    );
-
-    const entries: EvaluationEntry[] = roster.map((entry) => {
-      const own = homework.filter((h) => h.studentId === entry.student.id && h.deletedAt === null);
-      return {
-        ...entry,
-        history: own,
-        homework: splitLessonHomework(own, lesson, lessonDates),
-      };
-    });
-    const present = entries.filter((entry) => entry.attendance?.status === "present");
-    return {
-      present,
-      unmarked: entries.filter((entry) => !entry.attendance),
-      progress: evaluationProgress(
-        present.map((entry) => entry.student.id),
-        homework,
-        lesson.id,
-      ),
-    };
-  }, [db, lesson.id, lesson.classId, lesson.date, locale]);
-}
+import { findAttendance, setAttendance } from "./attendance";
 
 const homeworkTables = (db: LocalDb) => [
   db.homework,

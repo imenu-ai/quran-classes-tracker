@@ -1,9 +1,6 @@
-import { useLiveQuery } from "dexie-react-hooks";
-import { useLocale } from "next-intl";
 import { attendanceIdFor } from "@/shared/ids";
 import type { AttendanceRecord, AttendanceStatus } from "@/shared/schemas/attendance";
 import type { StudentRecord } from "@/shared/schemas/student";
-import { useApp } from "../app-context";
 import type { LocalDb } from "../db/dexie";
 import type { LocalStore } from "../db/local-store";
 import { isActive } from "./classes";
@@ -55,24 +52,6 @@ export function buildRoster(
     student,
     attendance: byStudent.get(student.id) ?? null,
   }));
-}
-
-export function useLessonRoster(lessonId: string, classId: string) {
-  const { db } = useApp();
-  const locale = useLocale();
-  return useLiveQuery(async () => {
-    const [classStudents, records] = await Promise.all([
-      db.students.where("classId").equals(classId).toArray(),
-      db.attendance.where("lessonId").equals(lessonId).toArray(),
-    ]);
-    const recordedIds = records.map((record) => record.studentId);
-    const recordedStudents = await db.students.bulkGet(recordedIds);
-    const allStudents = [
-      ...classStudents,
-      ...recordedStudents.filter((s): s is StudentRecord => s !== undefined),
-    ];
-    return buildRoster(classStudents, allStudents, records, locale);
-  }, [db, lessonId, classId, locale]);
 }
 
 // Lessons are read (attendance takes its lesson's class), never written here.

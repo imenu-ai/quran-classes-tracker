@@ -592,7 +592,7 @@ See §0 #33–36.
   - Attendance for today; the score grids for each pending item; postpone and undo; "recite now"; "add homework for the next day" with the suggestion.
   - Today's lesson is created only on the first write (`startLesson`). Without `lessons.run`, view only.
 - [x] **9.3 The month table.** Month switcher, one row per day (date, portion, marks, status), an averages row, and the existing edit sheet on tapping a row. It replaces the chart, month cards and history list.
-- [ ] **9.4 Simplify the class page and home cards.** The class page is the student list only; class cards lose "درس جديد". The lesson screens and the `/lesson` route are removed.
+- [x] **9.4 Simplify the class page and home cards.** The class page is the student list only; class cards lose "درس جديد". The lesson screens and the `/lesson` route are removed.
 - [ ] **9.5 E2E, docs, wrap-up. Stop.** `main-flow` and `offline` rewritten for the student page, `roles` and `ltr-smoke` updated, README and skills.
 
 ---
@@ -745,3 +745,4 @@ See §0 #33–36.
   - The month switcher covers the months with data plus the current month.
   - The chart is gone, so `recharts` and the shadcn `chart` component are removed. The first-load-size question about lazy-loading the chart (Phase 5) no longer applies.
   - The student's details (class, birth year, direction, note) move to the bottom of the page.
+- 2026-10-10 (step 9.4): The lesson screens and `/lesson` are removed, along with the hooks only they used (`useLesson`, `useClassLessons`, `useClassLessonSummaries`, `useLessonRoster`, `useLessonEvaluation`, `setLessonNote`). Data functions with their own tests stay (`changeLessonDate`, `deleteLesson`, `markAllPresent`, `summarizeAttendance`). Class cards no longer flag "lesson today".

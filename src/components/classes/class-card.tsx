@@ -1,17 +1,15 @@
 "use client";
 
-import { CalendarCheck, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { DirectionalIcon } from "@/components/directional-icon";
-import { StartLessonButton } from "@/components/lessons/start-lesson-button";
-import { Badge } from "@/components/ui/badge";
 import type { ClassSummary } from "@/client/data/classes";
 
-/** A class on the home screen, with the prominent "درس جديد" button. */
+/** A class on the home screen; tapping it opens its students. */
 export function ClassCard({ summary }: { summary: ClassSummary }) {
   const t = useTranslations("classes");
-  const { record, studentCount, hasLessonToday } = summary;
+  const { record, studentCount } = summary;
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border bg-card p-3 shadow-xs">
@@ -25,12 +23,6 @@ export function ClassCard({ summary }: { summary: ClassSummary }) {
           </span>
           <span className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             {t("studentCount", { count: studentCount })}
-            {hasLessonToday && (
-              <Badge className="bg-success text-success-foreground">
-                <CalendarCheck aria-hidden />
-                {t("lessonToday")}
-              </Badge>
-            )}
           </span>
         </div>
         <DirectionalIcon
@@ -38,7 +30,6 @@ export function ClassCard({ summary }: { summary: ClassSummary }) {
           className="size-5 shrink-0 text-muted-foreground group-hover:text-foreground"
         />
       </Link>
-      <StartLessonButton classId={record.id} hasLessonToday={hasLessonToday} className="w-full" />
     </div>
   );
 }

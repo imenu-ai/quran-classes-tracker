@@ -1,8 +1,6 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { useLocale } from "next-intl";
-import { todayInTimeZone, type LocalDate } from "@/domain/dates/local-date";
 import type { ClassRecord } from "@/shared/schemas/class";
-import type { LessonRecord } from "@/shared/schemas/lesson";
 import type { StudentRecord } from "@/shared/schemas/student";
 import { useApp } from "../app-context";
 import type { LocalDb } from "../db/dexie";
@@ -18,26 +16,18 @@ export const isArchived = (record: { deletedAt: number | null; archivedAt: numbe
 export interface ClassSummary {
   record: ClassRecord;
   studentCount: number;
-  hasLessonToday: boolean;
 }
 
-/** Active classes sorted by name, with their active student count and today's lesson flag. */
+/** Active classes sorted by name, with their active student count. */
 export function summarizeClasses(
   classes: readonly ClassRecord[],
   students: readonly StudentRecord[],
-  lessons: readonly LessonRecord[],
-  today: LocalDate,
   locale: string,
 ): ClassSummary[] {
   const counts = new Map<string, number>();
   for (const student of students) {
     if (isActive(student)) counts.set(student.classId, (counts.get(student.classId) ?? 0) + 1);
   }
-  const withLessonToday = new Set(
-    lessons
-      .filter((lesson) => lesson.deletedAt === null && lesson.date === today)
-      .map((l) => l.classId),
-  );
   const collator = new Intl.Collator(locale);
   return classes
     .filter(isActive)
@@ -45,27 +35,21 @@ export function summarizeClasses(
     .map((record) => ({
       record,
       studentCount: counts.get(record.id) ?? 0,
-      hasLessonToday: withLessonToday.has(record.id),
     }));
 }
 
 /** Home screen data: active class summaries and archived classes. */
 export function useClassList() {
-  const { db, session } = useApp();
+  const { db } = useApp();
   const locale = useLocale();
   return useLiveQuery(async () => {
-    const today = todayInTimeZone(session.timezone);
-    const [classes, students, lessons] = await Promise.all([
-      db.classes.toArray(),
-      db.students.toArray(),
-      db.lessons.where("date").equals(today).toArray(),
-    ]);
+    const [classes, students] = await Promise.all([db.classes.toArray(), db.students.toArray()]);
     const collator = new Intl.Collator(locale);
     return {
-      active: summarizeClasses(classes, students, lessons, today, locale),
+      active: summarizeClasses(classes, students, locale),
       archived: classes.filter(isArchived).sort((a, b) => collator.compare(a.name, b.name)),
     };
-  }, [db, session.timezone, locale]);
+  }, [db, locale]);
 }
 
 /** Every active class (for "move to" pickers). */

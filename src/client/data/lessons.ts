@@ -1,9 +1,7 @@
-import { useLiveQuery } from "dexie-react-hooks";
 import { v7 as uuidv7 } from "uuid";
 import type { LocalDate } from "@/domain/dates/local-date";
 import { lessonIdFor } from "@/shared/ids";
 import type { LessonRecord } from "@/shared/schemas/lesson";
-import { useApp } from "../app-context";
 import type { LocalDb } from "../db/dexie";
 import type { LocalStore } from "../db/local-store";
 
@@ -64,28 +62,6 @@ export async function changeLessonDate(
   });
 }
 
-export function setLessonNote(store: LocalStore, lessonId: string, note: string) {
-  return store.update("lessons", lessonId, { note });
-}
-
-export function useLesson(id: string | null) {
-  const { db } = useApp();
-  // null = not found, undefined = still loading.
-  return useLiveQuery(async () => (id ? ((await db.lessons.get(id)) ?? null) : null), [db, id]);
-}
-
-/** A class's lessons, newest first (deleted ones excluded). */
-export function useClassLessons(classId: string | null) {
-  const { db } = useApp();
-  return useLiveQuery(async () => {
-    if (!classId) return [];
-    const lessons = await db.lessons.where("classId").equals(classId).toArray();
-    return lessons
-      .filter((lesson) => lesson.deletedAt === null)
-      .sort((a, b) => b.date.localeCompare(a.date));
-  }, [db, classId]);
-}
-
 /**
  * Soft-deletes a lesson and what was recorded in it, in one transaction:
  * - its attendance is deleted;
@@ -120,39 +96,4 @@ export async function deleteLesson(store: LocalStore, lessonId: string) {
     }
     await store.softDelete("lessons", lessonId);
   });
-}
-
-export interface LessonSummary {
-  lesson: LessonRecord;
-  present: number;
-  absent: number;
-  excused: number;
-  evaluated: number;
-}
-
-/** A class's lessons (newest first) with attendance and evaluation counts. */
-export function useClassLessonSummaries(classId: string | null) {
-  const { db } = useApp();
-  return useLiveQuery(async (): Promise<LessonSummary[]> => {
-    if (!classId) return [];
-    const lessons = (await db.lessons.where("classId").equals(classId).toArray())
-      .filter((lesson) => lesson.deletedAt === null)
-      .sort((a, b) => b.date.localeCompare(a.date));
-    const ids = lessons.map((lesson) => lesson.id);
-    const [attendance, homework] = await Promise.all([
-      db.attendance.where("lessonId").anyOf(ids).toArray(),
-      db.homework.where("evaluatedLessonId").anyOf(ids).toArray(),
-    ]);
-    return lessons.map((lesson) => {
-      const live = attendance.filter((a) => a.lessonId === lesson.id && a.deletedAt === null);
-      return {
-        lesson,
-        present: live.filter((a) => a.status === "present").length,
-        absent: live.filter((a) => a.status === "absent").length,
-        excused: live.filter((a) => a.status === "excused").length,
-        evaluated: homework.filter((h) => h.evaluatedLessonId === lesson.id && h.deletedAt === null)
-          .length,
-      };
-    });
-  }, [db, classId]);
 }

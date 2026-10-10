@@ -2,15 +2,7 @@
 export const PAGE_CACHE = "pages";
 
 /** Every page shell of the signed-in app (ids come from the query string). */
-export const APP_SHELL_PATHS = [
-  "/",
-  "/class",
-  "/student",
-  "/lesson",
-  "/search",
-  "/users",
-  "/settings",
-];
+export const APP_SHELL_PATHS = ["/", "/class", "/student", "/search", "/users", "/settings"];
 
 /** A page's cache key: origin + pathname, without the query string. */
 export function pageCacheKey(url: string): string {

@@ -11,14 +11,6 @@ describe("pageCacheKey", () => {
   });
 
   it("warms every signed-in page shell", () => {
-    expect(APP_SHELL_PATHS).toEqual([
-      "/",
-      "/class",
-      "/student",
-      "/lesson",
-      "/search",
-      "/users",
-      "/settings",
-    ]);
+    expect(APP_SHELL_PATHS).toEqual(["/", "/class", "/student", "/search", "/users", "/settings"]);
   });
 });

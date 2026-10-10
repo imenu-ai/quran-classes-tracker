@@ -1,6 +1,6 @@
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { classRecord, lessonRecord, studentRecord } from "@/test/records";
+import { classRecord, studentRecord } from "@/test/records";
 import { openLocalDb, type LocalDb } from "../db/dexie";
 import { LocalStore } from "../db/local-store";
 import {
@@ -27,30 +27,11 @@ describe("summarizeClasses", () => {
       studentRecord(fajr.id, { deletedAt: 9 }),
       studentRecord(asr.id),
     ];
-    const result = summarizeClasses(
-      [fajr, archived, asr, deleted],
-      students,
-      [],
-      "2026-10-05",
-      "ar",
-    );
+    const result = summarizeClasses([fajr, archived, asr, deleted], students, "ar");
     expect(result.map((s) => [s.record.name, s.studentCount])).toEqual([
       ["حلقة العصر", 1],
       ["حلقة الفجر", 2],
     ]);
-  });
-
-  it("flags classes that have a (non-deleted) lesson today", () => {
-    const lessons = [
-      lessonRecord(fajr.id, { date: "2026-10-05" }),
-      lessonRecord(asr.id, { date: "2026-10-05", deletedAt: 3 }),
-      lessonRecord(asr.id, { date: "2026-10-04" }),
-    ];
-    const result = summarizeClasses([fajr, asr], [], lessons, "2026-10-05", "ar");
-    expect(Object.fromEntries(result.map((s) => [s.record.name, s.hasLessonToday]))).toEqual({
-      "حلقة الفجر": true,
-      "حلقة العصر": false,
-    });
   });
 });
 
