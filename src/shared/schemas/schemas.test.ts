@@ -123,10 +123,24 @@ describe("lessonRecordSchema", () => {
 describe("attendanceRecordSchema", () => {
   it("accepts each status and rejects others", () => {
     for (const status of ["present", "absent", "excused"]) {
-      const record = { ...base, lessonId: ID2, studentId: ID2, status, excuseNote: "" };
+      const record = {
+        ...base,
+        lessonId: ID2,
+        classId: ID2,
+        studentId: ID2,
+        status,
+        excuseNote: "",
+      };
       expect(parseWithCodes(attendanceRecordSchema, record).success).toBe(true);
     }
-    const bad = { ...base, lessonId: ID2, studentId: ID2, status: "late", excuseNote: "" };
+    const bad = {
+      ...base,
+      lessonId: ID2,
+      classId: ID2,
+      studentId: ID2,
+      status: "late",
+      excuseNote: "",
+    };
     expect(errorsOf(attendanceRecordSchema, bad)).toEqual([
       { path: "status", code: "INVALID_VALUE", params: {} },
     ]);

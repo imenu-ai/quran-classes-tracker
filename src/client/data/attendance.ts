@@ -75,7 +75,14 @@ export function useLessonRoster(lessonId: string, classId: string) {
   }, [db, lessonId, classId, locale]);
 }
 
-const attendanceTables = (db: LocalDb) => [db.attendance, db.outbox, db.rejected, db.meta];
+// Lessons are read (attendance takes its lesson's class), never written here.
+const attendanceTables = (db: LocalDb) => [
+  db.attendance,
+  db.lessons,
+  db.outbox,
+  db.rejected,
+  db.meta,
+];
 
 /**
  * The student's attendance record in a lesson: a live one if any (whatever
@@ -104,8 +111,11 @@ export async function setAttendance(
   status: AttendanceStatus,
 ) {
   const existing = await findAttendance(store.db, lessonId, studentId);
+  const lesson = await store.db.lessons.get(lessonId);
+  if (!lesson) throw new Error(`No lesson ${lessonId}`);
   return store.upsert("attendance", existing?.id ?? attendanceIdFor(lessonId, studentId), {
     lessonId,
+    classId: lesson.classId,
     studentId,
     status,
     excuseNote: existing?.excuseNote ?? "",

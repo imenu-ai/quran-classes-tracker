@@ -566,7 +566,7 @@ The database is wiped for this phase (local and Atlas); there is no migration. S
   - `src/server/centers.ts`: `createCenter`, `createMember`, `updateMember`, `setMemberPassword`, `updateOwnProfile`. Indexes for `tenants.code` and `members`.
   - CLI `pnpm center:create` (replaces `user:create`); `dev:seed --center`; E2E accounts.
 - [x] **8.2 Registration, login, forced password change.** `POST /api/centers` (rate-limited) and `/register` with the center-code screen; 3-field `/login`; `/change-password`; `/api/me` and the device session carry role, permissions, classes and the center.
-- [ ] **8.3 Server-side access.** `withTenant` loads the member (disabled → 401, `mustChangePassword` → 403); push permission and scope checks; teacher-created classes assigned to him; pull scoping; `accessVersion`; student-move handling; `attendance.classId`.
+- [x] **8.3 Server-side access.** `withTenant` loads the member (disabled → 401, `mustChangePassword` → 403); push permission and scope checks; teacher-created classes assigned to him; pull scoping; `accessVersion`; student-move handling; `attendance.classId`.
 - [ ] **8.4 Access in the client.** `useAccess()`; actions hidden or read-only by permission; resync on a new `accessVersion`; forced password change and disabled accounts handled.
 - [ ] **8.5 User management.** Admin API and `/users` screens: create, edit, assign classes and permissions, reset password, disable; keep at least one active admin.
 - [ ] **8.6 Own profile and center settings.** `PATCH /api/account` (name, username, phone, admin email); a center section in Settings (name, time zone, code).
@@ -678,3 +678,10 @@ The database is wiped for this phase (local and Atlas); there is no migration. S
   - Device sessions saved before Phase 8 count as signed out.
   - Until step 8.6, saving the profile in Settings fails: Better Auth's `/update-user` is disabled, and its replacement (`PATCH /api/account`) comes in 8.6.
   - Checked in WebKit at 360 px: registration with field errors, the code screen, entering the app, a wrong password, and signing in again with the remembered code.
+- 2026-10-10 (step 8.3):
+  - Push checks run in this order: another tenant's id → references → consistency → access → write.
+    - Consistency applies to everyone: attendance belongs to its lesson's class, and lessons and attendance never change class. Otherwise `INVALID_VALUE` on `classId`.
+    - Access applies to teachers: the table's permission, and every class the write touches. For homework, that's the student's class.
+  - A new class needs only `classes.manage`. It's added to the teacher's classes immediately, so the rest of the same batch (e.g. its first students) passes.
+  - Trusted server code (the dev seed, tests) passes a bare tenant id and has full access. Routes always pass the signed-in actor.
+  - Attendance and homework actions now read the lesson inside their transaction, so the lessons table is part of it (Dexie refuses tables outside a transaction's scope).

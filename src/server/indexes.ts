@@ -34,6 +34,7 @@ export const INDEXES: Record<string, IndexDescription[]> = {
   [COLLECTIONS.attendance]: [
     { key: { tenantId: 1, serverVersion: 1 }, name: "tenant_version" },
     { key: { tenantId: 1, lessonId: 1 }, name: "tenant_lesson" },
+    { key: { tenantId: 1, classId: 1 }, name: "tenant_class" },
     { key: { tenantId: 1, studentId: 1 }, name: "tenant_student" },
   ],
   [COLLECTIONS.homework]: [

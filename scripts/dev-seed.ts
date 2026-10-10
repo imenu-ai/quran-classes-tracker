@@ -102,6 +102,7 @@ function buildMutations(): PushMutation[] {
           ...base(),
           id: attendanceIdFor(lesson.id, position.student.id),
           lessonId: lesson.id,
+          classId: lesson.classId,
           studentId: position.student.id,
           status,
           excuseNote: status === "excused" ? "مريض" : "",

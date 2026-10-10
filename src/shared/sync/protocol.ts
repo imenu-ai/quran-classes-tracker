@@ -43,6 +43,8 @@ export interface PushResult {
 
 export interface PushResponse {
   results: PushResult[];
+  /** The user's access version: a new value means "resync from scratch". */
+  accessVersion: number;
 }
 
 export const pullQuerySchema = z.object({
@@ -58,4 +60,6 @@ export interface PullResponse {
   cursor: number;
   /** More changes are ready right now: pull again immediately. */
   hasMore: boolean;
+  /** The user's access version (sync routes only): a new value means "resync from scratch". */
+  accessVersion?: number;
 }

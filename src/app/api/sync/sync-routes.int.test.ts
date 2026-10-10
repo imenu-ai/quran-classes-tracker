@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { resetAuthForTests } from "@/server/auth/auth";
 import { ensureIndexes } from "@/server/indexes";
 import { MAX_PUSH_BATCH, type PullResponse, type PushResponse } from "@/shared/sync/protocol";
-import { createSignedInTeacher } from "@/test/auth";
+import { createSignedInMember, createSignedInTeacher } from "@/test/auth";
 import { startTestMongo } from "@/test/mongo";
 import { classRecord } from "@/test/records";
 import { GET as pull } from "./pull/route";
@@ -14,6 +14,7 @@ describe("sync routes", () => {
   let stop: () => Promise<void>;
   let cookie: string;
   let tenantId: string;
+  let code: string;
 
   const pushRequest = (body: string, headers: Record<string, string> = {}) =>
     new Request(`${BASE}/push`, {
@@ -27,7 +28,7 @@ describe("sync routes", () => {
     stop = mongo.stop;
     await ensureIndexes(mongo.db);
     resetAuthForTests();
-    ({ cookie, tenantId } = await createSignedInTeacher("routes_teacher"));
+    ({ cookie, tenantId, code } = await createSignedInTeacher("routes_teacher"));
   });
 
   afterAll(async () => {
@@ -44,6 +45,29 @@ describe("sync routes", () => {
 
     const pullNoSession = await pull(new Request(`${BASE}/pull?since=0`));
     expect(pullNoSession.status).toBe(401);
+  });
+
+  it("returns the user's accessVersion on push and pull", async () => {
+    const pushed = (await (
+      await push(pushRequest(JSON.stringify({ mutations: [] })))
+    ).json()) as PushResponse;
+    expect(pushed.accessVersion).toBe(1);
+    const pulled = (await (
+      await pull(new Request(`${BASE}/pull?since=0`, { headers: { cookie } }))
+    ).json()) as PullResponse;
+    expect(pulled.accessVersion).toBe(1);
+  });
+
+  it("answers 403 while the password an admin set hasn't been changed", async () => {
+    const member = await createSignedInMember(
+      { tenantId, code },
+      { username: "routes_new_member", permissions: ["lessons.run"] },
+    );
+    const response = await pull(
+      new Request(`${BASE}/pull?since=0`, { headers: { cookie: member.cookie } }),
+    );
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ error: "PASSWORD_CHANGE_REQUIRED" });
   });
 
   it("answers 400 on malformed bodies and queries", async () => {
