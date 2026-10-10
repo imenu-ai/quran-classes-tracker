@@ -1,5 +1,5 @@
 import type { ErrorParams } from "@/shared/schemas/errors";
-import type { SyncRecord } from "@/shared/sync/tables";
+import { SYNC_TABLES, type SyncRecord } from "@/shared/sync/tables";
 import type { LocalDb, OutboxEntry } from "./dexie";
 
 export interface OutboxItem {
@@ -7,9 +7,21 @@ export interface OutboxItem {
   record: SyncRecord;
 }
 
-/** Oldest entries first (parents before children), with the record's latest snapshot. */
+/**
+ * The next entries to push, parents before children: by table (classes,
+ * students, lessons, attendance, homework), then oldest first, each with
+ * the record's latest snapshot.
+ *
+ * Ordering only by when an entry was first queued isn't enough: an unsynced
+ * record edited later can point at a parent queued after it (homework from
+ * yesterday scored in today's lesson, created just now), and the server
+ * would refuse it as REFERENCE_NOT_FOUND.
+ */
 export async function readOutboxBatch(db: LocalDb, limit: number): Promise<OutboxItem[]> {
-  const entries = await db.outbox.orderBy("enqueuedAt").limit(limit).toArray();
+  const rank = (entry: OutboxEntry) => SYNC_TABLES.indexOf(entry.table);
+  const entries = (await db.outbox.orderBy("enqueuedAt").toArray())
+    .sort((a, b) => rank(a) - rank(b) || a.enqueuedAt - b.enqueuedAt)
+    .slice(0, limit);
   const items: OutboxItem[] = [];
   for (const entry of entries) {
     const record = await db.syncTable(entry.table).get(entry.recordId);

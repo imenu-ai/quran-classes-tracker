@@ -101,6 +101,46 @@ describe("SyncEngine", () => {
     await db.delete();
   });
 
+  it("pushes parents first, even when a child was queued before its parent", async () => {
+    online = false;
+    const cls = await store.create("classes", { name: "A", archivedAt: null });
+    const student = await store.create("students", {
+      classId: cls.id,
+      fullName: "أحمد",
+      birthYear: 2014,
+      note: "",
+      memorizationDirection: "forward",
+      archivedAt: null,
+    });
+    const homework = await store.create("homework", {
+      studentId: student.id,
+      surah: 112,
+      fromAyah: 1,
+      toAyah: 4,
+      note: "",
+      assignedLessonId: null,
+      evaluatedLessonId: null,
+      memorizationRate: null,
+      behaviorRate: null,
+      postponedLessonIds: [],
+    });
+    // Later: today's lesson is created and the (still unsynced) homework scored in it.
+    const lesson = await store.create("lessons", { classId: cls.id, date: "2026-10-10", note: "" });
+    await store.update("homework", homework.id, {
+      evaluatedLessonId: lesson.id,
+      memorizationRate: 9,
+    });
+
+    online = true;
+    await engine.syncNow();
+    expect(server.pushes[0]?.map((mutation) => mutation.table)).toEqual([
+      "classes",
+      "students",
+      "lessons",
+      "homework",
+    ]);
+  });
+
   it("keeps offline writes and pushes them once online", async () => {
     online = false;
     const created = await store.create("classes", { name: "A", archivedAt: null });
