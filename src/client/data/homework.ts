@@ -2,6 +2,7 @@ import type { Portion } from "@/domain/homework/suggestion";
 import { postponedLessonsOf, type HomeworkRecord } from "@/shared/schemas/homework";
 import type { LocalDb } from "../db/dexie";
 import type { LocalStore } from "../db/local-store";
+import type { AttendanceStatus } from "@/shared/schemas/attendance";
 import { findAttendance, setAttendance } from "./attendance";
 
 const homeworkTables = (db: LocalDb) => [
@@ -68,6 +69,32 @@ export async function postponeHomework(
     if (postponed.includes(lessonId)) return;
     await ensurePresent(store, lessonId, item.studentId);
     await store.update("homework", item.id, { postponedLessonIds: [...postponed, lessonId] });
+  });
+}
+
+/**
+ * Sets a student's attendance in a lesson. A postponed recitation means he
+ * was there, so marking him absent or excused also cancels his
+ * postponements in that lesson.
+ */
+export async function setStudentAttendance(
+  store: LocalStore,
+  lessonId: string,
+  studentId: string,
+  status: AttendanceStatus,
+) {
+  const { db } = store;
+  await db.transaction("rw", homeworkTables(db), async () => {
+    await setAttendance(store, lessonId, studentId, status);
+    if (status === "present") return;
+    const items = await db.homework.where("studentId").equals(studentId).toArray();
+    for (const item of items) {
+      const postponed = postponedLessonsOf(item);
+      if (item.deletedAt !== null || !postponed.includes(lessonId)) continue;
+      await store.update("homework", item.id, {
+        postponedLessonIds: postponed.filter((id) => id !== lessonId),
+      });
+    }
   });
 }
 

@@ -15,11 +15,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAccess } from "@/client/access";
 import { useApp } from "@/client/app-context";
-import { clearAttendance, setAttendance } from "@/client/data/attendance";
+import { clearAttendance } from "@/client/data/attendance";
 import {
   deleteHomework,
   postponeHomework,
   rateHomework,
+  setStudentAttendance,
   undoEvaluation,
   undoPostpone,
 } from "@/client/data/homework";
@@ -85,7 +86,7 @@ export function StudentToday({ student }: { student: StudentRecord }) {
                 if (lesson) await clearAttendance(store, lesson.id, student.id);
                 return;
               }
-              await setAttendance(store, await lessonId(), student.id, status);
+              await setStudentAttendance(store, await lessonId(), student.id, status);
             }}
           />
           {attendance?.status === "excused" && lesson && (

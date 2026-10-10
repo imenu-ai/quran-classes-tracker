@@ -9,6 +9,7 @@ import {
   addHomework,
   postponeHomework,
   rateHomework,
+  setStudentAttendance,
   undoEvaluation,
   undoPostpone,
   updateHomework,
@@ -72,6 +73,17 @@ describe("homework actions", () => {
       memorizationRate: 7,
       // The earlier day's postponement stays in his history.
       postponedLessonIds: [OLD_LESSON],
+    });
+  });
+
+  it("marking the student absent cancels his postponements in that lesson", async () => {
+    const item = await assignInOldLesson();
+    await postponeHomework(store, item, OLD_LESSON);
+    await postponeHomework(store, item, LESSON);
+    await setStudentAttendance(store, LESSON, STUDENT, "absent");
+    expect((await db.homework.get(item.id))?.postponedLessonIds).toEqual([OLD_LESSON]);
+    expect(await db.attendance.get(attendanceIdFor(LESSON, STUDENT))).toMatchObject({
+      status: "absent",
     });
   });
 

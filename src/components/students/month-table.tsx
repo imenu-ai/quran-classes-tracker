@@ -18,8 +18,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { useApp } from "@/client/app-context";
-import { setAttendance } from "@/client/data/attendance";
-import { rateHomework, undoPostpone } from "@/client/data/homework";
+import { rateHomework, setStudentAttendance, undoPostpone } from "@/client/data/homework";
 import { buildMonthHistory, type HistoryRow, type StudentProfile } from "@/client/data/profile";
 import { localDateToUtcDate, monthKey, todayInTimeZone } from "@/domain/dates/local-date";
 import { cn } from "@/lib/utils";
@@ -303,7 +302,9 @@ function RowEditDrawer({
                       label={t("glossary.attendance")}
                       value={row.record.status}
                       onChange={(status: AttendanceStatus | null) => {
-                        if (status) void setAttendance(store, row.lesson.id, student.id, status);
+                        if (status) {
+                          void setStudentAttendance(store, row.lesson.id, student.id, status);
+                        }
                       }}
                     />
                     {row.record.status === "excused" && (

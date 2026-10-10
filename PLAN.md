@@ -746,3 +746,7 @@ See §0 #33–36.
   - The chart is gone, so `recharts` and the shadcn `chart` component are removed. The first-load-size question about lazy-loading the chart (Phase 5) no longer applies.
   - The student's details (class, birth year, direction, note) move to the bottom of the page.
 - 2026-10-10 (step 9.4): The lesson screens and `/lesson` are removed, along with the hooks only they used (`useLesson`, `useClassLessons`, `useClassLessonSummaries`, `useLessonRoster`, `useLessonEvaluation`, `setLessonNote`). Data functions with their own tests stay (`changeLessonDate`, `deleteLesson`, `markAllPresent`, `summarizeAttendance`). Class cards no longer flag "lesson today".
+- 2026-10-10 (Phase 9 browser check; two fixes):
+  - **Absent after postponed.** Marking a student absent or excused now cancels his postponements in that lesson (`setStudentAttendance`); a postponement means he was there.
+  - **Sync order.** The outbox pushed by the time an entry was first queued. A still-unsynced homework item scored in today's lesson, created just then, reached the server before the lesson and was rejected (`REFERENCE_NOT_FOUND`). With today's lesson created on the first mark, this would hit anyone marking offline. Pushes now go in table order (classes, students, lessons, attendance, homework), then oldest first; the server also writes each batch in that order.
+
