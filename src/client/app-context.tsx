@@ -7,12 +7,18 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
 import { openLocalDb, type LocalDb } from "./db/dexie";
 import { LocalStore } from "./db/local-store";
-import { getDeviceId, readSession, type SessionSnapshot } from "./session/session";
+import {
+  bootstrapSession,
+  getDeviceId,
+  readSession,
+  type SessionSnapshot,
+} from "./session/session";
 import { SyncEngine, type SyncStatus } from "./sync/engine";
 import { requestPersistentStorage } from "./pwa/install";
 import { warmPageCache } from "./pwa/page-cache";
@@ -67,6 +73,9 @@ export function AppProvider({
 
   const userId = session?.userId;
   const tenantId = session?.tenantId;
+  // The engine lives as long as the user; it reads the latest snapshot here.
+  const accessVersion = useRef(session?.accessVersion);
+  accessVersion.current = session?.accessVersion;
 
   useEffect(() => {
     if (!userId || !tenantId || !session) return;
@@ -78,7 +87,19 @@ export function AppProvider({
       if (cancelled) return;
       const db = openLocalDb(userId);
       const store = new LocalStore(db, { tenantId, deviceId });
-      engine = new SyncEngine({ db });
+      engine = new SyncEngine({
+        db,
+        getAccessVersion: () => accessVersion.current,
+        // New classes or permissions: the engine rebuilt the local copy;
+        // refresh the saved session so the UI shows the new access.
+        onAccessChanged: async () => {
+          await bootstrapSession();
+        },
+        // The saved session then says so, and the gate above redirects.
+        onPasswordChangeRequired: () => {
+          void bootstrapSession().catch(() => {});
+        },
+      });
       detach = attachSyncTriggers(engine, store);
       // Cache every page shell now, so pages not opened yet also work offline.
       if (navigator.onLine) void warmPageCache();

@@ -177,7 +177,9 @@
     "renamed": "Class renamed",
     "archivedToast": "Class archived",
     "unarchivedToast": "Class restored",
-    "actions": "Class options"
+    "actions": "Class options",
+    "emptyAssignedTitle": "No classes assigned to you",
+    "emptyAssignedDescription": "Ask your center's admin to assign you a class."
   },
   "students": {
     "title": "Students",
@@ -290,7 +292,8 @@
     "attendanceSummary": "Present {present} · Absent {absent} · Excused {excused}",
     "evaluatedCount": "{count, plural, =0 {No evaluations} one {# evaluation} other {# evaluations}}",
     "showMore": "Show more",
-    "notePlaceholder": "Note about this lesson (optional)"
+    "notePlaceholder": "Note about this lesson (optional)",
+    "viewOnly": "View only: you don't have permission to run lessons."
   },
   "attendance": {
     "markAllPresent": "Mark all present",

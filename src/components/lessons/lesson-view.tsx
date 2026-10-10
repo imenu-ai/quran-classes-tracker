@@ -9,6 +9,7 @@ import { PageContainer, PageHeader } from "@/components/shell/page";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAccess } from "@/client/access";
 import { useClass } from "@/client/data/classes";
 import { useLesson } from "@/client/data/lessons";
 import { AttendanceStep } from "./attendance-step";
@@ -26,6 +27,7 @@ export function LessonView({ lessonId, step }: { lessonId: string | null; step: 
   const formatLessonDate = useLessonDate();
   const lesson = useLesson(lessonId);
   const cls = useClass(lesson?.classId ?? null);
+  const canRun = useAccess().can("lessons.run");
 
   if (lesson === undefined) {
     return (
@@ -63,7 +65,7 @@ export function LessonView({ lessonId, step }: { lessonId: string | null; step: 
       <PageHeader
         title={formatLessonDate(lesson.date)}
         backHref={`/class?id=${lesson.classId}`}
-        actions={<LessonActionsMenu lesson={lesson} />}
+        actions={canRun ? <LessonActionsMenu lesson={lesson} /> : null}
       />
       {cls && (
         <p dir="auto" className="-mt-3 text-muted-foreground">
@@ -71,7 +73,17 @@ export function LessonView({ lessonId, step }: { lessonId: string | null; step: 
         </p>
       )}
 
-      <LessonNoteField lesson={lesson} />
+      {!canRun && (
+        <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
+          {t("lessons.viewOnly")}
+        </p>
+      )}
+
+      {/* A disabled fieldset turns every control inside it into view-only;
+          the step tabs stay outside so the lesson can still be browsed. */}
+      <fieldset disabled={!canRun} className="min-w-0">
+        <LessonNoteField lesson={lesson} />
+      </fieldset>
 
       <Tabs value={step} onValueChange={setStep} className="gap-4">
         <TabsList aria-label={t("lessons.steps")} className="h-12 w-full">
@@ -83,10 +95,14 @@ export function LessonView({ lessonId, step }: { lessonId: string | null; step: 
           </TabsTrigger>
         </TabsList>
         <TabsContent value="attendance">
-          <AttendanceStep lesson={lesson} onNext={() => setStep("evaluate")} />
+          <fieldset disabled={!canRun} className="min-w-0">
+            <AttendanceStep lesson={lesson} onNext={() => setStep("evaluate")} />
+          </fieldset>
         </TabsContent>
         <TabsContent value="evaluate">
-          <EvaluationStep lesson={lesson} onBackToAttendance={() => setStep("attendance")} />
+          <fieldset disabled={!canRun} className="min-w-0">
+            <EvaluationStep lesson={lesson} onBackToAttendance={() => setStep("attendance")} />
+          </fieldset>
         </TabsContent>
       </Tabs>
     </PageContainer>

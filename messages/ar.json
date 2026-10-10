@@ -177,7 +177,9 @@
     "renamed": "تم تعديل اسم الحلقة",
     "archivedToast": "تمت أرشفة الحلقة",
     "unarchivedToast": "تمت استعادة الحلقة",
-    "actions": "خيارات الحلقة"
+    "actions": "خيارات الحلقة",
+    "emptyAssignedTitle": "لا توجد حلقات مسندة إليك",
+    "emptyAssignedDescription": "اطلب من مدير المركز أن يسند إليك حلقة."
   },
   "students": {
     "title": "الطلاب",
@@ -290,7 +292,8 @@
     "attendanceSummary": "حاضر {present} · غائب {absent} · بعذر {excused}",
     "evaluatedCount": "{count, plural, zero {لا تقييمات} one {تقييم واحد} two {تقييمان} few {# تقييمات} many {# تقييمًا} other {# تقييم}}",
     "showMore": "عرض المزيد",
-    "notePlaceholder": "ملاحظة على الدرس (اختياري)"
+    "notePlaceholder": "ملاحظة على الدرس (اختياري)",
+    "viewOnly": "للعرض فقط: ليست لديك صلاحية تسجيل الدروس."
   },
   "attendance": {
     "markAllPresent": "تحديد الكل حاضر",

@@ -567,7 +567,7 @@ The database is wiped for this phase (local and Atlas); there is no migration. S
   - CLI `pnpm center:create` (replaces `user:create`); `dev:seed --center`; E2E accounts.
 - [x] **8.2 Registration, login, forced password change.** `POST /api/centers` (rate-limited) and `/register` with the center-code screen; 3-field `/login`; `/change-password`; `/api/me` and the device session carry role, permissions, classes and the center.
 - [x] **8.3 Server-side access.** `withTenant` loads the member (disabled → 401, `mustChangePassword` → 403); push permission and scope checks; teacher-created classes assigned to him; pull scoping; `accessVersion`; student-move handling; `attendance.classId`.
-- [ ] **8.4 Access in the client.** `useAccess()`; actions hidden or read-only by permission; resync on a new `accessVersion`; forced password change and disabled accounts handled.
+- [x] **8.4 Access in the client.** `useAccess()`; actions hidden or read-only by permission; resync on a new `accessVersion`; forced password change and disabled accounts handled.
 - [ ] **8.5 User management.** Admin API and `/users` screens: create, edit, assign classes and permissions, reset password, disable; keep at least one active admin.
 - [ ] **8.6 Own profile and center settings.** `PATCH /api/account` (name, username, phone, admin email); a center section in Settings (name, time zone, code).
 - [ ] **8.7 Password reset by email.** SES sender, Better Auth reset flow, `/forgot-password` and `/reset-password`, SSR compute role in the stack, `EMAIL_FROM`.
@@ -685,3 +685,8 @@ The database is wiped for this phase (local and Atlas); there is no migration. S
   - A new class needs only `classes.manage`. It's added to the teacher's classes immediately, so the rest of the same batch (e.g. its first students) passes.
   - Trusted server code (the dev seed, tests) passes a bare tenant id and has full access. Routes always pass the signed-in actor.
   - Attendance and homework actions now read the lesson inside their transaction, so the lessons table is part of it (Dexie refuses tables outside a transaction's scope).
+- 2026-10-10 (step 8.4):
+  - On a new `accessVersion` from push or pull, the engine deletes every local record the server has confirmed and pulls from 0, then refreshes the saved session. Records with a pending or rejected change are kept, so nothing unsynced is lost. A pull page reporting a different version isn't applied before the rebuild.
+  - A disabled user needs no special handling on the device: disabling ends his sessions, so the device shows "sign in again", and sign-in then says the account is disabled. His local, unsynced work stays on the device.
+  - View-only screens use a disabled `<fieldset>` around the controls, which disables every button and input inside. The lesson's step tabs stay outside it, so a lesson can still be browsed.
+  - Without `reports.view`, the student page shows the current homework but not the monthly statistics or the history.

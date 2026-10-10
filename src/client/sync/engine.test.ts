@@ -277,3 +277,101 @@ describe("applyPulledChanges", () => {
     expect(await db.classes.get(record.id)).toMatchObject({ deletedAt: 2_000 });
   });
 });
+
+describe("SyncEngine and access changes", () => {
+  let db: LocalDb;
+  let store: LocalStore;
+  let server: ReturnType<typeof fakeServer>;
+
+  beforeEach(() => {
+    db = openLocalDb(`engine-access-${crypto.randomUUID()}`);
+    store = new LocalStore(db, { tenantId: "t1", deviceId: "device-a" });
+    server = fakeServer();
+  });
+
+  afterEach(async () => {
+    await db.delete();
+  });
+
+  it("rebuilds the local copy for new access, keeping changes the server hasn't taken", async () => {
+    const lost = classRecord({ name: "صف لم يعد له", serverVersion: 3 });
+    await applyPulledChanges(db, { changes: { ...emptyChanges(), classes: [lost] }, cursor: 5 });
+    const refused = await store.create("classes", { name: "مرفوض", archivedAt: null });
+    server.setDecide((mutation) => ({
+      id: String(mutation.record.id),
+      table: mutation.table,
+      status: "rejected",
+      code: "FORBIDDEN",
+    }));
+    const gained = classRecord({ name: "صف جديد له", serverVersion: 8 });
+    server.queuePull(
+      { changes: emptyChanges(), cursor: 5, hasMore: false, accessVersion: 2 },
+      {
+        changes: { ...emptyChanges(), classes: [gained] },
+        cursor: 9,
+        hasMore: false,
+        accessVersion: 2,
+      },
+    );
+    const onAccessChanged = vi.fn(async () => {});
+    const engine = new SyncEngine({
+      db,
+      fetch: server.fetch,
+      isOnline: () => true,
+      getAccessVersion: () => 1,
+      onAccessChanged,
+    });
+
+    await engine.syncNow();
+
+    expect(await db.classes.get(lost.id)).toBeUndefined();
+    expect(await db.classes.get(refused.id)).toBeDefined();
+    expect(await db.rejected.get(refused.id)).toBeDefined();
+    expect(await db.classes.get(gained.id)).toMatchObject({ name: "صف جديد له" });
+    expect(await getCursor(db)).toBe(9);
+    expect(onAccessChanged).toHaveBeenCalledTimes(1);
+    const pulls = server.calls.mock.calls
+      .map(([url]) => String(url))
+      .filter((url) => url.startsWith("/api/sync/pull"));
+    expect(pulls.map((url) => new URL(url, "http://x").searchParams.get("since"))).toEqual([
+      "5",
+      "0",
+    ]);
+    engine.dispose();
+  });
+
+  it("leaves everything as is while the access version matches", async () => {
+    const kept = classRecord({ serverVersion: 3 });
+    await applyPulledChanges(db, { changes: { ...emptyChanges(), classes: [kept] }, cursor: 5 });
+    server.queuePull({ changes: emptyChanges(), cursor: 5, hasMore: false, accessVersion: 4 });
+    const onAccessChanged = vi.fn(async () => {});
+    const engine = new SyncEngine({
+      db,
+      fetch: server.fetch,
+      isOnline: () => true,
+      getAccessVersion: () => 4,
+      onAccessChanged,
+    });
+    await engine.syncNow();
+    expect(await db.classes.get(kept.id)).toBeDefined();
+    expect(onAccessChanged).not.toHaveBeenCalled();
+    engine.dispose();
+  });
+
+  it("asks for the password change on 403 and keeps local changes", async () => {
+    await store.create("classes", { name: "A", archivedAt: null });
+    server.setPushStatus(403);
+    const onPasswordChangeRequired = vi.fn();
+    const engine = new SyncEngine({
+      db,
+      fetch: server.fetch,
+      isOnline: () => true,
+      onPasswordChangeRequired,
+    });
+    await engine.syncNow();
+    expect(onPasswordChangeRequired).toHaveBeenCalledTimes(1);
+    expect(engine.getStatus().state).toBe("idle");
+    expect(await db.outbox.count()).toBe(1);
+    engine.dispose();
+  });
+});

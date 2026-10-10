@@ -1,7 +1,8 @@
 import type { PullResponse, PushResponse } from "@/shared/sync/protocol";
+import { SYNC_TABLES } from "@/shared/sync/tables";
 import type { LocalDb } from "../db/dexie";
 import { acknowledge, markFailed, readOutboxBatch, reject } from "../db/outbox";
-import { applyPulledChanges, getCursor } from "./apply-pull";
+import { applyPulledChanges, CURSOR_KEY, getCursor } from "./apply-pull";
 import { backoffDelay } from "./backoff";
 
 export type SyncState = "idle" | "syncing" | "offline" | "needsLogin" | "error";
@@ -24,6 +25,16 @@ export interface SyncEngineOptions {
   pullLimit?: number;
   /** Injectable timers for tests. */
   timers?: Timers;
+  /** The access version the device last saw (from the saved session). */
+  getAccessVersion?: () => number | undefined;
+  /**
+   * The server reported a new access version: the local copy was already
+   * rebuilt for the new access; refresh the saved session (permissions,
+   * classes) so the UI follows.
+   */
+  onAccessChanged?: () => Promise<void>;
+  /** The server wants the password an admin set replaced first (403). */
+  onPasswordChangeRequired?: () => void;
 }
 
 export interface Timers {
@@ -40,6 +51,8 @@ const defaultTimers: Timers = {
 class NeedsLoginError extends Error {}
 /** A network failure or a server error: try again later. */
 class TransientError extends Error {}
+/** The user must replace an admin-set password before syncing. */
+class PasswordChangeRequiredError extends Error {}
 
 const PUSH_URL = "/api/sync/push";
 const PULL_URL = "/api/sync/pull";
@@ -65,8 +78,12 @@ export class SyncEngine {
   private readonly isOnline: () => boolean;
   private readonly pushBatchSize: number;
   private readonly pullLimit: number;
+  private readonly options: SyncEngineOptions;
+  /** The latest access version a sync response reported. */
+  private reportedAccessVersion: number | undefined;
 
   constructor(options: SyncEngineOptions) {
+    this.options = options;
     this.db = options.db;
     this.fetchImpl = options.fetch ?? ((...args) => fetch(...args));
     this.now = options.now ?? Date.now;
@@ -139,12 +156,27 @@ export class SyncEngine {
     try {
       await withLock(async () => {
         await this.pushAll();
+        if (this.accessChanged()) await this.rebuildForNewAccess();
         await this.pullAll();
+        // Access may also change between the push and the pull.
+        if (this.accessChanged()) {
+          await this.rebuildForNewAccess();
+          await this.pullAll();
+        }
+        if (this.rebuilt) {
+          this.rebuilt = false;
+          await this.options.onAccessChanged?.();
+        }
       });
       this.setStatus({ state: "idle", failures: 0, lastSyncedAt: this.now() });
     } catch (error) {
       if (error instanceof NeedsLoginError) {
         this.setStatus({ state: "needsLogin" });
+        return;
+      }
+      if (error instanceof PasswordChangeRequiredError) {
+        this.setStatus({ state: "idle" });
+        this.options.onPasswordChangeRequired?.();
         return;
       }
       const failures = this.status.failures + 1;
@@ -182,12 +214,14 @@ export class SyncEngine {
         throw error;
       }
       if (response.status === 401) throw new NeedsLoginError();
+      if (response.status === 403) throw new PasswordChangeRequiredError();
       if (!response.ok) {
         await markFailed(this.db, sent, `HTTP_${response.status}`);
         throw new TransientError(`push failed with ${response.status}`);
       }
 
-      const { results } = (await response.json()) as PushResponse;
+      const { results, accessVersion } = (await response.json()) as PushResponse;
+      this.reportedAccessVersion = accessVersion;
       const accepted = [];
       for (const [index, entry] of sent.entries()) {
         const result = results[index];
@@ -211,12 +245,48 @@ export class SyncEngine {
       const url = `${PULL_URL}?since=${since}&limit=${this.pullLimit}`;
       const response = await this.fetchImpl(url, { headers: { accept: "application/json" } });
       if (response.status === 401) throw new NeedsLoginError();
+      if (response.status === 403) throw new PasswordChangeRequiredError();
       if (!response.ok) throw new TransientError(`pull failed with ${response.status}`);
 
       const page = (await response.json()) as PullResponse;
+      this.reportedAccessVersion = page.accessVersion;
+      // Don't apply a page cut for different access; the caller rebuilds first.
+      if (this.accessChanged()) return;
       await applyPulledChanges(this.db, page);
       if (!page.hasMore) return;
     }
+  }
+
+  /** Set while the local copy was rebuilt and the session not refreshed yet. */
+  private rebuilt = false;
+
+  private accessChanged(): boolean {
+    const known = this.options.getAccessVersion?.();
+    const reported = this.reportedAccessVersion;
+    return known !== undefined && reported !== undefined && reported !== known && !this.rebuilt;
+  }
+
+  /**
+   * The user's classes or permissions changed: drop the local copy of
+   * everything the server confirmed and pull it again from scratch, so
+   * classes he lost disappear and classes he gained arrive in full. Records
+   * with a pending or rejected change are kept: nothing unsynced is lost.
+   */
+  private async rebuildForNewAccess(): Promise<void> {
+    const { db } = this;
+    const tables = SYNC_TABLES.map((table) => db.syncTable(table));
+    await db.transaction("rw", [...tables, db.outbox, db.rejected, db.meta], async () => {
+      const keep = new Set<string>([
+        ...((await db.outbox.toCollection().primaryKeys()) as string[]),
+        ...((await db.rejected.toCollection().primaryKeys()) as string[]),
+      ]);
+      for (const table of tables) {
+        const ids = (await table.toCollection().primaryKeys()) as string[];
+        await table.bulkDelete(ids.filter((id) => !keep.has(id)));
+      }
+      await db.meta.put({ key: CURSOR_KEY, value: 0 });
+    });
+    this.rebuilt = true;
   }
 
   private setStatus(patch: Partial<SyncStatus>) {

@@ -15,6 +15,7 @@ import { StudentFormDrawer } from "@/components/students/student-form-drawer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAccess } from "@/client/access";
 import { useApp } from "@/client/app-context";
 import { useClass } from "@/client/data/classes";
 import { startLesson, useClassLessons } from "@/client/data/lessons";
@@ -43,6 +44,10 @@ export function ClassView({ classId }: { classId: string | null }) {
   const [pickingDate, setPickingDate] = useState(false);
   const router = useRouter();
   const { store, session } = useApp();
+  const access = useAccess();
+  const canManageClass = access.can("classes.manage");
+  const canManageStudents = access.can("students.manage");
+  const canRunLessons = access.can("lessons.run");
   const lessons = useClassLessons(classId);
   const today = todayInTimeZone(session.timezone);
   const hasLessonToday = (lessons ?? []).some((lesson) => lesson.date === today);
@@ -66,16 +71,21 @@ export function ClassView({ classId }: { classId: string | null }) {
     );
   }
 
-  const addButton = (
+  const addButton = canManageStudents ? (
     <Button size="lg" className="h-11" onClick={() => setAdding(true)}>
       <UserPlus aria-hidden />
       {t("students.add")}
     </Button>
-  );
+  ) : null;
 
   return (
     <PageContainer>
-      <PageHeader title={cls.name} backHref="/" userText actions={<ClassActionsMenu cls={cls} />} />
+      <PageHeader
+        title={cls.name}
+        backHref="/"
+        userText
+        actions={canManageClass ? <ClassActionsMenu cls={cls} /> : null}
+      />
       {cls.archivedAt !== null && (
         <Badge variant="secondary" className="self-start">
           <Archive aria-hidden />
@@ -83,7 +93,7 @@ export function ClassView({ classId }: { classId: string | null }) {
         </Badge>
       )}
 
-      {students.active.length > 0 && cls.archivedAt === null && (
+      {canRunLessons && students.active.length > 0 && cls.archivedAt === null && (
         <div className="grid gap-2 sm:grid-cols-2">
           <StartLessonButton classId={cls.id} hasLessonToday={hasLessonToday} />
           <Button variant="outline" size="lg" className="h-12" onClick={() => setPickingDate(true)}>

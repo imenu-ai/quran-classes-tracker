@@ -9,6 +9,7 @@ import { PageContainer, PageHeader } from "@/components/shell/page";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAccess } from "@/client/access";
 import { useApp } from "@/client/app-context";
 import { useClass } from "@/client/data/classes";
 import { useStudentProfile } from "@/client/data/profile";
@@ -24,6 +25,7 @@ import { StudentActionsMenu } from "./student-actions-menu";
 export function StudentView({ studentId }: { studentId: string | null }) {
   const t = useTranslations();
   const { session } = useApp();
+  const access = useAccess();
   const student = useStudent(studentId);
   const cls = useClass(student?.classId ?? null);
   const profile = useStudentProfile(studentId);
@@ -66,7 +68,7 @@ export function StudentView({ studentId }: { studentId: string | null }) {
         title={student.fullName}
         backHref={`/class?id=${student.classId}`}
         userText
-        actions={<StudentActionsMenu student={student} />}
+        actions={access.can("students.manage") ? <StudentActionsMenu student={student} /> : null}
       />
 
       <dl className="grid grid-cols-2 gap-3 rounded-xl border bg-card p-4 text-sm md:grid-cols-4">
@@ -114,13 +116,24 @@ export function StudentView({ studentId }: { studentId: string | null }) {
       {profile && (
         <>
           <CurrentHomework pending={profile.pending} />
-          <section className="flex flex-col gap-3">
-            <h2 className="text-lg font-semibold">{t("profile.monthlyTitle")}</h2>
-            <MonthlyChart months={profile.months} />
-            <MonthSummaries months={profile.months} selected={selectedMonth} onSelect={setMonth} />
-          </section>
-          {selectedMonth && (
-            <MonthHistory profile={profile} month={selectedMonth} student={student} />
+          {access.can("reports.view") && (
+            <>
+              <section className="flex flex-col gap-3">
+                <h2 className="text-lg font-semibold">{t("profile.monthlyTitle")}</h2>
+                <MonthlyChart months={profile.months} />
+                <MonthSummaries
+                  months={profile.months}
+                  selected={selectedMonth}
+                  onSelect={setMonth}
+                />
+              </section>
+              {selectedMonth && (
+                // Without lessons.run the history is shown, not edited.
+                <fieldset disabled={!access.can("lessons.run")} className="min-w-0">
+                  <MonthHistory profile={profile} month={selectedMonth} student={student} />
+                </fieldset>
+              )}
+            </>
           )}
         </>
       )}
