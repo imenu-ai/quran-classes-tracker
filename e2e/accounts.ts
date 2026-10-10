@@ -9,6 +9,20 @@ export const E2E_SPECS = ["main", "offline", "ltr"] as const;
 export const accountFor = (spec: (typeof E2E_SPECS)[number], project: string) =>
   `e2e_${spec}_${project}`;
 
+/**
+ * Each account is the admin of its own center, with a fixed code so the
+ * specs know what to type at sign-in.
+ */
 export const E2E_ACCOUNTS = E2E_SPECS.flatMap((spec) =>
-  E2E_PROJECTS.map((project) => accountFor(spec, project)),
+  E2E_PROJECTS.map((project) => ({
+    username: accountFor(spec, project),
+    code: centerCodeFor(spec, project),
+  })),
 );
+
+export function centerCodeFor(spec: (typeof E2E_SPECS)[number], project: string): string {
+  const index =
+    E2E_SPECS.indexOf(spec) * E2E_PROJECTS.length +
+    E2E_PROJECTS.indexOf(project as (typeof E2E_PROJECTS)[number]);
+  return String(100_100 + index);
+}

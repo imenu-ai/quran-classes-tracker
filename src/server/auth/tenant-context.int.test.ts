@@ -17,7 +17,12 @@ describe("tenant context", () => {
 
     const ctx = await getAuth().$context;
     const user = await ctx.internalAdapter.createUser(
-      { name: "T", email: "ctx@users.invalid", username: "ctxteacher", tenantId: "tenant-ctx" },
+      {
+        name: "T",
+        email: "ctx@users.invalid",
+        username: "123456:ctxteacher",
+        tenantId: "tenant-ctx",
+      },
       { method: "admin" },
     );
     await ctx.internalAdapter.linkAccount({
@@ -35,7 +40,7 @@ describe("tenant context", () => {
           origin: "http://localhost:3000",
           "x-forwarded-for": "198.51.100.7",
         },
-        body: JSON.stringify({ username: "ctxteacher", password: PASSWORD }),
+        body: JSON.stringify({ username: "123456:ctxteacher", password: PASSWORD }),
       }),
     );
     sessionCookie = (response.headers.get("set-cookie") ?? "").split(";")[0] ?? "";

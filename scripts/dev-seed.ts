@@ -1,6 +1,6 @@
 /**
- * Fills a teacher's tenant with sample data for development.
- * Usage: pnpm dev:seed --username demo
+ * Fills a center with sample data for development.
+ * Usage: pnpm dev:seed --center <6-digit center code>
  *
  * Writes through the real push service, so records get proper server
  * versions and pass the same validation as data from the app.
@@ -12,6 +12,7 @@ import { COLLECTIONS } from "@/server/collections";
 import { closeMongoClient, getDb } from "@/server/db";
 import { ensureIndexes } from "@/server/indexes";
 import { pushChanges } from "@/server/sync/push";
+import { tenantsCollection } from "@/server/tenants";
 import { attendanceIdFor, lessonIdFor } from "@/shared/ids";
 import type { PushMutation } from "@/shared/sync/protocol";
 import { loadEnv } from "./load-env";
@@ -154,24 +155,22 @@ function buildMutations(): PushMutation[] {
 
 async function main() {
   loadEnv();
-  const { values } = parseArgs({ options: { username: { type: "string" } }, strict: true });
-  if (!values.username) {
-    console.error("Usage: pnpm dev:seed --username <username>");
+  const { values } = parseArgs({ options: { center: { type: "string" } }, strict: true });
+  if (!values.center) {
+    console.error("Usage: pnpm dev:seed --center <6-digit center code>");
     process.exitCode = 1;
     return;
   }
 
   const db = getDb();
   await ensureIndexes(db);
-  const user = await db
-    .collection(COLLECTIONS.users)
-    .findOne({ username: values.username.toLowerCase() });
-  if (!user) {
-    console.error(`No user "${values.username}". Create one with pnpm user:create first.`);
+  const tenant = await tenantsCollection(db).findOne({ code: values.center.trim() });
+  if (!tenant) {
+    console.error(`No center with code "${values.center}". Create one with pnpm center:create.`);
     process.exitCode = 1;
     return;
   }
-  const tenantId = String(user.tenantId);
+  const tenantId = tenant._id;
   if ((await db.collection(COLLECTIONS.classes).countDocuments({ tenantId })) > 0) {
     console.log("This tenant already has classes; nothing seeded.");
     return;
@@ -185,7 +184,7 @@ async function main() {
     if (rejected.length > 0) throw new Error(`Seed rejected: ${JSON.stringify(rejected[0])}`);
     applied += results.length;
   }
-  console.log(`Seeded ${applied} records for "${values.username}".`);
+  console.log(`Seeded ${applied} records for center ${tenant.code} ("${tenant.name}").`);
 }
 
 main()

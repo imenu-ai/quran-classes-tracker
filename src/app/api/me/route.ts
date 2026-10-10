@@ -20,7 +20,8 @@ export const GET = withTenant(async (request, { tenantId }) => {
     user: {
       id: user.id,
       name: user.name,
-      username: String(user.username ?? ""),
+      // The part people see; the stored username is "<code>:<username>".
+      username: String(user.displayUsername ?? ""),
       locale: isLocale(user.locale) ? user.locale : DEFAULT_LOCALE,
     },
     tenant: { id: tenant._id, name: tenant.name, timezone: tenant.timezone ?? DEFAULT_TIME_ZONE },

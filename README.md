@@ -47,14 +47,14 @@ Node 22 (see `.nvmrc`) and pnpm 10 (pinned in `package.json`; run `corepack enab
    ```sh
    pnpm db:indexes
    ```
-5. **Create a teacher account.** There is no sign-up page: accounts are created with the CLI, which also creates the tenant if it doesn't exist.
+5. **Create a center and its admin.** The CLI prints the 6-digit center code used at sign-in.
    ```sh
-   pnpm user:create --tenant "مركز التحفيظ" --username teacher --name "الأستاذ محمد"
-   # optional: --password <p> (otherwise a hidden prompt), --locale ar, --timezone Asia/Hebron
+   pnpm center:create --center "مركز التحفيظ" --name "المدير" --email admin@example.com --username admin
+   # optional: --password <p> (otherwise a hidden prompt), --timezone Asia/Hebron, --locale ar
    ```
 6. **Optional sample data** (classes, students and a few months of lessons):
    ```sh
-   pnpm dev:seed --username teacher
+   pnpm dev:seed --center <center code>
    ```
 7. **Run it:**
    ```sh
@@ -76,7 +76,7 @@ The service worker is **off in development**. To try offline behaviour on your m
 | `pnpm test:e2e`                     | Playwright end-to-end tests (see below)                                  |
 | `pnpm format` / `pnpm format:check` | Prettier                                                                 |
 | `pnpm db:indexes`                   | Create or update MongoDB indexes                                         |
-| `pnpm user:create`                  | Create a teacher account (and tenant)                                    |
+| `pnpm center:create`                | Create a center and its admin (prints the center code)                   |
 | `pnpm dev:seed`                     | Fill a teacher's tenant with sample data                                 |
 
 The CLI scripts read `.env.local` then `.env`; variables already set in the shell win. To run one against Atlas, set `MONGODB_URI` in the shell.
@@ -194,7 +194,7 @@ Not deployed yet. Do these in order.
 
 - [ ] Create a cluster (ideally in or near `eu-central-1`) and a database user with read/write on the app database only.
 - [ ] Network access: Amplify's compute has no fixed outbound IP, so allow `0.0.0.0/0` and rely on a strong, generated database password.
-- [ ] From your machine, with `MONGODB_URI` (and `MONGODB_DB`) set to the Atlas values in the shell: `pnpm db:indexes`, then `pnpm user:create …` for the teacher.
+- [ ] From your machine, with `MONGODB_URI` (and `MONGODB_DB`) set to the Atlas values in the shell: `pnpm db:indexes`, then `pnpm center:create …` for the center's admin.
 
 **2. The app secret.** In Secrets Manager (`eu-central-1`), create a secret of type "Other", in plaintext JSON:
 

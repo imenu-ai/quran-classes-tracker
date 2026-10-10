@@ -3,7 +3,9 @@ import { COLLECTIONS } from "./collections";
 
 /** Every index the app relies on. Safe to apply repeatedly. */
 export const INDEXES: Record<string, IndexDescription[]> = {
-  [COLLECTIONS.tenants]: [{ key: { name: 1 }, name: "name_unique", unique: true }],
+  // Center names may repeat; the 6-digit code is what identifies a center.
+  [COLLECTIONS.tenants]: [{ key: { code: 1 }, name: "code_unique", unique: true }],
+  [COLLECTIONS.members]: [{ key: { tenantId: 1 }, name: "tenantId" }],
   [COLLECTIONS.users]: [
     { key: { username: 1 }, name: "username_unique", unique: true },
     { key: { email: 1 }, name: "email_unique", unique: true },

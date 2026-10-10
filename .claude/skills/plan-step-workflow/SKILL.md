@@ -50,9 +50,9 @@ At the end of a phase: stop, summarize what was done and what's open, and wait f
   NEXT_DIST_DIR=.next-check pnpm exec next dev -p 3001
   ```
   For offline or service-worker behaviour you need a production build: `next build` and then `next start` with the same `NEXT_DIST_DIR`. The service worker is disabled in development.
-- **Local login:** `demo` / `demo-password-123`.
-  - If it's missing, create it: `pnpm user:create --tenant "Dev Center" --username demo --name "…" --password demo-password-123`.
-  - Fill it with sample data: `pnpm dev:seed --username demo`.
+- **Local login:** center code + `demo` / `demo-password-123`.
+  - If it's missing, create it: `pnpm center:create --center "Dev Center" --name "…" --email demo@example.test --username demo --password demo-password-123`. The command prints the code.
+  - Fill it with sample data: `pnpm dev:seed --center <code>`.
 - **Sign-in is rate-limited** to 5 attempts a minute per IP. If checks get locked out, wait 60 s.
 - **Throwaway Playwright scripts** go in the session scratchpad, never the repo root. Delete them afterwards.
 - **The dev build's Fast Refresh can reload a page mid-navigation.** Retry a step once before calling it a bug, or check against a production build.

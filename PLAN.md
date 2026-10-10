@@ -560,7 +560,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 The database is wiped for this phase (local and Atlas); there is no migration. See §0 #26–32 and §2.11.
 
 - [x] **8.0 Plan.** This section, the decisions and the data model changes.
-- [ ] **8.1 Centers and identity.**
+- [x] **8.1 Centers and identity.**
   - `src/shared/access.ts`: roles, permissions, `can`/`canSeeClass`, Zod schemas for registration, members and profile.
   - Better Auth: composite usernames, `phone`, `/update-user` disabled, disabled members refused at sign-in, `mustChangePassword` cleared after a password change.
   - `src/server/centers.ts`: `createCenter`, `createMember`, `updateMember`, `setMemberPassword`, `updateOwnProfile`. Indexes for `tenants.code` and `members`.

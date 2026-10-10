@@ -23,18 +23,23 @@ Object.assign(process.env, env);
 
 const { ensureIndexes } = await import("../src/server/indexes");
 const { getDb } = await import("../src/server/db");
-const { createTeacherAccount } = await import("../src/server/accounts");
+const { createCenter } = await import("../src/server/centers");
 await ensureIndexes(getDb());
-for (const username of E2E_ACCOUNTS) {
-  await createTeacherAccount({
-    tenantName: `tenant-${username}`,
-    username,
-    password: E2E_PASSWORD,
-    name: "معلم الاختبار",
-    // The LTR smoke accounts are English users: sign-in copies user.locale
-    // into the NEXT_LOCALE cookie, exactly like a real English teacher.
-    locale: username.startsWith("e2e_ltr_") ? "en" : "ar",
-  });
+for (const { username, code } of E2E_ACCOUNTS) {
+  await createCenter(
+    {
+      centerName: `center-${username}`,
+      timezone: "Asia/Hebron",
+      adminName: "معلم الاختبار",
+      email: `${username}@e2e.test`,
+      username,
+      password: E2E_PASSWORD,
+      // The LTR smoke accounts are English users: sign-in copies user.locale
+      // into the NEXT_LOCALE cookie, exactly like a real English teacher.
+      locale: username.startsWith("e2e_ltr_") ? "en" : "ar",
+    },
+    { code },
+  );
 }
 console.log(`[e2e] MongoDB ready, ${E2E_ACCOUNTS.length} accounts created`);
 
