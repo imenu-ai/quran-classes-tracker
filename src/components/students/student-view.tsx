@@ -15,11 +15,11 @@ import { useClass } from "@/client/data/classes";
 import { useStudentProfile } from "@/client/data/profile";
 import { useStudent } from "@/client/data/students";
 import { ageFromBirthYear, todayInTimeZone } from "@/domain/dates/local-date";
-import { CurrentHomework } from "./current-homework";
 import { MonthHistory } from "./month-history";
 import { MonthSummaries } from "./month-summaries";
 import { MonthlyChart } from "./monthly-chart";
 import { StudentActionsMenu } from "./student-actions-menu";
+import { StudentToday } from "./student-today";
 
 /** Student profile: header, current homework, monthly statistics, chart and history. */
 export function StudentView({ studentId }: { studentId: string | null }) {
@@ -115,7 +115,6 @@ export function StudentView({ studentId }: { studentId: string | null }) {
 
       {profile && (
         <>
-          <CurrentHomework pending={profile.pending} />
           {access.can("reports.view") && (
             <>
               <section className="flex flex-col gap-3">
@@ -137,6 +136,9 @@ export function StudentView({ studentId }: { studentId: string | null }) {
           )}
         </>
       )}
+
+      {/* Today: attendance, marks, postponing and the next day's homework. */}
+      {student.archivedAt === null && <StudentToday student={student} />}
     </PageContainer>
   );
 }

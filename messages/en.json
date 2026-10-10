@@ -476,5 +476,18 @@
       "expiry": "This link expires in one hour.",
       "ignore": "If you didn't ask for this, ignore this email; your current password hasn't changed."
     }
+  },
+  "today": {
+    "title": "Today",
+    "viewOnly": "View only: you don't have permission to run lessons.",
+    "absentNote": "The student is absent today.",
+    "homework": "Homework",
+    "postpone": "Postpone recitation",
+    "postponed": "Postponed",
+    "postponedHint": "Recitation postponed; the homework stays for the next day.",
+    "undoPostpone": "Undo postponement",
+    "postponedToast": "Recitation postponed",
+    "nextTitle": "Homework for the next day",
+    "addNext": "Add homework for the next day"
   }
 }

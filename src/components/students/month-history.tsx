@@ -6,7 +6,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { HomeworkFormDrawer } from "@/components/homework/homework-form-drawer";
 import { usePortionLabel } from "@/components/homework/use-portion-label";
-import { ExcuseNoteInput } from "@/components/lessons/attendance-step";
+import { ExcuseNoteInput } from "./attendance-controls";
 import { ScorePicker } from "@/components/lessons/score-picker";
 import { useLessonDate } from "@/components/lessons/use-lesson-date";
 import { Badge } from "@/components/ui/badge";

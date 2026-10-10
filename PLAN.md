@@ -588,7 +588,7 @@ See §0 #33–36.
   - Homework field `postponedLessonIds` (default `[]`, so older records stay valid).
   - `postponeHomework` and `undoPostpone`. Postponing marks the student present; scoring removes a postponement for that lesson.
   - A `postponed` row in the month history. Averages ignore postponed items.
-- [ ] **9.2 The today card on the student page.**
+- [x] **9.2 The today card on the student page.**
   - Attendance for today; the score grids for each pending item; postpone and undo; "recite now"; "add homework for the next day" with the suggestion.
   - Today's lesson is created only on the first write (`startLesson`). Without `lessons.run`, view only.
 - [ ] **9.3 The month table.** Month switcher, one row per day (date, portion, marks, status), an averages row, and the existing edit sheet on tapping a row. It replaces the chart, month cards and history list.
@@ -736,3 +736,7 @@ See §0 #33–36.
 - 2026-10-10 (after Phase 8, first deploy): The Amplify build failed because `src/app/api/centers/route.ts` exported a constant (`REGISTER_RATE_LIMIT`); Next.js route files may export only handlers and route settings. The constant moved to `src/server/rate-limit.ts`. `pnpm typecheck` (`next typegen` + `tsc`) can't catch this: only `next build` checks route exports. The workflow skill now says to run `pnpm build` before work goes to `main`.
 - 2026-10-10 (Phase 9 planned): The day-to-day screens become student-centred, and a recitation can be postponed. The data model stays (lessons still exist, created automatically); one homework field is added.
 - 2026-10-10 (step 9.1): Records pulled from the server aren't re-validated on the device, so code reads the new field through `postponedLessonsOf()`, which treats a missing field as `[]`. The server fills in `[]` when an older device pushes a record without it. Postponing twice in one lesson counts once, and an already evaluated item can't be postponed.
+- 2026-10-10 (step 9.2):
+  - The today card reads today's lesson if it exists, and otherwise uses its derived id (`lessonIdFor`) without creating anything. Every write first calls `startLesson`, which creates the lesson, returns the existing one, or revives a deleted one. The homework drawer accepts a function for the lesson id for the same reason.
+  - When the student is marked absent or excused, the homework part is hidden. Otherwise a score would contradict the absence: marking present on evaluation doesn't override an existing status.
+  - The current-homework box on the student page is removed; the today card covers it.
