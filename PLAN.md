@@ -584,7 +584,7 @@ The database is wiped for this phase (local and Atlas); there is no migration. S
 See §0 #33–36.
 
 - [x] **9.0 Plan.** This section, the decisions and the homework field.
-- [ ] **9.1 Postpone in the data.**
+- [x] **9.1 Postpone in the data.**
   - Homework field `postponedLessonIds` (default `[]`, so older records stay valid).
   - `postponeHomework` and `undoPostpone`. Postponing marks the student present; scoring removes a postponement for that lesson.
   - A `postponed` row in the month history. Averages ignore postponed items.
@@ -735,3 +735,4 @@ See §0 #33–36.
   - README, skills and CLAUDE.md describe centers, roles and sign-in.
 - 2026-10-10 (after Phase 8, first deploy): The Amplify build failed because `src/app/api/centers/route.ts` exported a constant (`REGISTER_RATE_LIMIT`); Next.js route files may export only handlers and route settings. The constant moved to `src/server/rate-limit.ts`. `pnpm typecheck` (`next typegen` + `tsc`) can't catch this: only `next build` checks route exports. The workflow skill now says to run `pnpm build` before work goes to `main`.
 - 2026-10-10 (Phase 9 planned): The day-to-day screens become student-centred, and a recitation can be postponed. The data model stays (lessons still exist, created automatically); one homework field is added.
+- 2026-10-10 (step 9.1): Records pulled from the server aren't re-validated on the device, so code reads the new field through `postponedLessonsOf()`, which treats a missing field as `[]`. The server fills in `[]` when an older device pushes a record without it. Postponing twice in one lesson counts once, and an already evaluated item can't be postponed.

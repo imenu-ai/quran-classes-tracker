@@ -2,18 +2,22 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { monthKey } from "@/domain/dates/local-date";
 import { monthlyStats, type MonthStats } from "@/domain/stats/monthly";
 import type { AttendanceRecord } from "@/shared/schemas/attendance";
-import type { HomeworkRecord } from "@/shared/schemas/homework";
+import { postponedLessonsOf, type HomeworkRecord } from "@/shared/schemas/homework";
 import type { LessonRecord } from "@/shared/schemas/lesson";
 import { useApp } from "../app-context";
 
 export type HistoryRow =
   | { kind: "evaluation"; lesson: LessonRecord; item: HomeworkRecord }
+  | { kind: "postponed"; lesson: LessonRecord; item: HomeworkRecord }
   | { kind: "absence"; lesson: LessonRecord; record: AttendanceRecord };
+
+const KIND_ORDER: Record<HistoryRow["kind"], number> = { evaluation: 0, postponed: 1, absence: 2 };
 
 /**
  * One month of a student's record, newest first: every homework item
- * evaluated in that month's lessons, plus absences (with excuse notes).
- * Within a day, evaluations come before the absence row.
+ * evaluated in that month's lessons, every postponed recitation, and
+ * absences (with excuse notes). Within a day: evaluations, then
+ * postponements, then the absence row.
  */
 export function buildMonthHistory(
   homework: readonly HomeworkRecord[],
@@ -29,6 +33,11 @@ export function buildMonthHistory(
   for (const item of homework) {
     const lesson = item.deletedAt === null ? inMonth(item.evaluatedLessonId) : null;
     if (lesson) rows.push({ kind: "evaluation", lesson, item });
+    if (item.deletedAt !== null) continue;
+    for (const lessonId of postponedLessonsOf(item)) {
+      const postponedIn = inMonth(lessonId);
+      if (postponedIn) rows.push({ kind: "postponed", lesson: postponedIn, item });
+    }
   }
   for (const record of attendance) {
     if (record.deletedAt !== null || record.status === "present") continue;
@@ -36,9 +45,7 @@ export function buildMonthHistory(
     if (lesson) rows.push({ kind: "absence", lesson, record });
   }
   return rows.sort(
-    (a, b) =>
-      b.lesson.date.localeCompare(a.lesson.date) ||
-      (a.kind === b.kind ? 0 : a.kind === "evaluation" ? -1 : 1),
+    (a, b) => b.lesson.date.localeCompare(a.lesson.date) || KIND_ORDER[a.kind] - KIND_ORDER[b.kind],
   );
 }
 
@@ -65,7 +72,11 @@ export function useStudentProfile(studentId: string | null) {
     const liveAttendance = attendance.filter((a) => a.deletedAt === null);
     const lessonIds = [
       ...new Set([
-        ...liveHomework.flatMap((h) => [h.evaluatedLessonId, h.assignedLessonId]),
+        ...liveHomework.flatMap((h) => [
+          h.evaluatedLessonId,
+          h.assignedLessonId,
+          ...postponedLessonsOf(h),
+        ]),
         ...liveAttendance.map((a) => a.lessonId),
       ]),
     ].filter((id): id is string => id !== null);

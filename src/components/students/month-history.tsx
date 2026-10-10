@@ -29,11 +29,13 @@ import { ATTENDANCE_STATUSES, type AttendanceStatus } from "@/shared/schemas/att
 import type { StudentRecord } from "@/shared/schemas/student";
 import { useStatsFormat } from "./month-summaries";
 
-const rowKey = (row: HistoryRow) =>
+type ListedRow = Exclude<HistoryRow, { kind: "postponed" }>;
+
+const rowKey = (row: ListedRow) =>
   row.kind === "evaluation" ? `h:${row.item.id}` : `a:${row.record.id}`;
 
 /** What the sheet edits, by id: it must stay open even if the row leaves the list. */
-type EditTarget = { kind: HistoryRow["kind"]; id: string; lessonId: string };
+type EditTarget = { kind: ListedRow["kind"]; id: string; lessonId: string };
 
 /**
  * The live record behind an edit target, looked up in ALL of the student's
@@ -41,7 +43,7 @@ type EditTarget = { kind: HistoryRow["kind"]; id: string; lessonId: string };
  * removes it from the history, but the open sheet must keep showing it;
  * otherwise its content vanishes and the page stays blocked behind it.
  */
-function resolveTarget(target: EditTarget | null, profile: StudentProfile): HistoryRow | null {
+function resolveTarget(target: EditTarget | null, profile: StudentProfile): ListedRow | null {
   if (!target) return null;
   const lesson = profile.lessonsById.get(target.lessonId);
   if (!lesson) return null;
@@ -70,7 +72,10 @@ export function MonthHistory({
   const [editing, setEditing] = useState<EditTarget | null>(null);
 
   const rows = useMemo(
-    () => buildMonthHistory(profile.homework, profile.attendance, profile.lessonsById, month),
+    () =>
+      buildMonthHistory(profile.homework, profile.attendance, profile.lessonsById, month).filter(
+        (row): row is ListedRow => row.kind !== "postponed",
+      ),
     [profile, month],
   );
 
@@ -167,7 +172,7 @@ function HistoryEditDrawer({
   profile,
   onClose,
 }: {
-  row: HistoryRow | null;
+  row: ListedRow | null;
   open: boolean;
   student: StudentRecord;
   profile: StudentProfile;

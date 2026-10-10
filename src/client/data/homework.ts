@@ -6,7 +6,7 @@ import {
   type StudentLessonHomework,
 } from "@/domain/homework/progress";
 import type { Portion } from "@/domain/homework/suggestion";
-import type { HomeworkRecord } from "@/shared/schemas/homework";
+import { postponedLessonsOf, type HomeworkRecord } from "@/shared/schemas/homework";
 import type { LessonRecord } from "@/shared/schemas/lesson";
 import { useApp } from "../app-context";
 import type { LocalDb } from "../db/dexie";
@@ -94,7 +94,10 @@ async function ensurePresent(store: LocalStore, lessonId: string, studentId: str
 
 export type RateField = "memorizationRate" | "behaviorRate";
 
-/** Sets (or clears, with null) one score; the item becomes evaluated in this lesson. */
+/**
+ * Sets (or clears, with null) one score; the item becomes evaluated in this
+ * lesson. Scoring after a postponement in the same lesson replaces it.
+ */
 export async function rateHomework(
   store: LocalStore,
   item: Pick<HomeworkRecord, "id" | "studentId">,
@@ -105,7 +108,54 @@ export async function rateHomework(
   const { db } = store;
   await db.transaction("rw", homeworkTables(db), async () => {
     await ensurePresent(store, lessonId, item.studentId);
-    await store.update("homework", item.id, { evaluatedLessonId: lessonId, [field]: score });
+    const current = await db.homework.get(item.id);
+    const postponed = current ? postponedLessonsOf(current) : [];
+    await store.update("homework", item.id, {
+      evaluatedLessonId: lessonId,
+      [field]: score,
+      ...(postponed.includes(lessonId)
+        ? { postponedLessonIds: postponed.filter((id) => id !== lessonId) }
+        : {}),
+    });
+  });
+}
+
+/**
+ * Postpones the recitation ("تأجيل التسميع"): the student wasn't ready. The
+ * item stays pending for the next day, the student counts as present, and
+ * nothing is scored. Only for items not evaluated yet.
+ */
+export async function postponeHomework(
+  store: LocalStore,
+  item: Pick<HomeworkRecord, "id" | "studentId">,
+  lessonId: string,
+) {
+  const { db } = store;
+  await db.transaction("rw", homeworkTables(db), async () => {
+    const current = await db.homework.get(item.id);
+    if (!current || current.deletedAt !== null || current.evaluatedLessonId !== null) return;
+    const postponed = postponedLessonsOf(current);
+    if (postponed.includes(lessonId)) return;
+    await ensurePresent(store, lessonId, item.studentId);
+    await store.update("homework", item.id, { postponedLessonIds: [...postponed, lessonId] });
+  });
+}
+
+/** Undoes a postponement made in this lesson. */
+export async function undoPostpone(
+  store: LocalStore,
+  item: Pick<HomeworkRecord, "id">,
+  lessonId: string,
+) {
+  const { db } = store;
+  await db.transaction("rw", homeworkTables(db), async () => {
+    const current = await db.homework.get(item.id);
+    if (!current) return;
+    const postponed = postponedLessonsOf(current);
+    if (!postponed.includes(lessonId)) return;
+    await store.update("homework", item.id, {
+      postponedLessonIds: postponed.filter((id) => id !== lessonId),
+    });
   });
 }
 
@@ -150,6 +200,7 @@ export async function addHomework(
       evaluatedLessonId: input.evaluateNow ? input.lessonId : null,
       memorizationRate: null,
       behaviorRate: null,
+      postponedLessonIds: [],
     });
   });
 }

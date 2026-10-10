@@ -44,6 +44,37 @@ describe("pushChanges", () => {
     expect(doc).not.toHaveProperty("id");
   });
 
+  it("stores postponements, and fills them in for a device from before Phase 9", async () => {
+    const cls = classRecord();
+    const student = studentRecord(cls.id);
+    const lesson = lessonRecord(cls.id);
+    const postponed = homeworkRecord(student.id, { postponedLessonIds: [lesson.id] });
+    const { postponedLessonIds: _omitted, ...older } = homeworkRecord(student.id);
+    const results = await pushChanges(
+      db,
+      "tenant-postpone",
+      [
+        m("classes", cls),
+        m("students", student),
+        m("lessons", lesson),
+        m("homework", postponed),
+        m("homework", older),
+      ],
+      NOW,
+    );
+    expect(results.map((r) => r.status)).toEqual([
+      "applied",
+      "applied",
+      "applied",
+      "applied",
+      "applied",
+    ]);
+    expect(await stored("homework", postponed.id)).toMatchObject({
+      postponedLessonIds: [lesson.id],
+    });
+    expect(await stored("homework", older.id)).toMatchObject({ postponedLessonIds: [] });
+  });
+
   it("assigns increasing versions in batch order", async () => {
     const records = [classRecord(), classRecord(), classRecord()];
     const results = await pushChanges(

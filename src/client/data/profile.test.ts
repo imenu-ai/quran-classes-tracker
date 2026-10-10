@@ -39,12 +39,28 @@ describe("buildMonthHistory", () => {
       rows.map((row) => [
         row.lesson.date,
         row.kind,
-        row.kind === "evaluation" ? row.item.memorizationRate : row.record.excuseNote,
+        row.kind === "absence" ? row.record.excuseNote : row.item.memorizationRate,
       ]),
     ).toEqual([
       ["2026-10-05", "evaluation", 9],
       ["2026-10-01", "evaluation", 8],
       ["2026-10-01", "absence", "مريض"],
+    ]);
+  });
+
+  it("lists postponed recitations on their day, between evaluations and absences", () => {
+    const homework = [
+      homeworkRecord(STUDENT, { evaluatedLessonId: oct5.id, memorizationRate: 9 }),
+      homeworkRecord(STUDENT, { postponedLessonIds: [oct1.id, oct5.id, sep28.id] }),
+      homeworkRecord(STUDENT, { postponedLessonIds: [oct1.id], deletedAt: 5 }),
+    ];
+    const attendance = [attendanceRecord(oct5.id, STUDENT, { status: "excused" })];
+    const rows = buildMonthHistory(homework, attendance, lessons, "2026-10");
+    expect(rows.map((row) => [row.lesson.date, row.kind])).toEqual([
+      ["2026-10-05", "evaluation"],
+      ["2026-10-05", "postponed"],
+      ["2026-10-05", "absence"],
+      ["2026-10-01", "postponed"],
     ]);
   });
 

@@ -128,6 +128,7 @@ describe("two devices syncing through the real server", () => {
       evaluatedLessonId: null,
       memorizationRate: null,
       behaviorRate: null,
+      postponedLessonIds: [],
     };
     // Write straight to IndexedDB, bypassing LocalStore validation.
     await phone.db.homework.put(bad);

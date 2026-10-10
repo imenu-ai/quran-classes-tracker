@@ -47,6 +47,12 @@ export const homeworkFieldsSchema = z.object({
   evaluatedLessonId: idSchema.nullable(),
   memorizationRate: rateSchema.nullable(),
   behaviorRate: rateSchema.nullable(),
+  /**
+   * Lessons in which the recitation was postponed ("تأجيل التسميع"): the
+   * student wasn't ready, so it stays pending instead of getting a bad mark.
+   * Defaults to [] so records from before Phase 9 stay valid.
+   */
+  postponedLessonIds: z.array(idSchema).max(200).default([]),
 });
 
 export const homeworkRecordSchema = syncableBaseSchema
@@ -64,3 +70,7 @@ export const homeworkRecordSchema = syncableBaseSchema
   });
 
 export type HomeworkRecord = z.infer<typeof homeworkRecordSchema>;
+
+/** The lessons where this item was postponed (records pulled before Phase 9 lack the field). */
+export const postponedLessonsOf = (item: Pick<HomeworkRecord, "postponedLessonIds">): string[] =>
+  item.postponedLessonIds ?? [];

@@ -5,7 +5,14 @@ import { lessonRecord } from "@/test/records";
 import { openLocalDb, type LocalDb } from "../db/dexie";
 import { LocalStore, LocalValidationError } from "../db/local-store";
 import { setAttendance } from "./attendance";
-import { addHomework, rateHomework, undoEvaluation, updateHomework } from "./homework";
+import {
+  addHomework,
+  postponeHomework,
+  rateHomework,
+  undoEvaluation,
+  undoPostpone,
+  updateHomework,
+} from "./homework";
 
 const LESSON = "01928c5e-7b3a-7cde-8f00-00000000aa01";
 const OLD_LESSON = "01928c5e-7b3a-7cde-8f00-00000000aa00";
@@ -37,6 +44,43 @@ describe("homework actions", () => {
       note: "",
       evaluateNow: false,
     });
+
+  it("postpones a recitation: still pending, no scores, the student present", async () => {
+    const item = await assignInOldLesson();
+    await postponeHomework(store, item, LESSON);
+    await postponeHomework(store, item, LESSON); // twice in one lesson counts once
+    expect(await db.homework.get(item.id)).toMatchObject({
+      evaluatedLessonId: null,
+      memorizationRate: null,
+      postponedLessonIds: [LESSON],
+    });
+    expect(await db.attendance.get(attendanceIdFor(LESSON, STUDENT))).toMatchObject({
+      status: "present",
+    });
+
+    await undoPostpone(store, item, LESSON);
+    expect((await db.homework.get(item.id))?.postponedLessonIds).toEqual([]);
+  });
+
+  it("scoring after a postponement in the same lesson replaces it", async () => {
+    const item = await assignInOldLesson();
+    await postponeHomework(store, item, OLD_LESSON);
+    await postponeHomework(store, item, LESSON);
+    await rateHomework(store, item, LESSON, "memorizationRate", 7);
+    expect(await db.homework.get(item.id)).toMatchObject({
+      evaluatedLessonId: LESSON,
+      memorizationRate: 7,
+      // The earlier day's postponement stays in his history.
+      postponedLessonIds: [OLD_LESSON],
+    });
+  });
+
+  it("doesn't postpone an item that's already evaluated", async () => {
+    const item = await assignInOldLesson();
+    await rateHomework(store, item, LESSON, "memorizationRate", 9);
+    await postponeHomework(store, item, LESSON);
+    expect((await db.homework.get(item.id))?.postponedLessonIds).toEqual([]);
+  });
 
   it("assigns homework for the next lesson as pending", async () => {
     const item = await assignInOldLesson();
