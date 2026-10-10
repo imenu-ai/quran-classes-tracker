@@ -25,6 +25,7 @@ Work one step at a time. After each step:
    ```
    - `pnpm typecheck` runs `next typegen` then a non-incremental `tsc`. Don't trust an incremental tsc cache: it once let a missing import get committed.
    - Run `pnpm format:check` when you touch Markdown, YAML or JSON. Prettier formats those too.
+   - Run `pnpm build` before work goes to `main`, and whenever you add or change a route file (`page.tsx`, `route.ts`, `layout.tsx`). Some errors only `next build` reports. For example, a route file may export only its handlers and route settings (`runtime`, `dynamic`…); any other export fails the Amplify build, but `pnpm typecheck` doesn't see it. Put shared constants in a module under `src/server` or `src/shared` instead.
    - For UI changes, also look at the real app (see "Checking in a browser" below). Tests alone have missed real bugs here, such as overflow at 360 px and blocked pointer events.
 2. **Update `PLAN.md`:**
    - Tick the step: `- [ ]` → `- [x]`. Mark a step whose plan changed as `[~]`.
