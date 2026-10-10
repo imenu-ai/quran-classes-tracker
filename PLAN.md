@@ -42,6 +42,10 @@ Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bo
 | 30 | First login | A teacher must replace the password the admin set before using the app. |
 | 31 | Own profile | A teacher can edit his display name, username, phone (new optional field) and password. |
 | 32 | Old data | The app was not in use: the database is wiped, with no migration. |
+| 33 | Student-centred screens (2026-10-10) | Opening a class shows only its students. The student's page shows his month in a simple table, and under it his homework with the score grids and "add homework for the next day". The lesson screens (attendance step, evaluation step, lesson history) are hidden; lessons still exist in the data, and today's lesson is created automatically on the first thing recorded for a student today. |
+| 34 | Postponed recitation | "تأجيل التسميع": when a student isn't ready, the teacher postpones instead of giving a bad mark. The homework stays pending for the next day, the day shows "مؤجل", the student counts as present, and averages aren't affected. It can be undone the same day. |
+| 35 | Absence | Marked on the student's page for today (present / absent / excused, with the excuse note). |
+| 36 | Past days | Marking applies to today; a past day is corrected by tapping its row in the month table. The chart and month cards are removed. |
 
 ### Resolved open items
 - **O1:** Keep a hidden `en.json`, the key-parity test and the LTR Playwright smoke test. Only `ar` is enabled (`ENABLED_LOCALES=ar`).
@@ -289,6 +293,7 @@ Tests sit next to the code as `*.test.ts`. Server integration tests are `*.int.t
 - `note`
 - `assignedLessonId | null`, `evaluatedLessonId | null`
 - `memorizationRate`, `behaviorRate`: int 1–10 or null
+- `postponedLessonIds: string[]` (Phase 9, default `[]`): lessons in which the recitation was postponed
 - Pending = `evaluatedLessonId == null`.
 
 ### Derived rules (computed, never stored)
@@ -385,6 +390,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 6. PWA and offline hardening, settings, E2E, README, deployment | [x] Done |
 | 7. Deployment (CloudFormation + Amplify) | [x] Done |
 | 8. Centers, roles and permissions | [x] Done |
+| 9. Simpler class and student screens, postponed recitation | [ ] In progress |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -573,6 +579,22 @@ The database is wiped for this phase (local and Atlas); there is no migration. S
 - [x] **8.7 Password reset by email.** SES sender, Better Auth reset flow, `/forgot-password` and `/reset-password`, SSR compute role in the stack, `EMAIL_FROM`.
 - [x] **8.8 E2E, docs, wrap-up. Stop.** Existing specs on the new login; a roles spec; README, skills, CLAUDE.md.
 
+### [ ] Phase 9: Simpler class and student screens, postponed recitation
+
+See §0 #33–36.
+
+- [x] **9.0 Plan.** This section, the decisions and the homework field.
+- [ ] **9.1 Postpone in the data.**
+  - Homework field `postponedLessonIds` (default `[]`, so older records stay valid).
+  - `postponeHomework` and `undoPostpone`. Postponing marks the student present; scoring removes a postponement for that lesson.
+  - A `postponed` row in the month history. Averages ignore postponed items.
+- [ ] **9.2 The today card on the student page.**
+  - Attendance for today; the score grids for each pending item; postpone and undo; "recite now"; "add homework for the next day" with the suggestion.
+  - Today's lesson is created only on the first write (`startLesson`). Without `lessons.run`, view only.
+- [ ] **9.3 The month table.** Month switcher, one row per day (date, portion, marks, status), an averages row, and the existing edit sheet on tapping a row. It replaces the chart, month cards and history list.
+- [ ] **9.4 Simplify the class page and home cards.** The class page is the student list only; class cards lose "درس جديد". The lesson screens and the `/lesson` route are removed.
+- [ ] **9.5 E2E, docs, wrap-up. Stop.** `main-flow` and `offline` rewritten for the student page, `roles` and `ltr-smoke` updated, README and skills.
+
 ---
 
 ## 7. Change log
@@ -712,4 +734,4 @@ The database is wiped for this phase (local and Atlas); there is no migration. S
   - The LTR smoke test also covers `/users`, `/users?id=new`, `/register`, `/forgot-password` and `/reset-password`.
   - README, skills and CLAUDE.md describe centers, roles and sign-in.
 - 2026-10-10 (after Phase 8, first deploy): The Amplify build failed because `src/app/api/centers/route.ts` exported a constant (`REGISTER_RATE_LIMIT`); Next.js route files may export only handlers and route settings. The constant moved to `src/server/rate-limit.ts`. `pnpm typecheck` (`next typegen` + `tsc`) can't catch this: only `next build` checks route exports. The workflow skill now says to run `pnpm build` before work goes to `main`.
-
+- 2026-10-10 (Phase 9 planned): The day-to-day screens become student-centred, and a recitation can be postponed. The data model stays (lessons still exist, created automatically); one homework field is added.
