@@ -711,3 +711,5 @@ The database is wiped for this phase (local and Atlas); there is no migration. S
   - New E2E spec `roles`: registration, a teacher with limited access, his forced password change and restricted view, reassignment followed by his device, and disabling. It passes on iPhone 15 (WebKit), Pixel 7 and Desktop Chrome.
   - The LTR smoke test also covers `/users`, `/users?id=new`, `/register`, `/forgot-password` and `/reset-password`.
   - README, skills and CLAUDE.md describe centers, roles and sign-in.
+- 2026-10-10 (after Phase 8, first deploy): The Amplify build failed because `src/app/api/centers/route.ts` exported a constant (`REGISTER_RATE_LIMIT`); Next.js route files may export only handlers and route settings. The constant moved to `src/server/rate-limit.ts`. `pnpm typecheck` (`next typegen` + `tsc`) can't catch this: only `next build` checks route exports. The workflow skill now says to run `pnpm build` before work goes to `main`.
+

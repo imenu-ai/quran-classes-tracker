@@ -1,16 +1,13 @@
 import { getAuth } from "@/server/auth/auth";
 import { CenterError, createCenter } from "@/server/centers";
 import { getDb } from "@/server/db";
-import { clientIp, consumeRateLimit } from "@/server/rate-limit";
+import { clientIp, consumeRateLimit, REGISTER_RATE_LIMIT } from "@/server/rate-limit";
 import { badRequest, jsonResponse, readJsonBody } from "@/server/sync/http";
 import { composeUsername, registerCenterSchema } from "@/shared/access";
 import { parseWithCodes } from "@/shared/schemas/errors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-/** Registrations allowed per IP per hour (counted once the form is valid). */
-export const REGISTER_RATE_LIMIT = { window: 60 * 60, max: 5 };
 
 /**
  * POST /api/centers: public registration of a new center and its admin.

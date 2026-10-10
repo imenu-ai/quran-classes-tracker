@@ -3,9 +3,9 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { getAuth, resetAuthForTests } from "@/server/auth/auth";
 import { COLLECTIONS } from "@/server/collections";
 import { ensureIndexes } from "@/server/indexes";
-import { consumeRateLimit } from "@/server/rate-limit";
+import { consumeRateLimit, REGISTER_RATE_LIMIT } from "@/server/rate-limit";
 import { startTestMongo } from "@/test/mongo";
-import { POST, REGISTER_RATE_LIMIT } from "./route";
+import { POST } from "./route";
 
 let ipCounter = 0;
 

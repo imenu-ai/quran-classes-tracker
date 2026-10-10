@@ -9,6 +9,13 @@ export interface RateRule {
 }
 
 /**
+ * Center registrations allowed per IP per hour (counted once the form is
+ * valid). Lives here, not in the route: a Next.js route file may only export
+ * its handlers and route settings.
+ */
+export const REGISTER_RATE_LIMIT: RateRule = { window: 60 * 60, max: 5 };
+
+/**
  * The client IP, by the same rule Better Auth uses without trusted proxies:
  * only a single-value x-forwarded-for counts. Anything else shares one bucket,
  * which fails safe (see README → "Sign-in rate limit behind CloudFront").
