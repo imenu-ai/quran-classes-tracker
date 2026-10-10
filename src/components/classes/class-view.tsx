@@ -1,14 +1,10 @@
 "use client";
 
-import { Archive, CalendarDays, SearchX, UserPlus, Users } from "lucide-react";
+import { Archive, SearchX, UserPlus, Users } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { EmptyState } from "@/components/empty-state";
-import { LessonDateDialog } from "@/components/lessons/lesson-date-dialog";
-import { LessonHistory } from "@/components/lessons/lesson-history";
-import { StartLessonButton } from "@/components/lessons/start-lesson-button";
 import { PageContainer, PageHeader } from "@/components/shell/page";
 import { ArchivedStudents, StudentList } from "@/components/students/student-list";
 import { StudentFormDrawer } from "@/components/students/student-form-drawer";
@@ -16,11 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAccess } from "@/client/access";
-import { useApp } from "@/client/app-context";
 import { useClass } from "@/client/data/classes";
-import { startLesson, useClassLessons } from "@/client/data/lessons";
 import { useClassStudents } from "@/client/data/students";
-import { todayInTimeZone } from "@/domain/dates/local-date";
 import { ClassActionsMenu } from "./class-actions-menu";
 
 function LoadingView() {
@@ -35,22 +28,13 @@ function LoadingView() {
   );
 }
 
-/** A class: its students, plus class actions. */
+/** A class: the list of its students. Tapping one opens his page for today. */
 export function ClassView({ classId }: { classId: string | null }) {
   const t = useTranslations();
   const cls = useClass(classId);
   const students = useClassStudents(classId);
   const [adding, setAdding] = useState(false);
-  const [pickingDate, setPickingDate] = useState(false);
-  const router = useRouter();
-  const { store, session } = useApp();
   const access = useAccess();
-  const canManageClass = access.can("classes.manage");
-  const canManageStudents = access.can("students.manage");
-  const canRunLessons = access.can("lessons.run");
-  const lessons = useClassLessons(classId);
-  const today = todayInTimeZone(session.timezone);
-  const hasLessonToday = (lessons ?? []).some((lesson) => lesson.date === today);
 
   if (cls === undefined || students === undefined) return <LoadingView />;
 
@@ -71,7 +55,7 @@ export function ClassView({ classId }: { classId: string | null }) {
     );
   }
 
-  const addButton = canManageStudents ? (
+  const addButton = access.can("students.manage") ? (
     <Button size="lg" className="h-11" onClick={() => setAdding(true)}>
       <UserPlus aria-hidden />
       {t("students.add")}
@@ -84,23 +68,13 @@ export function ClassView({ classId }: { classId: string | null }) {
         title={cls.name}
         backHref="/"
         userText
-        actions={canManageClass ? <ClassActionsMenu cls={cls} /> : null}
+        actions={access.can("classes.manage") ? <ClassActionsMenu cls={cls} /> : null}
       />
       {cls.archivedAt !== null && (
         <Badge variant="secondary" className="self-start">
           <Archive aria-hidden />
           {t("classes.archivedBadge")}
         </Badge>
-      )}
-
-      {canRunLessons && students.active.length > 0 && cls.archivedAt === null && (
-        <div className="grid gap-2 sm:grid-cols-2">
-          <StartLessonButton classId={cls.id} hasLessonToday={hasLessonToday} />
-          <Button variant="outline" size="lg" className="h-12" onClick={() => setPickingDate(true)}>
-            <CalendarDays aria-hidden />
-            {t("lessons.otherDate")}
-          </Button>
-        </div>
       )}
 
       {students.active.length === 0 ? (
@@ -122,23 +96,9 @@ export function ClassView({ classId }: { classId: string | null }) {
         </>
       )}
 
-      <LessonHistory classId={cls.id} />
-
       <ArchivedStudents students={students.archived} />
 
       <StudentFormDrawer open={adding} onOpenChange={setAdding} classId={cls.id} />
-      <LessonDateDialog
-        open={pickingDate}
-        onOpenChange={setPickingDate}
-        title={t("lessons.pickDateTitle")}
-        description={t("lessons.pickDateDescription")}
-        submitLabel={t("lessons.open")}
-        onSubmit={async (date) => {
-          const lesson = await startLesson(store, cls.id, date);
-          router.push(`/lesson?id=${lesson.id}`);
-          return null;
-        }}
-      />
     </PageContainer>
   );
 }

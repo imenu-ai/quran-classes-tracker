@@ -1,78 +1,9 @@
-import { useLiveQuery } from "dexie-react-hooks";
-import { useLocale } from "next-intl";
-import {
-  evaluationProgress,
-  splitLessonHomework,
-  type StudentLessonHomework,
-} from "@/domain/homework/progress";
 import type { Portion } from "@/domain/homework/suggestion";
-import type { HomeworkRecord } from "@/shared/schemas/homework";
-import type { LessonRecord } from "@/shared/schemas/lesson";
-import { useApp } from "../app-context";
+import { postponedLessonsOf, type HomeworkRecord } from "@/shared/schemas/homework";
 import type { LocalDb } from "../db/dexie";
 import type { LocalStore } from "../db/local-store";
-import { buildRoster, findAttendance, setAttendance, type LessonRosterEntry } from "./attendance";
-
-export interface EvaluationEntry extends LessonRosterEntry {
-  homework: StudentLessonHomework<HomeworkRecord>;
-  /** Every non-deleted homework item of the student (for the next suggestion). */
-  history: HomeworkRecord[];
-}
-
-export interface LessonEvaluation {
-  present: EvaluationEntry[];
-  /** Not marked yet: evaluating one of them marks them present. */
-  unmarked: EvaluationEntry[];
-  progress: { done: number; total: number };
-}
-
-/** Everything the evaluation step shows, live from the local database. */
-export function useLessonEvaluation(lesson: LessonRecord) {
-  const { db } = useApp();
-  const locale = useLocale();
-  return useLiveQuery(async (): Promise<LessonEvaluation> => {
-    const [classStudents, records] = await Promise.all([
-      db.students.where("classId").equals(lesson.classId).toArray(),
-      db.attendance.where("lessonId").equals(lesson.id).toArray(),
-    ]);
-    const recorded = await db.students.bulkGet(records.map((r) => r.studentId));
-    const roster = buildRoster(
-      classStudents,
-      [...classStudents, ...recorded.filter((s) => s !== undefined)],
-      records,
-      locale,
-    );
-
-    const studentIds = roster.map((entry) => entry.student.id);
-    const homework = await db.homework.where("studentId").anyOf(studentIds).toArray();
-    const lessonIds = [
-      ...new Set(homework.flatMap((h) => [h.assignedLessonId, h.evaluatedLessonId])),
-    ].filter((id): id is string => id !== null);
-    const lessons = await db.lessons.bulkGet(lessonIds);
-    const lessonDates = new Map(
-      lessons.filter((l) => l !== undefined).map((l) => [l.id, l.date] as const),
-    );
-
-    const entries: EvaluationEntry[] = roster.map((entry) => {
-      const own = homework.filter((h) => h.studentId === entry.student.id && h.deletedAt === null);
-      return {
-        ...entry,
-        history: own,
-        homework: splitLessonHomework(own, lesson, lessonDates),
-      };
-    });
-    const present = entries.filter((entry) => entry.attendance?.status === "present");
-    return {
-      present,
-      unmarked: entries.filter((entry) => !entry.attendance),
-      progress: evaluationProgress(
-        present.map((entry) => entry.student.id),
-        homework,
-        lesson.id,
-      ),
-    };
-  }, [db, lesson.id, lesson.classId, lesson.date, locale]);
-}
+import type { AttendanceStatus } from "@/shared/schemas/attendance";
+import { findAttendance, setAttendance } from "./attendance";
 
 const homeworkTables = (db: LocalDb) => [
   db.homework,
@@ -94,7 +25,10 @@ async function ensurePresent(store: LocalStore, lessonId: string, studentId: str
 
 export type RateField = "memorizationRate" | "behaviorRate";
 
-/** Sets (or clears, with null) one score; the item becomes evaluated in this lesson. */
+/**
+ * Sets (or clears, with null) one score; the item becomes evaluated in this
+ * lesson. Scoring after a postponement in the same lesson replaces it.
+ */
 export async function rateHomework(
   store: LocalStore,
   item: Pick<HomeworkRecord, "id" | "studentId">,
@@ -105,7 +39,80 @@ export async function rateHomework(
   const { db } = store;
   await db.transaction("rw", homeworkTables(db), async () => {
     await ensurePresent(store, lessonId, item.studentId);
-    await store.update("homework", item.id, { evaluatedLessonId: lessonId, [field]: score });
+    const current = await db.homework.get(item.id);
+    const postponed = current ? postponedLessonsOf(current) : [];
+    await store.update("homework", item.id, {
+      evaluatedLessonId: lessonId,
+      [field]: score,
+      ...(postponed.includes(lessonId)
+        ? { postponedLessonIds: postponed.filter((id) => id !== lessonId) }
+        : {}),
+    });
+  });
+}
+
+/**
+ * Postpones the recitation ("تأجيل التسميع"): the student wasn't ready. The
+ * item stays pending for the next day, the student counts as present, and
+ * nothing is scored. Only for items not evaluated yet.
+ */
+export async function postponeHomework(
+  store: LocalStore,
+  item: Pick<HomeworkRecord, "id" | "studentId">,
+  lessonId: string,
+) {
+  const { db } = store;
+  await db.transaction("rw", homeworkTables(db), async () => {
+    const current = await db.homework.get(item.id);
+    if (!current || current.deletedAt !== null || current.evaluatedLessonId !== null) return;
+    const postponed = postponedLessonsOf(current);
+    if (postponed.includes(lessonId)) return;
+    await ensurePresent(store, lessonId, item.studentId);
+    await store.update("homework", item.id, { postponedLessonIds: [...postponed, lessonId] });
+  });
+}
+
+/**
+ * Sets a student's attendance in a lesson. A postponed recitation means he
+ * was there, so marking him absent or excused also cancels his
+ * postponements in that lesson.
+ */
+export async function setStudentAttendance(
+  store: LocalStore,
+  lessonId: string,
+  studentId: string,
+  status: AttendanceStatus,
+) {
+  const { db } = store;
+  await db.transaction("rw", homeworkTables(db), async () => {
+    await setAttendance(store, lessonId, studentId, status);
+    if (status === "present") return;
+    const items = await db.homework.where("studentId").equals(studentId).toArray();
+    for (const item of items) {
+      const postponed = postponedLessonsOf(item);
+      if (item.deletedAt !== null || !postponed.includes(lessonId)) continue;
+      await store.update("homework", item.id, {
+        postponedLessonIds: postponed.filter((id) => id !== lessonId),
+      });
+    }
+  });
+}
+
+/** Undoes a postponement made in this lesson. */
+export async function undoPostpone(
+  store: LocalStore,
+  item: Pick<HomeworkRecord, "id">,
+  lessonId: string,
+) {
+  const { db } = store;
+  await db.transaction("rw", homeworkTables(db), async () => {
+    const current = await db.homework.get(item.id);
+    if (!current) return;
+    const postponed = postponedLessonsOf(current);
+    if (!postponed.includes(lessonId)) return;
+    await store.update("homework", item.id, {
+      postponedLessonIds: postponed.filter((id) => id !== lessonId),
+    });
   });
 }
 
@@ -150,6 +157,7 @@ export async function addHomework(
       evaluatedLessonId: input.evaluateNow ? input.lessonId : null,
       memorizationRate: null,
       behaviorRate: null,
+      postponedLessonIds: [],
     });
   });
 }

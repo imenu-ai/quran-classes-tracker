@@ -17,14 +17,17 @@ function SearchContent() {
   const t = useTranslations();
   const router = useRouter();
   const inputId = useId();
-  const initialQuery = useSearchParams().get("q") ?? "";
-  const [query, setQuery] = useState(initialQuery);
+  const urlQuery = useSearchParams().get("q") ?? "";
+  const [query, setQuery] = useState(urlQuery);
   const results = useStudentSearch(query);
 
+  // Keep the URL in step with what's typed, but don't navigate when it
+  // already matches (on load): that extra navigation could cut off another.
   useEffect(() => {
+    if (query === urlQuery) return;
     const url = query ? `/search?q=${encodeURIComponent(query)}` : "/search";
     router.replace(url, { scroll: false });
-  }, [query, router]);
+  }, [query, urlQuery, router]);
 
   return (
     <PageContainer>

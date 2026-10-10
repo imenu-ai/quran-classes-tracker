@@ -50,7 +50,11 @@ export function HomeworkFormDrawer({
   mode: HomeworkFormMode;
   student: StudentRecord;
   history: readonly HomeworkRecord[];
-  lessonId: string;
+  /**
+   * The lesson new homework belongs to, or a function that provides it at
+   * save time (today's lesson is only created when something is recorded).
+   */
+  lessonId: string | (() => Promise<string>);
 }) {
   const t = useTranslations();
   const { store } = useApp();
@@ -99,7 +103,7 @@ export function HomeworkFormDrawer({
     } else {
       await addHomework(store, {
         studentId: student.id,
-        lessonId,
+        lessonId: typeof lessonId === "string" ? lessonId : await lessonId(),
         portion: check.value,
         note,
         evaluateNow: mode.kind === "recite",

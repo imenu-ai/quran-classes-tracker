@@ -3,7 +3,13 @@ import { can, canSeeClass, isAdmin, type Permission } from "@/shared/access";
 import { parseWithCodes } from "@/shared/schemas/errors";
 import { clampUpdatedAt } from "@/shared/sync/lww";
 import type { PushMutation, PushResult } from "@/shared/sync/protocol";
-import { RECORD_SCHEMAS, REFERENCES, type SyncRecord, type SyncTable } from "@/shared/sync/tables";
+import {
+  RECORD_SCHEMAS,
+  REFERENCES,
+  SYNC_TABLES,
+  type SyncRecord,
+  type SyncTable,
+} from "@/shared/sync/tables";
 import { actorOf, tenantIdOf, type Actor, type SyncScope } from "../actor";
 import { membersCollection } from "../members";
 import {
@@ -132,7 +138,7 @@ async function isAllowed(
  *
  * For each record: validate with the shared schema (including sura/ayah
  * rules), force the session's tenant, check references exist in this tenant
- * (parents earlier in the same batch count, since they're written first),
+ * (parents anywhere in the same batch count: the batch is written in table order),
  * check the user may make the write (FORBIDDEN otherwise), clamp the device
  * clock, and write only if the incoming copy is newer.
  */
@@ -173,9 +179,14 @@ export async function pushChanges(
 
   if (valid.length === 0) return results;
 
-  const allocation = await allocateVersions(db, tenantId, valid.length);
+  // Parents before children (classes, students, lessons, attendance,
+  // homework), so a reference to a record later in the same batch resolves.
+  const rank = (table: SyncTable) => SYNC_TABLES.indexOf(table);
+  const ordered = [...valid].sort((a, b) => rank(a.mutation.table) - rank(b.mutation.table));
+
+  const allocation = await allocateVersions(db, tenantId, ordered.length);
   try {
-    for (const [offset, { index, mutation }] of valid.entries()) {
+    for (const [offset, { index, mutation }] of ordered.entries()) {
       results[index] = await applyOne(db, repos, actor, mutation, allocation.from + offset, now);
     }
   } finally {

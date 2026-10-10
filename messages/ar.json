@@ -177,7 +177,6 @@
     "rename": "تعديل الاسم",
     "renameTitle": "تعديل اسم الحلقة",
     "studentCount": "{count, plural, zero {لا يوجد طلاب} one {طالب واحد} two {طالبان} few {# طلاب} many {# طالبًا} other {# طالب}}",
-    "lessonToday": "درس اليوم",
     "archive": "أرشفة الحلقة",
     "unarchive": "استعادة الحلقة",
     "archivedTitle": "الحلقات المؤرشفة",
@@ -297,61 +296,24 @@
     "centerSaved": "تم حفظ إعدادات المركز"
   },
   "lessons": {
-    "otherDate": "درس بتاريخ سابق",
-    "pickDateTitle": "درس بتاريخ سابق",
-    "pickDateDescription": "اختر تاريخ الدرس. إن كان للحلقة درس في ذلك اليوم فسيُفتح.",
     "open": "فتح الدرس",
     "title": "{weekday}، {date}",
     "notFound": "الدرس غير موجود",
-    "actions": "خيارات الدرس",
-    "changeDate": "تغيير التاريخ",
-    "changeDateTitle": "تغيير تاريخ الدرس",
-    "dateTaken": "يوجد درس لهذه الحلقة في هذا التاريخ",
-    "dateInFuture": "لا يمكن اختيار تاريخ في المستقبل",
-    "dateChanged": "تم تغيير تاريخ الدرس",
-    "stepAttendance": "الحضور",
-    "stepEvaluate": "التقييم",
-    "steps": "خطوات الدرس",
-    "historyTitle": "الدروس",
-    "noLessons": "لا توجد دروس بعد",
     "note": "ملاحظة الدرس",
-    "noteSaved": "تم حفظ الملاحظة",
     "delete": "حذف الدرس",
-    "deleteConfirmTitle": "حذف الدرس؟",
-    "deleteConfirm": "سيُحذف الدرس مع الحضور والواجبات المسجلة فيه، وتعود الواجبات التي قُيِّمت فيه إلى انتظار التقييم.",
-    "deleted": "تم حذف الدرس",
-    "attendanceSummary": "حاضر {present} · غائب {absent} · بعذر {excused}",
-    "evaluatedCount": "{count, plural, zero {لا تقييمات} one {تقييم واحد} two {تقييمان} few {# تقييمات} many {# تقييمًا} other {# تقييم}}",
-    "showMore": "عرض المزيد",
-    "notePlaceholder": "ملاحظة على الدرس (اختياري)",
-    "viewOnly": "للعرض فقط: ليست لديك صلاحية تسجيل الدروس."
+    "deleted": "تم حذف الدرس"
   },
   "attendance": {
-    "markAllPresent": "تحديد الكل حاضر",
-    "unmarked": "لم يُسجَّل",
-    "clear": "إلغاء التسجيل",
-    "excuseNotePlaceholder": "سبب الغياب (اختياري)",
-    "marked": "تم تسجيل {marked} من {total}",
-    "noStudents": "لا يوجد طلاب في هذه الحلقة"
+    "excuseNotePlaceholder": "سبب الغياب (اختياري)"
   },
   "evaluation": {
-    "progress": "تم تقييم {done} من {total}",
     "pending": "المطلوب تسميعه",
     "noPending": "لا يوجد واجب بانتظار التسميع",
-    "evaluatedHere": "قُيِّم في هذا الدرس",
-    "nextHomework": "واجب الدرس القادم",
-    "addNext": "إضافة واجب للدرس القادم",
     "reciteNow": "تسميع الآن",
     "editRange": "تعديل المقطع",
     "undo": "إلغاء التقييم",
     "deleteHomework": "حذف الواجب",
-    "unmarkedTitle": "لم يُسجَّل حضورهم",
-    "unmarkedHint": "تقييم أحدهم يسجّله حاضرًا تلقائيًا.",
-    "noPresent": "لم يُسجَّل حضور أي طالب بعد",
-    "goToAttendance": "تسجيل الحضور",
-    "range": "{surah} {from}–{to}",
-    "scoreLabel": "{label}: {score}",
-    "clearScore": "إزالة الدرجة"
+    "range": "{surah} {from}–{to}"
   },
   "homework": {
     "addTitle": "واجب الدرس القادم",
@@ -365,23 +327,20 @@
     "suggested": "مقترح بعد آخر واجب، ويمكنك تغييره"
   },
   "profile": {
-    "currentHomework": "الواجب الحالي",
-    "noCurrentHomework": "لا يوجد واجب حالي",
-    "monthlyTitle": "الإحصائيات الشهرية",
-    "noData": "لا توجد بيانات بعد. ستظهر الإحصائيات بعد أول تقييم أو تسجيل حضور.",
-    "absentDays": "أيام الغياب",
-    "excusedDays": "أيام الغياب بعذر",
-    "evaluatedItems": "الواجبات المقيَّمة",
-    "chartTitle": "معدل الحفظ والسلوك عبر الأشهر",
-    "chartTable": "جدول المعدلات الشهرية",
     "month": "الشهر",
-    "historyTitle": "سجل {month}",
     "noHistory": "لا يوجد سجل لهذا الشهر",
-    "scores": "الحفظ {memorization} · السلوك {behavior}",
     "editEvaluationTitle": "تعديل التقييم",
     "editAttendanceTitle": "تعديل الحضور",
-    "openLesson": "فتح الدرس",
-    "selectMonth": "اختر الشهر"
+    "dateHeader": "التاريخ",
+    "memorizationShort": "الحفظ",
+    "behaviorShort": "السلوك",
+    "average": "المعدل",
+    "olderMonth": "الشهر السابق",
+    "newerMonth": "الشهر التالي",
+    "tableCaption": "سجل {month}",
+    "editRow": "تعديل سجل {date}",
+    "editPostponedTitle": "تسميع مؤجل",
+    "attendanceSummary": "أيام الحضور: {present} · الغياب: {absent} · الغياب بعذر: {excused}"
   },
   "offline": {
     "title": "لا يوجد اتصال",
@@ -476,5 +435,18 @@
       "expiry": "ينتهي هذا الرابط خلال ساعة.",
       "ignore": "إن لم تطلب ذلك فتجاهل هذه الرسالة؛ كلمة مرورك الحالية لم تتغير."
     }
+  },
+  "today": {
+    "title": "اليوم",
+    "viewOnly": "للعرض فقط: ليست لديك صلاحية تسجيل الدروس.",
+    "absentNote": "الطالب غائب اليوم.",
+    "homework": "الواجب",
+    "postpone": "تأجيل التسميع",
+    "postponed": "مؤجل",
+    "postponedHint": "أُجّل التسميع؛ يبقى الواجب لليوم التالي.",
+    "undoPostpone": "إلغاء التأجيل",
+    "postponedToast": "تم تأجيل التسميع",
+    "nextTitle": "واجب اليوم التالي",
+    "addNext": "إضافة واجب لليوم التالي"
   }
 }

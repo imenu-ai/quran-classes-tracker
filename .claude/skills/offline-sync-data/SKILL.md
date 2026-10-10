@@ -58,8 +58,14 @@ Data belongs to a **center** (`tenantId`). Who may touch it is decided per user 
 - **IDs come from the client.** UUIDv7 is the default. When two devices could create "the same thing" offline, derive a deterministic UUIDv5 instead, so they merge rather than duplicate: one lesson per class per day, one attendance record per lesson and student. Find existing records by their natural key, not only by the derived ID. `findAttendance` does this because older records may use other IDs.
 - **Domain and server code return error codes, never text.** Schemas use `codeErrorMap` / `parseWithCodes` (`src/shared/schemas/errors.ts`). The UI translates codes through `messages/*.json`.
 - **The server never trusts the client's `tenantId`.** Push overwrites it with the session's tenant. Access (role, permissions, classes) also comes from the server, never from the request. Server code reaches tenant data only through `TenantRepository`, which applies the tenant filter last. Never query a syncable collection directly.
-- **References are checked on push.** Add every new foreign key to `REFERENCES`. A missing parent is rejected as `REFERENCE_NOT_FOUND`. The outbox pushes oldest first, so parents go before children.
+- **References are checked on push.** Add every new foreign key to `REFERENCES`. A missing parent is rejected as `REFERENCE_NOT_FOUND`. The outbox pushes by table in `SYNC_TABLES` order (parents first), then oldest first, and the server writes each batch in the same order. A new table must go in `SYNC_TABLES` after the tables it references.
 - **Rejections are never dropped.** A record the server refuses moves to the `rejected` store and appears in Settings → Sync, where only the user can retry or discard it.
+
+## Lessons are created on demand (Phase 9)
+
+The UI no longer manages lessons. Today's lesson for a class is created the first time something is recorded for one of its students (`todayLessonId` in `src/client/data/today.ts`, built on `startLesson`). Read with the derived id and never create a lesson just to display something.
+
+A postponed recitation is stored on the homework item (`postponedLessonIds`). Read it through `postponedLessonsOf()`, since records pulled from the server may predate the field. Marking a student absent goes through `setStudentAttendance`, which also cancels his postponements in that lesson.
 
 ## Adding a field to an existing entity
 

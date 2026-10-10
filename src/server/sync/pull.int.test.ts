@@ -75,7 +75,12 @@ describe("pullChanges", () => {
       { table: "lessons" as const, record: lessonRecord(cls.id, { date: "2026-10-06" }) },
     ];
     await pushChanges(db, "t-page", records, NOW);
-    const expectedOrder = records.map((r) => r.record.id);
+    // Versions follow the order the batch is written in: by table (parents
+    // first), then batch order.
+    const rank = ["classes", "students", "lessons"];
+    const expectedOrder = [...records]
+      .sort((a, b) => rank.indexOf(a.table) - rank.indexOf(b.table))
+      .map((r) => r.record.id);
 
     const seen: string[] = [];
     let cursor = 0;

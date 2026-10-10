@@ -13,7 +13,7 @@ The product brief is in [BRIEF.md](BRIEF.md). The full design (decisions, sync p
 | Area        | Choice                                                                                |
 | ----------- | ------------------------------------------------------------------------------------- |
 | App         | Next.js 15 (App Router), React 19, TypeScript (strict)                                |
-| UI          | Tailwind CSS v4, shadcn/ui (Radix, `rtl: true`), next-themes, Recharts                |
+| UI          | Tailwind CSS v4, shadcn/ui (Radix, `rtl: true`), next-themes                          |
 | i18n        | next-intl without i18n routing: the locale comes from the user's account via a cookie |
 | Local data  | Dexie (IndexedDB), one database per user                                              |
 | Server data | MongoDB (local in development, Atlas in production)                                   |
@@ -98,6 +98,18 @@ The CLI scripts read `.env.local` then `.env`; variables already set in the shel
   - A teacher asks his admin, who sets a new one.
 - **How access is enforced.** The device hides what a user can't do. The server checks every sync: a teacher's writes need the matching permission and one of his classes, and pulls only return his classes. When an admin changes someone's classes or permissions, that user's devices rebuild their local copy at the next sync.
 
+## Daily use
+
+- **Opening a class** lists its students.
+- **A student's page** shows his month as a simple table: one row per day with the portion and the memorization and behavior marks, "مؤجل" or "غائب", and the month's averages. Earlier months are one tap away, and tapping a row corrects it.
+- **Under the table, "اليوم" (today):**
+  - attendance (present, absent, excused with a note);
+  - each due homework item with the two 1–10 grids;
+  - "تأجيل التسميع" (postpone the recitation) when he isn't ready: the homework stays for the next day and his averages aren't affected;
+  - "تسميع الآن" when nothing is due;
+  - "إضافة واجب لليوم التالي", pre-filled with the next portion.
+- **Lessons** still exist in the data (one per class per day), but the teacher never manages them: today's is created the first time something is recorded.
+
 ## Architecture in short
 
 ```
@@ -114,7 +126,8 @@ Service worker: cached assets and page shells
 - **Sync** pushes the outbox and pulls changes since the last server version. Conflicts resolve by last write wins on `updatedAt`. Triggers: app start, coming online, returning to the app, shortly after a write, and every 60 s.
 - **Nothing is dropped silently.** Network failures retry with backoff. A server validation rejection lands in Settings → Sync, where the teacher can retry or discard it.
 - **Deterministic IDs** for lessons (class + date) and attendance (lesson + student), so two devices offline create the same record instead of duplicates.
-- **Routes use query parameters** (`/class?id=…`, `/student?id=…`, `/lesson?id=…`), so one cached page shell serves every class, student and lesson offline. Pages hold no data; only the API checks the session.
+- **Pushes go parents first** (classes, students, lessons, attendance, homework), so a change never reaches the server before a record it refers to.
+- **Routes use query parameters** (`/class?id=…`, `/student?id=…`), so one cached page shell serves every class and student offline. Pages hold no data; only the API checks the session.
 - **Code layout:**
   - `src/domain`: pure logic (sura map and validation, homework suggestion, monthly stats, dates).
   - `src/shared`: schemas and the sync protocol, used by client and server.
@@ -147,8 +160,8 @@ To reuse the last build: `SKIP_E2E_BUILD=1 pnpm test:e2e`.
 
 | Spec        | Covers                                                                                                                                                   | Projects                                                                 |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `main-flow` | login → class → students → lesson → attendance → evaluate → homework → profile                                                                           | iPhone 15 (WebKit), Pixel 7, Desktop Chrome                              |
-| `offline`   | go offline mid-lesson, keep working, reload, reconnect; a second fresh login sees the data                                                               | Chromium only (Playwright can't drive service workers offline in WebKit) |
+| `main-flow` | class → students → student page: recite and mark, next-day homework, absence; next day: postpone, undo, mark                                             | iPhone 15 (WebKit), Pixel 7, Desktop Chrome                              |
+| `offline`   | offline: mark one student and mark another absent, reload, reconnect; a second fresh login sees both                                                     | Chromium only (Playwright can't drive service workers offline in WebKit) |
 | `roles`     | an admin registers, creates classes and a teacher with limited access; the teacher's forced password change, restricted view, reassignment and disabling | all three                                                                |
 | `ltr-smoke` | every main screen in English: `dir="ltr"` and no horizontal overflow at 360 px                                                                           | all three                                                                |
 
@@ -170,17 +183,17 @@ On the iPhone:
 
 1. Open the URL in **Safari**, then Share → **Add to Home Screen**. The home page shows these steps too.
 2. Open the app **from the home-screen icon** and sign in there. An installed web app on iOS has its own storage, separate from Safari: signing in inside Safari doesn't carry over.
-3. Browse once online: home, a class, a student, a lesson, search and settings. The app also pre-caches every page in the background after sign-in.
+3. Browse once online: home, a class, a student, search and settings. The app also pre-caches every page in the background after sign-in.
 
 **Manual offline check** (airplane mode):
 
 - [ ] Turn on airplane mode and fully close the app (swipe it away).
 - [ ] Reopen it from the home screen. The classes appear and the indicator shows "غير متصل".
-- [ ] Open a class, start a new lesson, mark attendance, and evaluate a student (recite, scores, next homework).
+- [ ] Open a class and a student: mark him (recite now or his due homework), postpone another student's recitation, mark one absent, and add next-day homework.
 - [ ] Open a student profile: the new scores are in the month summary.
 - [ ] Close and reopen the app, still offline: everything is still there, and the pending count shows.
 - [ ] Turn airplane mode off and return to the app. The indicator goes "جارٍ المزامنة" → "متصل".
-- [ ] On another device (or a laptop), sign in: the lesson and scores are there.
+- [ ] On another device (or a laptop), sign in: the marks, postponement and absence are in the students' tables.
 
 ## Deployment
 

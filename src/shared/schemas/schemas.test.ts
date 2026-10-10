@@ -148,6 +148,15 @@ describe("attendanceRecordSchema", () => {
 });
 
 describe("homeworkRecordSchema", () => {
+  it("fills in postponedLessonIds for a record from before Phase 9", () => {
+    const result = parseWithCodes(homeworkRecordSchema, validHomework);
+    expect(result.success && result.data.postponedLessonIds).toEqual([]);
+    expect(
+      parseWithCodes(homeworkRecordSchema, { ...validHomework, postponedLessonIds: ["nope"] })
+        .success,
+    ).toBe(false);
+  });
+
   it("accepts a pending homework item", () => {
     expect(parseWithCodes(homeworkRecordSchema, validHomework).success).toBe(true);
   });

@@ -15,10 +15,6 @@ test("LTR smoke: main screens in English at 360 px", async ({ page, projectName 
   await createClass(page, "LTR class", en);
   const classUrl = page.url();
   await addStudent(page, "Yusuf Test", "2014", en);
-  await page.getByRole("button", { name: en.glossary.newLesson }).click();
-  await page.waitForURL(/\/lesson\?id=/);
-  const lessonUrl = page.url();
-  await page.goto(classUrl);
   await page.getByRole("link", { name: /Yusuf Test/ }).click();
   await page.waitForURL(/\/student\?id=/);
   const studentUrl = page.url();
@@ -27,7 +23,6 @@ test("LTR smoke: main screens in English at 360 px", async ({ page, projectName 
     `${E2E_BASE_URL}/`,
     classUrl,
     studentUrl,
-    lessonUrl,
     `${E2E_BASE_URL}/search?q=yusuf`,
     `${E2E_BASE_URL}/users`,
     `${E2E_BASE_URL}/users?id=new`,
