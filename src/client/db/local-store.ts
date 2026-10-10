@@ -31,6 +31,9 @@ export interface LocalStoreOptions {
 
 const CLOCK_KEY = "clock";
 
+/** How long after a write the store still counts as busy (see isBusy). */
+const BUSY_WINDOW_MS = 150;
+
 /**
  * The only way the UI changes data. Each write validates the full record with
  * the shared Zod schema, then saves the record and its outbox entry in ONE
@@ -38,6 +41,10 @@ const CLOCK_KEY = "clock";
  */
 export class LocalStore {
   private readonly listeners = new Set<() => void>();
+  /** Writes started and not finished yet. */
+  private pendingWrites = 0;
+  /** When a write last started or finished (epoch ms). */
+  private lastWriteActivity = 0;
   private readonly now: () => number;
 
   constructor(
@@ -151,7 +158,43 @@ export class LocalStore {
     });
   }
 
+  /**
+   * Whether a write is running or just finished. An action can chain several
+   * writes (today's lesson, then the mark), with a short gap between them.
+   */
+  isBusy(): boolean {
+    return this.pendingWrites > 0 || Date.now() - this.lastWriteActivity < BUSY_WINDOW_MS;
+  }
+
+  /**
+   * Resolves once no write has run for a moment and everything written is
+   * committed, or after `maxWaitMs` at the latest. A full page load aborts
+   * IndexedDB transactions still in flight, so call this before one.
+   */
+  async whenIdle(maxWaitMs = 2000): Promise<void> {
+    const deadline = Date.now() + maxWaitMs;
+    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    while (this.isBusy() && Date.now() < deadline) await sleep(20);
+    // A read on the outbox (in every write's scope) waits for every
+    // read-write transaction on it to commit.
+    await this.db.transaction("r", this.db.outbox, () => this.db.outbox.count());
+  }
+
   private async write<T extends SyncTable>(
+    table: T,
+    build: (timestamp: number) => Promise<SyncRecordMap[T]>,
+  ): Promise<SyncRecordMap[T]> {
+    this.pendingWrites += 1;
+    this.lastWriteActivity = Date.now();
+    try {
+      return await this.writeNow(table, build);
+    } finally {
+      this.pendingWrites -= 1;
+      this.lastWriteActivity = Date.now();
+    }
+  }
+
+  private async writeNow<T extends SyncTable>(
     table: T,
     build: (timestamp: number) => Promise<SyncRecordMap[T]>,
   ): Promise<SyncRecordMap[T]> {

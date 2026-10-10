@@ -22,6 +22,7 @@ import {
 import { SyncEngine, type SyncStatus } from "./sync/engine";
 import { requestPersistentStorage } from "./pwa/install";
 import { warmPageCache } from "./pwa/page-cache";
+import { attachNavigationGuard } from "./navigation-guard";
 import { attachSyncTriggers } from "./sync/triggers";
 
 export interface AppServices {
@@ -100,7 +101,13 @@ export function AppProvider({
           void bootstrapSession().catch(() => {});
         },
       });
-      detach = attachSyncTriggers(engine, store);
+      const detachTriggers = attachSyncTriggers(engine, store);
+      // A link tapped right after a score waits for it to be saved.
+      const detachGuard = attachNavigationGuard(store, (href) => router.push(href));
+      detach = () => {
+        detachTriggers();
+        detachGuard();
+      };
       // Cache every page shell now, so pages not opened yet also work offline.
       if (navigator.onLine) void warmPageCache();
       // Keep IndexedDB from being evicted (unsynced lessons live there).

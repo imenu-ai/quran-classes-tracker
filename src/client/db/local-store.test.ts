@@ -221,4 +221,13 @@ describe("LocalStore + outbox", () => {
       expect(await db.outbox.get(a.id)).toMatchObject({ rev: 2 });
     });
   });
+
+  it("is busy while a write runs and shortly after, and whenIdle waits for it", async () => {
+    const writing = store.create("classes", { name: "busy", archivedAt: null });
+    expect(store.isBusy()).toBe(true);
+    await store.whenIdle();
+    expect(store.isBusy()).toBe(false);
+    expect((await writing).name).toBe("busy");
+    expect(await db.outbox.count()).toBe(1);
+  });
 });
