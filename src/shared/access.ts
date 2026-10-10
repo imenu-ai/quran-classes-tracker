@@ -92,7 +92,7 @@ export const phoneSchema = z
   .trim()
   .max(PHONE_MAX)
   .regex(/^[0-9+() -]*$/);
-export const emailSchema = z.string().trim().toLowerCase().pipe(z.email());
+export const emailSchema = z.string().trim().toLowerCase().min(1).pipe(z.email());
 export const timeZoneSchema = z.string().refine(isTimeZone, { error: "INVALID_VALUE" });
 
 export const registerCenterSchema = z.object({

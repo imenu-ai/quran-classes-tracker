@@ -26,9 +26,10 @@ export async function newContext(
   });
 }
 
-export async function signIn(page: Page, username: string) {
+export async function signIn(page: Page, account: { code: string; username: string }) {
   await page.goto(`${E2E_BASE_URL}/login`);
-  await page.locator('input[name="username"]').fill(username);
+  await page.locator('input[name="code"]').fill(account.code);
+  await page.locator('input[name="username"]').fill(account.username);
   await page.locator('input[name="password"]').fill(E2E_PASSWORD);
   await page.locator('button[type="submit"]').click();
   await page.waitForURL(`${E2E_BASE_URL}/`);

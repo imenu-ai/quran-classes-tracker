@@ -67,23 +67,68 @@
   "auth": {
     "login": {
       "title": "Sign in",
-      "subtitle": "Enter your username and password",
+      "subtitle": "Enter your center code, username and password",
       "username": "Username",
       "password": "Password",
       "submit": "Sign in",
       "submitting": "Signing in…",
       "showPassword": "Show password",
-      "hidePassword": "Hide password"
+      "hidePassword": "Hide password",
+      "centerCode": "Center code",
+      "centerCodeHint": "6 digits, from your center's admin",
+      "registerPrompt": "New center admin?",
+      "registerLink": "Register your center"
     },
     "errors": {
       "invalidCredentials": "Incorrect username or password",
       "rateLimited": "Too many attempts. Try again in a minute",
       "offline": "Signing in needs an internet connection",
-      "generic": "Couldn't sign in. Please try again"
+      "generic": "Couldn't sign in. Please try again",
+      "accountDisabled": "This account is disabled. Contact your center's admin",
+      "invalidCenterCode": "The center code is 6 digits"
     },
     "logout": "Sign out",
     "logoutPending": "{count, plural, one {# change hasn't} other {# changes haven't}} been synced yet. Signing out will delete {count, plural, one {it} other {them}} from this device.",
-    "logoutAnyway": "Sign out anyway"
+    "logoutAnyway": "Sign out anyway",
+    "register": {
+      "title": "Register a new center",
+      "subtitle": "Create the admin account, then add teachers and choose what they can do",
+      "centerSection": "Center",
+      "centerName": "Center name",
+      "timezone": "Time zone",
+      "timezoneHint": "Used to tell what day it is",
+      "adminSection": "Admin account",
+      "adminName": "Your name",
+      "email": "Email",
+      "emailHint": "Only used to reset your password",
+      "username": "Username",
+      "usernameHint": "English letters, digits, _ or . only (3 to 30)",
+      "password": "Password",
+      "passwordHint": "At least 8 characters",
+      "submit": "Register center",
+      "submitting": "Registering…",
+      "haveAccount": "Already have an account?",
+      "loginLink": "Sign in",
+      "errors": {
+        "emailTaken": "This email is already registered",
+        "rateLimited": "Too many registrations from this device. Try again later",
+        "offline": "Registration needs an internet connection",
+        "generic": "Couldn't register the center. Try again"
+      },
+      "done": {
+        "title": "Center registered",
+        "codeLabel": "Center code",
+        "codeHint": "Keep this code and share it with your teachers; they type it before their username and password when signing in.",
+        "copy": "Copy code",
+        "copied": "Code copied",
+        "continue": "Enter the app"
+      }
+    },
+    "changePassword": {
+      "title": "Choose a new password",
+      "subtitle": "Your current password was set by your center's admin. Choose your own to continue.",
+      "submit": "Save and continue"
+    }
   },
   "sync": {
     "connected": "Online",

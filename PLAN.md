@@ -565,7 +565,7 @@ The database is wiped for this phase (local and Atlas); there is no migration. S
   - Better Auth: composite usernames, `phone`, `/update-user` disabled, disabled members refused at sign-in, `mustChangePassword` cleared after a password change.
   - `src/server/centers.ts`: `createCenter`, `createMember`, `updateMember`, `setMemberPassword`, `updateOwnProfile`. Indexes for `tenants.code` and `members`.
   - CLI `pnpm center:create` (replaces `user:create`); `dev:seed --center`; E2E accounts.
-- [ ] **8.2 Registration, login, forced password change.** `POST /api/centers` (rate-limited) and `/register` with the center-code screen; 3-field `/login`; `/change-password`; `/api/me` and the device session carry role, permissions, classes and the center.
+- [x] **8.2 Registration, login, forced password change.** `POST /api/centers` (rate-limited) and `/register` with the center-code screen; 3-field `/login`; `/change-password`; `/api/me` and the device session carry role, permissions, classes and the center.
 - [ ] **8.3 Server-side access.** `withTenant` loads the member (disabled → 401, `mustChangePassword` → 403); push permission and scope checks; teacher-created classes assigned to him; pull scoping; `accessVersion`; student-move handling; `attendance.classId`.
 - [ ] **8.4 Access in the client.** `useAccess()`; actions hidden or read-only by permission; resync on a new `accessVersion`; forced password change and disabled accounts handled.
 - [ ] **8.5 User management.** Admin API and `/users` screens: create, edit, assign classes and permissions, reset password, disable; keep at least one active admin.
@@ -670,3 +670,11 @@ The database is wiped for this phase (local and Atlas); there is no migration. S
   The deploy job declares `environment: production`. This replaces the wildcard above.
 - 2026-10-06 (step 7.3, root cause of the refused role): the `imenu-ai` org puts immutable IDs in the OIDC subject. The token's `sub` was `repo:imenu-ai@155732539/quran-classes-tracker@1405484269:environment:production`, not `repo:imenu-ai/quran-classes-tracker:…`. The trust now accepts both forms. The deploy workflow prints the claims (never the token) before assuming the role, for future debugging.
 - 2026-10-10 (Phase 8 planned): The app becomes role-based: center admins register, create users and set their access; everyone signs in with center code + username + password. The app had no real data yet, so the database is wiped instead of migrated.
+- 2026-10-10 (steps 8.1–8.2):
+  - Center codes are random 6-digit numbers (retried on collision). The E2E server and the CLI may pass a fixed code; public registration never can.
+  - Better Auth's username validator accepts any case, because sign-in validates the raw input before lowercasing; stored usernames are lowercase.
+  - Registration is rate-limited to 5 a hour per IP, counted only for valid forms, with the same client-IP rule as Better Auth (a single-value `x-forwarded-for`).
+  - The center code is remembered on the device (localStorage, best effort), so teachers type it once.
+  - Device sessions saved before Phase 8 count as signed out.
+  - Until step 8.6, saving the profile in Settings fails: Better Auth's `/update-user` is disabled, and its replacement (`PATCH /api/account`) comes in 8.6.
+  - Checked in WebKit at 360 px: registration with field errors, the code screen, entering the app, a wrong password, and signing in again with the remembered code.

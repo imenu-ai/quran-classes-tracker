@@ -1,4 +1,4 @@
-import { accountFor, E2E_BASE_URL } from "./accounts";
+import { credentialsFor, E2E_BASE_URL } from "./accounts";
 import { en, expect, signIn, test } from "./fixtures";
 import { addStudent, createClass } from "./helpers";
 
@@ -10,7 +10,7 @@ import { addStudent, createClass } from "./helpers";
 test("LTR smoke: main screens in English at 360 px", async ({ page, projectName }) => {
   // The ltr accounts are created with locale "en" (see server.mts).
   await page.setViewportSize({ width: 360, height: 740 });
-  await signIn(page, accountFor("ltr", projectName));
+  await signIn(page, credentialsFor("ltr", projectName));
 
   await createClass(page, "LTR class", en);
   const classUrl = page.url();

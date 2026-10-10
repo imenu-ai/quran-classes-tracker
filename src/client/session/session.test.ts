@@ -7,12 +7,25 @@ import {
   forgetDevice,
   getDeviceId,
   readSession,
+  saveSession,
   snapshotFromMe,
 } from "./session";
 
 const me = {
-  user: { id: "u1", name: "الأستاذ", username: "teacher", locale: "ar" as const },
-  tenant: { id: "t1", name: "مركز", timezone: "Asia/Hebron" },
+  user: {
+    id: "u1",
+    name: "الأستاذ",
+    username: "teacher",
+    phone: "0599",
+    email: null,
+    locale: "ar" as const,
+    role: "teacher" as const,
+    permissions: ["lessons.run" as const],
+    classIds: ["c1"],
+    mustChangePassword: true,
+    accessVersion: 3,
+  },
+  tenant: { id: "t1", name: "مركز", code: "482913", timezone: "Asia/Hebron" },
 };
 
 describe("session snapshot", () => {
@@ -28,11 +41,24 @@ describe("session snapshot", () => {
       tenantId: "t1",
       name: "الأستاذ",
       username: "teacher",
+      phone: "0599",
+      email: null,
       locale: "ar",
+      role: "teacher",
+      permissions: ["lessons.run"],
+      classIds: ["c1"],
+      mustChangePassword: true,
+      accessVersion: 3,
       tenantName: "مركز",
+      centerCode: "482913",
       timezone: "Asia/Hebron",
       savedAt: 5,
     });
+  });
+
+  it("treats a snapshot saved before centers existed as signed out", async () => {
+    await saveSession({ userId: "u0", tenantId: "t0" } as never);
+    expect(await readSession()).toBeNull();
   });
 
   it("bootstraps from /api/me and saves the snapshot", async () => {

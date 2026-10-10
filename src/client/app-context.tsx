@@ -45,8 +45,9 @@ export function useSyncStatus(): SyncStatus {
 
 /**
  * Client-side gate for the app (pages are not gated on the server so the
- * cached shell works offline). With a saved session it opens that teacher's
- * local database and keeps it in sync; without one it sends them to /login.
+ * cached shell works offline). With a saved session it opens that user's
+ * local database and keeps it in sync; without one it sends them to /login,
+ * and a user with an admin-set password goes to /change-password first.
  */
 export function AppProvider({
   fallback,
@@ -57,9 +58,12 @@ export function AppProvider({
   const session = useLiveQuery(() => readSession(), [], undefined);
   const [services, setServices] = useState<AppServices | null>(null);
 
+  const mustChangePassword = session?.mustChangePassword === true;
   useEffect(() => {
     if (session === null) router.replace("/login");
-  }, [session, router]);
+    // The password an admin set must be replaced before anything else.
+    else if (mustChangePassword) router.replace("/change-password");
+  }, [session, mustChangePassword, router]);
 
   const userId = session?.userId;
   const tenantId = session?.tenantId;
@@ -107,6 +111,6 @@ export function AppProvider({
     [services, session],
   );
 
-  if (!value) return fallback;
+  if (!value || mustChangePassword) return fallback;
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
