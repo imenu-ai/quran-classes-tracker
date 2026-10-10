@@ -35,6 +35,13 @@ Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bo
 | 23 | Commits | Conventional Commits, with a Claude co-author trailer. |
 | 24 | Docs location | `BRIEF.md` and `PLAN.md` at the repo root, committed on `dev`. |
 | 25 | Deployment (2026-10-06) | The Amplify app (service role, app, `main` branch) is a **CloudFormation stack** in **eu-central-1**. A GitHub Actions workflow deploys it with an **OIDC role**, only when the stack file changes. The app's env vars live in **one Secrets Manager JSON secret** created manually; its ARN is the app env var `APP_SECRET_ARN`, and the build writes the secret into `.env`. Amplify auto-builds `main` on merge. Amplify's GitHub token is a GitHub Actions secret passed as a NoEcho parameter. The build spec lives in the stack (pnpm). |
+| 26 | Centers and roles (2026-10-10) | Role-based app. A **center admin** registers the center (public `/register`), creates the users and sets each one's access. Roles: `admin` (everything, all classes, user management) and `teacher` (assigned classes + permissions). Replaces CLI-only accounts (decision #13 kept for the auth library). |
+| 27 | Access | Per teacher: **assigned classes** + on/off **permissions** (`classes.manage`, `students.manage`, `lessons.run`, `reports.view`). Enforced on the server (push and pull); the client only hides what's not allowed. |
+| 28 | Center code | A generated **6-digit code** per center. Sign-in for everyone (admin too) is **center code + username + password**. Usernames are unique inside a center only. |
+| 29 | Admin email | The admin registers with an email, used only for **password reset by email via AWS SES** (eu-central-1). Teachers have no email; their admin resets their password. |
+| 30 | First login | A teacher must replace the password the admin set before using the app. |
+| 31 | Own profile | A teacher can edit his display name, username, phone (new optional field) and password. |
+| 32 | Old data | The app was not in use: the database is wiped, with no migration. |
 
 ### Resolved open items
 - **O1:** Keep a hidden `en.json`, the key-parity test and the LTR Playwright smoke test. Only `ar` is enabled (`ENABLED_LOCALES=ar`).
@@ -164,6 +171,14 @@ Response: `{ results: [{ id, status: 'applied' | 'stale' | 'rejected', code?, pa
 - Formats: `ar` uses `numberingSystem: 'latn'` and the Gregorian calendar. Weekday and month names come from `Intl`.
 - Domain functions return codes. `t('errors.<CODE>', params)` turns them into text.
 
+### 2.11 Centers, roles and access (Phase 8)
+- **Identity:** Better Auth `users`. The stored `username` is the composite `<code>:<local>` (e.g. `482913:ahmad`), so Better Auth's global uniqueness gives per-center uniqueness; `displayUsername` holds `<local>`. The login form builds the composite from its center-code and username fields. Better Auth's `/update-user` is disabled: profile changes go through `PATCH /api/account`, which keeps the composite consistent.
+- **Access:** a server-only `members` document per user (`role`, `permissions`, `classIds`, `disabled`, `mustChangePassword`, `accessVersion`), never reachable through Better Auth endpoints. `withTenant` loads it on every API request, so changes apply immediately.
+- **Push:** a teacher's mutation needs the table's permission (classes → `classes.manage`, students → `students.manage`, lessons/attendance/homework → `lessons.run`) and its class in scope (a student move: both classes). Otherwise `rejected: FORBIDDEN`. A class a teacher creates is added to his `classIds`.
+- **Pull:** a teacher only receives his classes, their students, lessons and attendance (`classId` in scope) and those students' homework. Admins are unfiltered.
+- **Scope changes:** changing a member's classes or permissions bumps his `accessVersion`. Sync responses carry it; a device that sees a new value pushes its outbox, clears its synced tables and pulls from 0. When a student changes class, the server re-versions his homework (so a teacher who gains him gets his history) and bumps `accessVersion` for teachers who lose sight of him.
+- **Offline:** unchanged for daily work. Registration, sign-in, user management and profile changes need a connection.
+
 ---
 
 ## 3. Folder structure
@@ -233,13 +248,17 @@ Tests sit next to the code as `*.test.ts`. Server integration tests are `*.int.t
 
 ### Entities
 
-**`tenants`** (server only)
-- `_id`, `name`, `timezone` (default `Asia/Hebron`), `createdAt`
+**`tenants`** (server only; a tenant is a **center**)
+- `_id`, `name`, `code` (6 digits, unique; Phase 8), `timezone` (default `Asia/Hebron`), `createdAt`
 
 **`users`** (Better Auth `user` model, renamed)
-- `_id`, `name` (display name), `username` (unique, lowercase), `displayUsername`
-- `email`: hidden placeholder, unique
-- `emailVerified`, `tenantId` (`input: false`), `locale` (default `ar`), `createdAt`, `updatedAt`
+- `_id`, `name` (display name), `username` (`<code>:<local>`, unique, lowercase; Phase 8), `displayUsername` (`<local>`)
+- `email`: the admin's real email (for password reset); for teachers a hidden placeholder. Unique.
+- `phone` (optional; Phase 8), `emailVerified`, `tenantId` (`input: false`), `locale` (default `ar`), `createdAt`, `updatedAt`
+
+**`members`** (server only; Phase 8)
+- `_id` (= user id), `tenantId`, `role: 'admin' | 'teacher'`, `permissions: string[]`, `classIds: string[]`
+- `disabled`, `mustChangePassword`, `accessVersion` (bumped when classes or permissions change)
 
 **`auth_sessions`, `auth_accounts`, `auth_verifications`, `rate_limits`**
 - Better Auth models, renamed. The argon2id password hash lives in `auth_accounts`.
@@ -260,6 +279,7 @@ Tests sit next to the code as `*.test.ts`. Server integration tests are `*.int.t
 
 **`attendance`**
 - `lessonId` *(was `sessionId`)*, `studentId`
+- `classId` (Phase 8): always the lesson's class, so pulls can be scoped by class
 - `status: 'present' | 'absent' | 'excused'`
 - `excuseNote` (only meaningful when `excused`)
 
@@ -364,6 +384,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 5. Student profile, monthly stats, chart | [x] Done |
 | 6. PWA and offline hardening, settings, E2E, README, deployment | [x] Done |
 | 7. Deployment (CloudFormation + Amplify) | [x] Done |
+| 8. Centers, roles and permissions | [ ] In progress |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -534,6 +555,24 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - the existing post-deploy checks.
 - [x] **7.5 Final wrap-up. Stop.** Nothing is deployed by Claude: the user merges to `main`.
 
+### [ ] Phase 8: Centers, roles and permissions
+
+The database is wiped for this phase (local and Atlas); there is no migration. See §0 #26–32 and §2.11.
+
+- [x] **8.0 Plan.** This section, the decisions and the data model changes.
+- [ ] **8.1 Centers and identity.**
+  - `src/shared/access.ts`: roles, permissions, `can`/`canSeeClass`, Zod schemas for registration, members and profile.
+  - Better Auth: composite usernames, `phone`, `/update-user` disabled, disabled members refused at sign-in, `mustChangePassword` cleared after a password change.
+  - `src/server/centers.ts`: `createCenter`, `createMember`, `updateMember`, `setMemberPassword`, `updateOwnProfile`. Indexes for `tenants.code` and `members`.
+  - CLI `pnpm center:create` (replaces `user:create`); `dev:seed --center`; E2E accounts.
+- [ ] **8.2 Registration, login, forced password change.** `POST /api/centers` (rate-limited) and `/register` with the center-code screen; 3-field `/login`; `/change-password`; `/api/me` and the device session carry role, permissions, classes and the center.
+- [ ] **8.3 Server-side access.** `withTenant` loads the member (disabled → 401, `mustChangePassword` → 403); push permission and scope checks; teacher-created classes assigned to him; pull scoping; `accessVersion`; student-move handling; `attendance.classId`.
+- [ ] **8.4 Access in the client.** `useAccess()`; actions hidden or read-only by permission; resync on a new `accessVersion`; forced password change and disabled accounts handled.
+- [ ] **8.5 User management.** Admin API and `/users` screens: create, edit, assign classes and permissions, reset password, disable; keep at least one active admin.
+- [ ] **8.6 Own profile and center settings.** `PATCH /api/account` (name, username, phone, admin email); a center section in Settings (name, time zone, code).
+- [ ] **8.7 Password reset by email.** SES sender, Better Auth reset flow, `/forgot-password` and `/reset-password`, SSR compute role in the stack, `EMAIL_FROM`.
+- [ ] **8.8 E2E, docs, wrap-up. Stop.** Existing specs on the new login; a roles spec; README, skills, CLAUDE.md.
+
 ---
 
 ## 7. Change log
@@ -630,3 +669,4 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
 
   The deploy job declares `environment: production`. This replaces the wildcard above.
 - 2026-10-06 (step 7.3, root cause of the refused role): the `imenu-ai` org puts immutable IDs in the OIDC subject. The token's `sub` was `repo:imenu-ai@155732539/quran-classes-tracker@1405484269:environment:production`, not `repo:imenu-ai/quran-classes-tracker:…`. The trust now accepts both forms. The deploy workflow prints the claims (never the token) before assuming the role, for future debugging.
+- 2026-10-10 (Phase 8 planned): The app becomes role-based: center admins register, create users and set their access; everyone signs in with center code + username + password. The app had no real data yet, so the database is wiped instead of migrated.
