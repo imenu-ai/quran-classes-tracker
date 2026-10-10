@@ -263,8 +263,21 @@
       "passwordLength": "The password must be 8 to 128 characters",
       "rateLimited": "Too many attempts. Try again in a minute",
       "sessionExpired": "Your session expired. Sign in again",
-      "generic": "Couldn't save the change. Please try again"
-    }
+      "generic": "Couldn't save the change. Please try again",
+      "emailTaken": "This email is already registered"
+    },
+    "phone": "Phone number",
+    "phoneHint": "Optional",
+    "email": "Email",
+    "emailHint": "To reset your password if you forget it",
+    "centerTitle": "Center",
+    "centerName": "Center name",
+    "centerCode": "Center code",
+    "centerCodeHint": "Everyone types it at sign-in, before their username",
+    "copyCode": "Copy code",
+    "codeCopied": "Code copied",
+    "timezone": "Time zone",
+    "centerSaved": "Center settings saved"
   },
   "lessons": {
     "otherDate": "Lesson on an earlier date",

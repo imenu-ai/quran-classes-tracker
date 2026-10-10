@@ -569,7 +569,7 @@ The database is wiped for this phase (local and Atlas); there is no migration. S
 - [x] **8.3 Server-side access.** `withTenant` loads the member (disabled → 401, `mustChangePassword` → 403); push permission and scope checks; teacher-created classes assigned to him; pull scoping; `accessVersion`; student-move handling; `attendance.classId`.
 - [x] **8.4 Access in the client.** `useAccess()`; actions hidden or read-only by permission; resync on a new `accessVersion`; forced password change and disabled accounts handled.
 - [x] **8.5 User management.** Admin API and `/users` screens: create, edit, assign classes and permissions, reset password, disable; keep at least one active admin.
-- [ ] **8.6 Own profile and center settings.** `PATCH /api/account` (name, username, phone, admin email); a center section in Settings (name, time zone, code).
+- [x] **8.6 Own profile and center settings.** `PATCH /api/account` (name, username, phone, admin email); a center section in Settings (name, time zone, code).
 - [ ] **8.7 Password reset by email.** SES sender, Better Auth reset flow, `/forgot-password` and `/reset-password`, SSR compute role in the stack, `EMAIL_FROM`.
 - [ ] **8.8 E2E, docs, wrap-up. Stop.** Existing specs on the new login; a roles spec; README, skills, CLAUDE.md.
 
@@ -700,3 +700,4 @@ The database is wiped for this phase (local and Atlas); there is no migration. S
     3. He sees only that class: "new lesson" is shown; "create class", "add student", Users and the monthly statistics are not.
     4. The admin moves him to the other class, and his device follows.
     5. Disabled, he's refused at sign-in with the "account disabled" message.
+- 2026-10-10 (step 8.6): The profile form sends only the fields that changed. The center code is shown to everyone in Settings → Center, since teachers may need to pass it on; only admins can edit the center's name and time zone. Checked in a browser: profile and center changes survive a reload, and a phone typed in Arabic-Indic digits is stored with Western digits.
