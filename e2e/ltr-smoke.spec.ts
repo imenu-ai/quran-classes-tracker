@@ -29,7 +29,12 @@ test("LTR smoke: main screens in English at 360 px", async ({ page, projectName 
     studentUrl,
     lessonUrl,
     `${E2E_BASE_URL}/search?q=yusuf`,
+    `${E2E_BASE_URL}/users`,
+    `${E2E_BASE_URL}/users?id=new`,
     `${E2E_BASE_URL}/settings`,
+    `${E2E_BASE_URL}/register`,
+    `${E2E_BASE_URL}/forgot-password`,
+    `${E2E_BASE_URL}/reset-password`,
   ]) {
     await page.goto(url);
     await page.locator("main h1").first().waitFor();

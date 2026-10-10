@@ -39,6 +39,17 @@ Sync engine ◀─ pull changes ─ GET /api/sync/pull?since=N ◀─ records wi
 | Test record builders, in-memory Mongo            | `src/test/records.ts`, `src/test/mongo.ts`                                                       |
 | Sample data                                      | `scripts/dev-seed.ts` (writes through the real `pushChanges`)                                    |
 
+## Centers and access (Phase 8)
+
+Data belongs to a **center** (`tenantId`). Who may touch it is decided per user by a server-only `members` document: role, permissions, assigned classes. See `src/shared/access.ts`, `src/server/members.ts` and PLAN.md §2.11.
+
+- **Sync routes pass the signed-in actor.** `pushChanges` and `pullChanges` take a `SyncScope`: an `Actor` from `withTenant` context, or a bare tenant id for trusted server code (dev seed, tests), which has full access. Never pass a bare tenant id from a request.
+- **Push checks a teacher's every write.** It needs the table's permission (classes → `classes.manage`, students → `students.manage`, lessons/attendance/homework → `lessons.run`) and every class it touches must be his. For homework, that's the student's class; for a move, both classes. Otherwise it's `FORBIDDEN`. A new class needs only the permission and becomes his.
+- **Pull returns only his classes** and their students, lessons and attendance (by `classId`), plus those students' homework. A new table that a teacher should see must be added to the pull scoping, with the class it belongs to.
+- **Attendance carries `classId`** (its lesson's class, checked on push). Lessons and attendance never change class.
+- **Access changes resync the device.** Changing a member's classes or permissions bumps `accessVersion`. Sync responses carry it, and the engine rebuilds the local copy when it changes. When a student changes class, his homework is re-versioned, and teachers who lose him get a new `accessVersion`.
+- **The client only hides.** `useAccess()` (`src/client/access.ts`) shapes the UI; never rely on it for security.
+
 ## Rules, and why they matter
 
 - **Write through `LocalStore` only.** Each write validates the full record with the shared schema, then saves the record and its outbox entry in one IndexedDB transaction. A direct `db.<table>.put()` creates a record that never syncs.
@@ -46,7 +57,7 @@ Sync engine ◀─ pull changes ─ GET /api/sync/pull?since=N ◀─ records wi
 - **Never hard-delete synced records.** Use `softDelete` (it sets `deletedAt`) and `restore`. A hard delete can't propagate to other devices, and the next pull would bring the record back. Queries filter on `deletedAt === null`. Archiving (`archivedAt`) is separate and reversible.
 - **IDs come from the client.** UUIDv7 is the default. When two devices could create "the same thing" offline, derive a deterministic UUIDv5 instead, so they merge rather than duplicate: one lesson per class per day, one attendance record per lesson and student. Find existing records by their natural key, not only by the derived ID. `findAttendance` does this because older records may use other IDs.
 - **Domain and server code return error codes, never text.** Schemas use `codeErrorMap` / `parseWithCodes` (`src/shared/schemas/errors.ts`). The UI translates codes through `messages/*.json`.
-- **The server never trusts the client's `tenantId`.** Push overwrites it with the session's tenant. Server code reaches tenant data only through `TenantRepository`, which applies the tenant filter last. Never query a syncable collection directly.
+- **The server never trusts the client's `tenantId`.** Push overwrites it with the session's tenant. Access (role, permissions, classes) also comes from the server, never from the request. Server code reaches tenant data only through `TenantRepository`, which applies the tenant filter last. Never query a syncable collection directly.
 - **References are checked on push.** Add every new foreign key to `REFERENCES`. A missing parent is rejected as `REFERENCE_NOT_FOUND`. The outbox pushes oldest first, so parents go before children.
 - **Rejections are never dropped.** A record the server refuses moves to the `rejected` store and appears in Settings → Sync, where only the user can retry or discard it.
 

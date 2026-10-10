@@ -384,7 +384,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 5. Student profile, monthly stats, chart | [x] Done |
 | 6. PWA and offline hardening, settings, E2E, README, deployment | [x] Done |
 | 7. Deployment (CloudFormation + Amplify) | [x] Done |
-| 8. Centers, roles and permissions | [ ] In progress |
+| 8. Centers, roles and permissions | [x] Done |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -555,7 +555,7 @@ Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then on
   - the existing post-deploy checks.
 - [x] **7.5 Final wrap-up. Stop.** Nothing is deployed by Claude: the user merges to `main`.
 
-### [ ] Phase 8: Centers, roles and permissions
+### [x] Phase 8: Centers, roles and permissions
 
 The database is wiped for this phase (local and Atlas); there is no migration. See §0 #26–32 and §2.11.
 
@@ -571,7 +571,7 @@ The database is wiped for this phase (local and Atlas); there is no migration. S
 - [x] **8.5 User management.** Admin API and `/users` screens: create, edit, assign classes and permissions, reset password, disable; keep at least one active admin.
 - [x] **8.6 Own profile and center settings.** `PATCH /api/account` (name, username, phone, admin email); a center section in Settings (name, time zone, code).
 - [x] **8.7 Password reset by email.** SES sender, Better Auth reset flow, `/forgot-password` and `/reset-password`, SSR compute role in the stack, `EMAIL_FROM`.
-- [ ] **8.8 E2E, docs, wrap-up. Stop.** Existing specs on the new login; a roles spec; README, skills, CLAUDE.md.
+- [x] **8.8 E2E, docs, wrap-up. Stop.** Existing specs on the new login; a roles spec; README, skills, CLAUDE.md.
 
 ---
 
@@ -707,3 +707,7 @@ The database is wiped for this phase (local and Atlas); there is no migration. S
   - The forgot-password page answers the same whether or not an email is registered.
   - Rate limits: 3 reset requests per 15 minutes and 5 resets a minute per IP. Better Auth signs the user out everywhere after a reset, and a reset link works once.
   - Checked in a browser: the link printed by the development server sets a new password, sign-in works with it, and a reused link shows "invalid or expired".
+- 2026-10-10 (step 8.8):
+  - New E2E spec `roles`: registration, a teacher with limited access, his forced password change and restricted view, reassignment followed by his device, and disabling. It passes on iPhone 15 (WebKit), Pixel 7 and Desktop Chrome.
+  - The LTR smoke test also covers `/users`, `/users?id=new`, `/register`, `/forgot-password` and `/reset-password`.
+  - README, skills and CLAUDE.md describe centers, roles and sign-in.

@@ -44,6 +44,7 @@ Users see Arabic, written right to left. English (`messages/en.json`) is built, 
 - **The shell pads for the notch and home indicator** with `env(safe-area-inset-*)` (`app-shell.tsx`). New fixed or sticky bars must do the same.
 - **Long Arabic names truncate.** Give the important text its own line rather than letting badges squeeze it to a few letters.
 - **Feedback after a tap must be instant.** Writes go to IndexedDB and are usually fast, but WebKit took about 250 ms. For high-frequency controls, show the new state optimistically, as `ScorePicker` does. See the `offline-sync-data` skill for the write path.
+- **Hide what the user may not do.** Gate actions with `useAccess()` (`can("lessons.run")`, `isAdmin`…, from `src/client/access.ts`). For a read-only view of a form, wrap its controls in `<fieldset disabled>`, keeping navigation (tabs, links) outside it. The server enforces access anyway; this is for a clear UI.
 - **Pages must not depend on the server for content.** Routes are `?id=` query pages served from the service-worker cache, and data comes from Dexie. Never fetch data in a server component.
 
 ## Checking your change
