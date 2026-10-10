@@ -146,7 +146,8 @@
     "search": "Search",
     "settings": "Settings",
     "back": "Back",
-    "main": "Main navigation"
+    "main": "Main navigation",
+    "users": "Users"
   },
   "classes": {
     "title": "Classes",
@@ -374,5 +375,66 @@
   "syncErrors": {
     "FORBIDDEN": "This record belongs to another account",
     "REFERENCE_NOT_FOUND": "It refers to a record missing on the server"
+  },
+  "users": {
+    "title": "Users",
+    "add": "Add user",
+    "newTitle": "New user",
+    "editTitle": "Edit user",
+    "you": "You",
+    "roleAdmin": "Admin",
+    "roleTeacher": "Teacher",
+    "statusDisabled": "Disabled",
+    "statusMustChange": "Hasn't changed the password yet",
+    "classCount": "{count, plural, =0 {No classes} one {# class} other {# classes}}",
+    "allClasses": "All classes",
+    "detailsSection": "Details",
+    "name": "Name",
+    "username": "Username",
+    "usernameHint": "Typed at sign-in with the center code. English letters, digits, _ or . only",
+    "phone": "Phone number",
+    "phoneHint": "Optional",
+    "password": "Temporary password",
+    "passwordHint": "Give it to the user; they'll be asked to change it at first sign-in. At least 8 characters",
+    "roleSection": "Role",
+    "roleAdminHint": "Sees every class, can do everything, and manages users",
+    "roleTeacherHint": "Works in the classes assigned to them, with the permissions you choose",
+    "permissionsSection": "Permissions",
+    "permissions": {
+      "classesManage": "Create, edit and archive classes",
+      "studentsManage": "Add, edit and move students",
+      "lessonsRun": "Run lessons: attendance, evaluation and homework",
+      "reportsView": "See students' monthly reports"
+    },
+    "classesSection": "Assigned classes",
+    "noClasses": "No classes yet. Create a class first, then assign it.",
+    "create": "Create user",
+    "save": "Save changes",
+    "created": "User created",
+    "saved": "Changes saved",
+    "accountSection": "Account",
+    "resetPassword": "Set a new password",
+    "resetPasswordDescription": "They'll be signed out on every device and asked to choose their own password at sign-in.",
+    "newPassword": "New password",
+    "setPassword": "Set",
+    "passwordSet": "Password set",
+    "disable": "Disable account",
+    "enable": "Enable account",
+    "disableConfirmTitle": "Disable this account?",
+    "disableConfirm": "They won't be able to sign in and will be signed out on every device. Their data stays in the center, and you can enable the account later.",
+    "disabledToast": "Account disabled",
+    "enabledToast": "Account enabled",
+    "notFound": "User not found",
+    "adminsOnly": "This page is for the center's admin only",
+    "errors": {
+      "usernameTaken": "This username is taken in this center",
+      "lastAdmin": "The center must keep at least one active admin",
+      "classNotFound": "Some classes haven't synced yet. Wait for the sync, then try again",
+      "offline": "Managing users needs an internet connection",
+      "generic": "Couldn't save. Try again",
+      "loadFailed": "Couldn't load the users"
+    },
+    "retry": "Try again",
+    "selfHint": "To change your own name or password, use Settings."
   }
 }

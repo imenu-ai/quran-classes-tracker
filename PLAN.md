@@ -568,7 +568,7 @@ The database is wiped for this phase (local and Atlas); there is no migration. S
 - [x] **8.2 Registration, login, forced password change.** `POST /api/centers` (rate-limited) and `/register` with the center-code screen; 3-field `/login`; `/change-password`; `/api/me` and the device session carry role, permissions, classes and the center.
 - [x] **8.3 Server-side access.** `withTenant` loads the member (disabled → 401, `mustChangePassword` → 403); push permission and scope checks; teacher-created classes assigned to him; pull scoping; `accessVersion`; student-move handling; `attendance.classId`.
 - [x] **8.4 Access in the client.** `useAccess()`; actions hidden or read-only by permission; resync on a new `accessVersion`; forced password change and disabled accounts handled.
-- [ ] **8.5 User management.** Admin API and `/users` screens: create, edit, assign classes and permissions, reset password, disable; keep at least one active admin.
+- [x] **8.5 User management.** Admin API and `/users` screens: create, edit, assign classes and permissions, reset password, disable; keep at least one active admin.
 - [ ] **8.6 Own profile and center settings.** `PATCH /api/account` (name, username, phone, admin email); a center section in Settings (name, time zone, code).
 - [ ] **8.7 Password reset by email.** SES sender, Better Auth reset flow, `/forgot-password` and `/reset-password`, SSR compute role in the stack, `EMAIL_FROM`.
 - [ ] **8.8 E2E, docs, wrap-up. Stop.** Existing specs on the new login; a roles spec; README, skills, CLAUDE.md.
@@ -690,3 +690,13 @@ The database is wiped for this phase (local and Atlas); there is no migration. S
   - A disabled user needs no special handling on the device: disabling ends his sessions, so the device shows "sign in again", and sign-in then says the account is disabled. His local, unsynced work stays on the device.
   - View-only screens use a disabled `<fieldset>` around the controls, which disables every button and input inside. The lesson's step tabs stay outside it, so a lesson can still be browsed.
   - Without `reports.view`, the student page shows the current homework but not the monthly statistics or the history.
+- 2026-10-10 (step 8.5):
+  - Admin-only routes go through `withAdmin`, and center service errors map to HTTP statuses in one place (`src/server/center-http.ts`).
+  - Before assigning classes, the editor syncs, so classes just created on the admin's device exist on the server; otherwise the save says to wait for the sync.
+  - Better Auth's username plugin refuses an update that repeats the user's own username as "already taken", so the services send the username only when it changes. Found by the browser check: re-saving a user failed.
+  - Checked in a browser (Pixel 7, 390 px):
+    1. An admin registers, creates two classes and a teacher with "run lessons" for one class.
+    2. The teacher signs in on another device and must change his password.
+    3. He sees only that class: "new lesson" is shown; "create class", "add student", Users and the monthly statistics are not.
+    4. The admin moves him to the other class, and his device follows.
+    5. Disabled, he's refused at sign-in with the "account disabled" message.

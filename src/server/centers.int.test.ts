@@ -211,6 +211,25 @@ describe("centers and members", () => {
       expect((await getMember(db, userId))?.accessVersion).toBe(2);
     });
 
+    it("saves a full form unchanged (same username, name and access)", async () => {
+      const center = await register();
+      const { userId } = await createMember(center.tenantId, {
+        name: "t",
+        username: "resaved",
+        password: TEST_PASSWORD,
+        permissions: ["lessons.run"],
+      });
+      await updateMember(center.tenantId, userId, {
+        name: "t",
+        username: "resaved",
+        phone: "",
+        role: "teacher",
+        permissions: ["lessons.run"],
+        classIds: [],
+      });
+      expect((await getMember(db, userId))?.accessVersion).toBe(1);
+    });
+
     it("renames a member's username within the center", async () => {
       const center = await register();
       const { userId } = await createMember(center.tenantId, {

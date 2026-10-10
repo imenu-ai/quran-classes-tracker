@@ -265,6 +265,25 @@ async function isLastActiveAdmin(db: Db, tenantId: string, userId: string) {
   return others === 0;
 }
 
+/**
+ * The user fields for a new username, or none when it's unchanged. Better
+ * Auth's username plugin refuses an update that repeats the user's own
+ * username as "already taken", so an unchanged one must not be sent.
+ */
+async function usernameChange(
+  db: Db,
+  tenantId: string,
+  userId: string,
+  localUsername: string,
+): Promise<Record<string, string>> {
+  const tenant = await getTenantOrThrow(db, tenantId);
+  const username = composeUsername(tenant.code, localUsername);
+  const current = await (await getAuth().$context).internalAdapter.findUserById(userId);
+  if (current && (current as { username?: unknown }).username === username) return {};
+  await assertUsernameFree(db, username, userId);
+  return { username, displayUsername: localUsername };
+}
+
 const sameSet = (a: readonly string[], b: readonly string[]) =>
   a.length === b.length && a.every((value) => b.includes(value));
 
@@ -288,11 +307,7 @@ export async function updateMember(tenantId: string, userId: string, rawInput: U
   if (input.name !== undefined) userChanges.name = input.name;
   if (input.phone !== undefined) userChanges.phone = input.phone;
   if (input.username !== undefined) {
-    const tenant = await getTenantOrThrow(db, tenantId);
-    const username = composeUsername(tenant.code, input.username);
-    await assertUsernameFree(db, username, userId);
-    userChanges.username = username;
-    userChanges.displayUsername = input.username;
+    Object.assign(userChanges, await usernameChange(db, tenantId, userId, input.username));
   }
   if (Object.keys(userChanges).length > 0) {
     try {
@@ -358,11 +373,7 @@ export async function updateOwnProfile(
   if (input.name !== undefined) changes.name = input.name;
   if (input.phone !== undefined) changes.phone = input.phone;
   if (input.username !== undefined) {
-    const tenant = await getTenantOrThrow(db, tenantId);
-    const username = composeUsername(tenant.code, input.username);
-    await assertUsernameFree(db, username, userId);
-    changes.username = username;
-    changes.displayUsername = input.username;
+    Object.assign(changes, await usernameChange(db, tenantId, userId, input.username));
   }
   if (input.email !== undefined) {
     await assertEmailFree(db, input.email, userId);

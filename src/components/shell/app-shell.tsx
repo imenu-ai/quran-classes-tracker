@@ -1,15 +1,16 @@
 "use client";
 
-import { BookOpenText, Search, Settings, type LucideIcon } from "lucide-react";
+import { BookOpenText, Search, Settings, UsersRound, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { SyncIndicator } from "@/components/sync-indicator";
+import { useAccess } from "@/client/access";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
   href: string;
-  labelKey: "home" | "search" | "settings";
+  labelKey: "home" | "search" | "users" | "settings";
   icon: LucideIcon;
   /** Other paths that belong to this section. */
   matches: string[];
@@ -23,12 +24,19 @@ const NAV_ITEMS: NavItem[] = [
     matches: ["/", "/class", "/student", "/lesson"],
   },
   { href: "/search", labelKey: "search", icon: Search, matches: ["/search"] },
+  { href: "/users", labelKey: "users", icon: UsersRound, matches: ["/users"] },
   { href: "/settings", labelKey: "settings", icon: Settings, matches: ["/settings"] },
 ];
 
-function useActiveHref() {
+/** The nav for this user: "Users" is for center admins only. */
+function useNavItems() {
+  const { isAdmin } = useAccess();
+  return NAV_ITEMS.filter((item) => item.href !== "/users" || isAdmin);
+}
+
+function useActiveHref(items: readonly NavItem[]) {
   const pathname = usePathname();
-  return NAV_ITEMS.find((item) => item.matches.includes(pathname))?.href;
+  return items.find((item) => item.matches.includes(pathname))?.href;
 }
 
 /**
@@ -37,7 +45,8 @@ function useActiveHref() {
  */
 export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
   const t = useTranslations();
-  const active = useActiveHref();
+  const items = useNavItems();
+  const active = useActiveHref(items);
 
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[15rem_minmax(0,1fr)]">
@@ -47,7 +56,7 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
           {t("app.shortName")}
         </span>
         <nav aria-label={t("nav.main")} className="flex flex-col gap-1">
-          {NAV_ITEMS.map((item) => (
+          {items.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -81,8 +90,13 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
         aria-label={t("nav.main")}
         className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-background/85 md:hidden"
       >
-        <ul className="mx-auto grid max-w-md grid-cols-3">
-          {NAV_ITEMS.map((item) => (
+        <ul
+          className={cn(
+            "mx-auto grid max-w-md",
+            items.length === 4 ? "grid-cols-4" : "grid-cols-3",
+          )}
+        >
+          {items.map((item) => (
             <li key={item.href}>
               <Link
                 href={item.href}
