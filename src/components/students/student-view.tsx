@@ -9,25 +9,21 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAccess } from "@/client/access";
-import { useApp } from "@/client/app-context";
-import { useClass } from "@/client/data/classes";
 import { useStudentProfile } from "@/client/data/profile";
 import { useStudent } from "@/client/data/students";
-import { ageFromBirthYear, todayInTimeZone } from "@/domain/dates/local-date";
 import { MonthTable } from "./month-table";
 import { StudentActionsMenu } from "./student-actions-menu";
 import { StudentToday } from "./student-today";
 
 /**
  * The student's page in his class: his month as a simple table, then today
- * (attendance, marks, postponing, next day's homework), then his details.
+ * (attendance, marks, postponing, next day's homework). His details are in
+ * the actions menu (edit student).
  */
 export function StudentView({ studentId }: { studentId: string | null }) {
   const t = useTranslations();
-  const { session } = useApp();
   const access = useAccess();
   const student = useStudent(studentId);
-  const cls = useClass(student?.classId ?? null);
   const profile = useStudentProfile(studentId);
 
   if (student === undefined) {
@@ -57,8 +53,6 @@ export function StudentView({ studentId }: { studentId: string | null }) {
     );
   }
 
-  const age = ageFromBirthYear(student.birthYear, todayInTimeZone(session.timezone));
-
   return (
     <PageContainer>
       <PageHeader
@@ -84,41 +78,6 @@ export function StudentView({ studentId }: { studentId: string | null }) {
 
       {/* Today: attendance, marks, postponing and the next day's homework. */}
       {student.archivedAt === null && <StudentToday student={student} />}
-
-      <dl className="grid grid-cols-2 gap-3 rounded-xl border bg-card p-4 text-sm md:grid-cols-4">
-        <div className="flex flex-col gap-1">
-          <dt className="text-muted-foreground">{t("students.class")}</dt>
-          <dd className="font-medium">
-            {cls ? (
-              <Link
-                href={`/class?id=${cls.id}`}
-                dir="auto"
-                className="underline-offset-4 hover:underline"
-              >
-                {cls.name}
-              </Link>
-            ) : null}
-          </dd>
-        </div>
-        <div className="flex flex-col gap-1">
-          <dt className="text-muted-foreground">{t("students.birthYear")}</dt>
-          <dd className="font-medium">
-            {student.birthYear} · {t("students.age", { age })}
-          </dd>
-        </div>
-        <div className="col-span-2 flex flex-col gap-1">
-          <dt className="text-muted-foreground">{t("students.direction")}</dt>
-          <dd className="font-medium">{t(`students.${student.memorizationDirection}`)}</dd>
-        </div>
-        {student.note && (
-          <div className="col-span-2 flex flex-col gap-1 md:col-span-4">
-            <dt className="text-muted-foreground">{t("students.note")}</dt>
-            <dd dir="auto" className="whitespace-pre-wrap">
-              {student.note}
-            </dd>
-          </div>
-        )}
-      </dl>
     </PageContainer>
   );
 }
