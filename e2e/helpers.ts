@@ -42,15 +42,22 @@ export async function setPortion(
   await sheet.getByRole("textbox", { name: ar.glossary.toAyah, exact: true }).fill(to);
 }
 
-/** Taps a score in one of an evaluation card's 1–10 grids. */
-export async function tapScore(
+/**
+ * Opens a homework item on the student page (items start closed) and
+ * returns it. `portion` is its "sura from–to" label.
+ */
+export async function openHomework(scope: import("@playwright/test").Locator, portion: string) {
+  const item = scope.locator("li").filter({ hasText: portion });
+  const header = item.getByRole("button", { name: new RegExp(portion) }).first();
+  if ((await header.getAttribute("aria-expanded")) !== "true") await header.click();
+  return item;
+}
+
+/** Chooses a mark (1–10) in one of the labelled mark pickers inside `scope`. */
+export async function setScore(
   scope: import("@playwright/test").Locator,
-  group: string,
+  label: string,
   score: number,
 ) {
-  await scope
-    .getByRole("group", { name: group })
-    .first()
-    .getByRole("button", { name: String(score), exact: true })
-    .click();
+  await scope.getByRole("combobox", { name: label }).first().selectOption(String(score));
 }

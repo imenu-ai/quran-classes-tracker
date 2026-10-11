@@ -1,6 +1,6 @@
 import { credentialsFor } from "./accounts";
 import { ar, expect, newContext, signIn, test, waitForSynced } from "./fixtures";
-import { addStudent, createClass, setPortion, tapScore } from "./helpers";
+import { addStudent, createClass, setPortion, setScore } from "./helpers";
 
 test("offline: mark a student without a connection, reconnect, and the server has it", async ({
   page,
@@ -32,8 +32,8 @@ test("offline: mark a student without a connection, reconnect, and the server ha
   await today.getByRole("button", { name: ar.evaluation.reciteNow }).click();
   await setPortion(page, "الإخلاص", /^112 · الإخلاص/, "1", "4");
   await page.getByRole("dialog").getByRole("button", { name: ar.common.save }).click();
-  await tapScore(today, ar.glossary.memorizationRate, 8);
-  await tapScore(today, ar.glossary.behaviorRate, 9);
+  await setScore(today, ar.glossary.memorizationRate, 8);
+  await setScore(today, ar.glossary.behaviorRate, 9);
 
   // Straight back to the class, as a teacher would: the link waits for the
   // last score to be saved (offline, it's a full page load).

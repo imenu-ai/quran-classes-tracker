@@ -1,8 +1,8 @@
 "use client";
 
-import { Clock, Mic, Pencil, Plus, Trash2, Undo2 } from "lucide-react";
+import { ChevronDown, Clock, Mic, Pencil, Plus, Trash2, Undo2 } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { toast } from "sonner";
 import { DirectionalIcon } from "@/components/directional-icon";
 import { usePortionLabel } from "@/components/homework/use-portion-label";
@@ -27,6 +27,7 @@ import {
 import { todayLessonId, useStudentToday } from "@/client/data/today";
 import { localDateToUtcDate } from "@/domain/dates/local-date";
 import { postponedLessonsOf, type HomeworkRecord } from "@/shared/schemas/homework";
+import { cn } from "@/lib/utils";
 import type { StudentRecord } from "@/shared/schemas/student";
 import { AttendanceToggle, ExcuseNoteInput } from "./attendance-controls";
 
@@ -43,6 +44,15 @@ export function StudentToday({ student }: { student: StudentRecord }) {
   const label = usePortionLabel();
   const today = useStudentToday(student);
   const [form, setForm] = useState<HomeworkFormMode | null>(null);
+  // Items start closed; this holds the ones the teacher opened, by id.
+  const [openIds, setOpenIds] = useState<ReadonlySet<string>>(new Set());
+  const toggle = (id: string) =>
+    setOpenIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   if (!today) return null;
 
@@ -57,8 +67,7 @@ export function StudentToday({ student }: { student: StudentRecord }) {
   return (
     <section
       aria-labelledby="today-title"
-      // A container, so the score grids go side by side only when the card is wide.
-      className="@container flex flex-col gap-4 rounded-xl border bg-card p-4"
+      className="flex flex-col gap-4 rounded-xl border bg-card p-4"
     >
       <header className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="today-title" className="text-lg font-semibold">
@@ -125,6 +134,8 @@ export function StudentToday({ student }: { student: StudentRecord }) {
                       key={item.id}
                       item={item}
                       label={label(item)}
+                      open={openIds.has(item.id)}
+                      onToggle={() => toggle(item.id)}
                       evaluated={lesson !== null && item.evaluatedLessonId === lesson.id}
                       postponed={postponedToday(item)}
                       onEdit={() => setForm({ kind: "edit", item })}
@@ -196,15 +207,27 @@ export function StudentToday({ student }: { student: StudentRecord }) {
         student={student}
         history={history}
         lessonId={lessonId}
+        // An item recited on the spot opens: it was added to be marked.
+        onCreated={(item) => {
+          if (item.evaluatedLessonId !== null) {
+            setOpenIds((current) => new Set(current).add(item.id));
+          }
+        }}
       />
     </section>
   );
 }
 
-/** One homework item today: its portion, then the score grids, or "postponed". */
-function HomeworkItem({
+/**
+ * One due homework item today, as a collapsible section. Closed, it's one
+ * line: the portion, then its marks ("9 · 10") or "مؤجل". Open, the pickers,
+ * postpone and the portion's edit and undo buttons.
+ */
+export function HomeworkItem({
   item,
   label,
+  open,
+  onToggle,
   evaluated,
   postponed,
   onEdit,
@@ -215,6 +238,8 @@ function HomeworkItem({
 }: {
   item: HomeworkRecord;
   label: string;
+  open: boolean;
+  onToggle: () => void;
   evaluated: boolean;
   postponed: boolean;
   onEdit: () => void;
@@ -224,67 +249,93 @@ function HomeworkItem({
   onUndoPostpone: () => Promise<void>;
 }) {
   const t = useTranslations();
+  const panelId = useId();
+  const mark = (value: number | null) => (value === null ? t("common.noValue") : String(value));
+
   return (
-    <li className="flex flex-col gap-2 rounded-lg border p-2.5">
-      <div className="flex items-center gap-1">
+    <li className="rounded-lg border">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={onToggle}
+        className="flex min-h-12 w-full items-center gap-2 px-3 py-2 text-start hover:bg-accent/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+      >
         <bdi className="min-w-0 flex-1 truncate font-medium">{label}</bdi>
-        {postponed && (
+        {postponed ? (
           <Badge className="bg-warning text-warning-foreground">
             <Clock aria-hidden />
             {t("today.postponed")}
           </Badge>
+        ) : (
+          evaluated && (
+            <span className="font-semibold text-primary tabular-nums">
+              {t("today.marks", {
+                memorization: mark(item.memorizationRate),
+                behavior: mark(item.behaviorRate),
+              })}
+            </span>
+          )
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-10"
-          aria-label={t("evaluation.editRange")}
-          onClick={onEdit}
-        >
-          <Pencil aria-hidden />
-        </Button>
-        {evaluated && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-10"
-            aria-label={t("evaluation.undo")}
-            onClick={() => void onUndo()}
-          >
-            <DirectionalIcon icon={Undo2} />
-          </Button>
-        )}
-      </div>
-
-      {postponed ? (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/50 p-3">
-          <span className="text-sm text-muted-foreground">{t("today.postponedHint")}</span>
-          <Button variant="outline" className="h-11" onClick={() => void onUndoPostpone()}>
-            <DirectionalIcon icon={Undo2} />
-            {t("today.undoPostpone")}
-          </Button>
-        </div>
-      ) : (
-        <>
-          <div className="grid gap-3 @lg:grid-cols-2">
-            <ScorePicker
-              label={t("glossary.memorizationRate")}
-              value={item.memorizationRate}
-              onChange={(score) => onRate("memorizationRate", score)}
-            />
-            <ScorePicker
-              label={t("glossary.behaviorRate")}
-              value={item.behaviorRate}
-              onChange={(score) => onRate("behaviorRate", score)}
-            />
-          </div>
-          {!evaluated && (
-            <Button variant="outline" className="h-11 self-start" onClick={() => void onPostpone()}>
-              <Clock aria-hidden />
-              {t("today.postpone")}
-            </Button>
+        <ChevronDown
+          aria-hidden
+          className={cn(
+            "size-5 shrink-0 text-muted-foreground transition-transform",
+            open && "rotate-180",
           )}
-        </>
+        />
+      </button>
+
+      {open && (
+        <div id={panelId} className="flex flex-col gap-3 border-t p-3">
+          <div className="flex items-center justify-end gap-1">
+            <Button variant="ghost" className="h-10" onClick={onEdit}>
+              <Pencil aria-hidden />
+              {t("evaluation.editRange")}
+            </Button>
+            {evaluated && (
+              <Button variant="ghost" className="h-10" onClick={() => void onUndo()}>
+                <DirectionalIcon icon={Undo2} />
+                {t("evaluation.undo")}
+              </Button>
+            )}
+          </div>
+
+          {postponed ? (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/50 p-3">
+              <span className="text-sm text-muted-foreground">{t("today.postponedHint")}</span>
+              <Button variant="outline" className="h-11" onClick={() => void onUndoPostpone()}>
+                <DirectionalIcon icon={Undo2} />
+                {t("today.undoPostpone")}
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <ScorePicker
+                  label={t("glossary.memorizationRate")}
+                  value={item.memorizationRate}
+                  onChange={(score) => onRate("memorizationRate", score)}
+                />
+                <ScorePicker
+                  label={t("glossary.behaviorRate")}
+                  value={item.behaviorRate}
+                  onChange={(score) => onRate("behaviorRate", score)}
+                />
+              </div>
+              {!evaluated && (
+                <Button
+                  variant="outline"
+                  className="h-11 self-start"
+                  onClick={() => void onPostpone()}
+                >
+                  <Clock aria-hidden />
+                  {t("today.postpone")}
+                </Button>
+              )}
+            </>
+          )}
+        </div>
       )}
     </li>
   );

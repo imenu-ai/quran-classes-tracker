@@ -342,7 +342,7 @@ function RowEditDrawer({
                         {t("today.undoPostpone")}
                       </Button>
                     ) : (
-                      <>
+                      <div className="grid grid-cols-2 gap-3">
                         <ScorePicker
                           label={t("glossary.memorizationRate")}
                           value={row.item.memorizationRate}
@@ -357,7 +357,7 @@ function RowEditDrawer({
                             rateHomework(store, row.item, row.lesson.id, "behaviorRate", value)
                           }
                         />
-                      </>
+                      </div>
                     )}
                   </>
                 )}

@@ -1,6 +1,6 @@
 import { credentialsFor } from "./accounts";
 import { ar, expect, signIn, test, waitForSynced } from "./fixtures";
-import { addStudent, createClass, setPortion, tapScore } from "./helpers";
+import { addStudent, createClass, openHomework, setPortion, setScore } from "./helpers";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -12,7 +12,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 test("class → students → student page: mark, next-day homework, absence, postpone", async ({
   page,
   projectName,
-}, testInfo) => {
+}) => {
   // A controllable clock, to move to the next day later.
   await page.clock.install({ time: new Date() });
   await signIn(page, credentialsFor("main", projectName));
@@ -35,21 +35,9 @@ test("class → students → student page: mark, next-day homework, absence, pos
   await page.getByRole("dialog").getByRole("button", { name: ar.common.save }).click();
   await expect(today.getByText("الفلق 1–5")).toBeVisible();
 
-  // How quickly a score tap shows as selected, measured in the page so
-  // Playwright's own click overhead isn't counted (production build).
-  const memorization = today
-    .getByRole("group", { name: ar.glossary.memorizationRate })
-    .getByRole("button", { name: "9", exact: true });
-  const tapMs = await memorization.evaluate(async (button: HTMLElement) => {
-    const started = performance.now();
-    button.click();
-    while (button.getAttribute("aria-pressed") !== "true") {
-      await new Promise(requestAnimationFrame);
-    }
-    return Math.round(performance.now() - started);
-  });
-  testInfo.annotations.push({ type: "score-tap-ms", description: String(tapMs) });
-  await tapScore(today, ar.glossary.behaviorRate, 10);
+  // An item just recited on the spot opens by itself.
+  await setScore(today, ar.glossary.memorizationRate, 9);
+  await setScore(today, ar.glossary.behaviorRate, 10);
 
   // Homework for the next day: suggested after الفلق, clamped to An-Nas.
   await today.getByRole("button", { name: ar.today.addNext }).click();
@@ -80,13 +68,14 @@ test("class → students → student page: mark, next-day homework, absence, pos
   await page.goto(classUrl);
   await page.getByRole("link", { name: /أحمد التجريبي/ }).click();
   await page.waitForURL(/\/student\?id=/);
-  const due = today.locator("li").filter({ hasText: "الناس 1–5" });
+  // Due items start closed: open it first.
+  const due = await openHomework(today, "الناس 1–5");
   await due.getByRole("button", { name: ar.today.postpone }).click();
   await expect(due.getByText(ar.today.postponed)).toBeVisible();
   await expect(table.locator("tbody tr").first()).toContainText(ar.today.postponed);
   await due.getByRole("button", { name: ar.today.undoPostpone }).click();
-  await tapScore(due, ar.glossary.memorizationRate, 8);
-  await tapScore(due, ar.glossary.behaviorRate, 9);
+  await setScore(due, ar.glossary.memorizationRate, 8);
+  await setScore(due, ar.glossary.behaviorRate, 9);
   await expect(table.locator("tbody tr").first()).toContainText("الناس 1–5");
   await expect(table.locator("tbody")).not.toContainText(ar.today.postponed);
   await waitForSynced(page);

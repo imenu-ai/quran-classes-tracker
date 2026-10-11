@@ -104,7 +104,7 @@ The CLI scripts read `.env.local` then `.env`; variables already set in the shel
 - **A student's page** shows his month as a simple table: one row per day with the portion and the memorization and behavior marks, "مؤجل" or "غائب", and the month's averages. Earlier months are one tap away, and tapping a row corrects it.
 - **Under the table, "اليوم" (today):**
   - attendance (present, absent, excused with a note);
-  - each due homework item with the two 1–10 grids;
+  - each due homework item as a collapsible section (sura and ayat; tap to open), with two mark pickers (1–10, the phone's own wheel on iPhone);
   - "تأجيل التسميع" (postpone the recitation) when he isn't ready: the homework stays for the next day and his averages aren't affected;
   - "تسميع الآن" when nothing is due;
   - "إضافة واجب لليوم التالي", pre-filled with the next portion.

@@ -40,6 +40,7 @@ Users see Arabic, written right to left. English (`messages/en.json`) is built, 
 - **Design for 360 px first,** then let it grow. Nothing may scroll sideways: `<main>` has `overflow-x-clip` as a guard, but don't rely on it.
 - **Tap targets are at least 44 px** (`h-11`/`size-11`). Frequent actions such as score buttons and attendance toggles are larger.
 - **When a component sits in variable-width containers,** use container queries (`@container` on the card, `@lg:grid-cols-2` inside) rather than viewport breakpoints. Score grids once shrank to 32 px at 1024 px with viewport breakpoints.
+- **Keep busy screens calm.** The user found a screen full of number buttons dizzying. Prefer the platform's own picker for a choice among many values: a native `<select>`, which iPhone shows as a wheel (see `ScorePicker`). Show lists of items as collapsible sections whose closed row says what matters (see `HomeworkItem` in `student-today.tsx`).
 - **The shell pads for the notch and home indicator** with `env(safe-area-inset-*)` (`app-shell.tsx`). New fixed or sticky bars must do the same.
 - **Long Arabic names truncate.** Give the important text its own line rather than letting badges squeeze it to a few letters.
 - **Feedback after a tap must be instant.** Writes go to IndexedDB and are usually fast, but WebKit took about 250 ms. For high-frequency controls, show the new state optimistically, as `ScorePicker` does. See the `offline-sync-data` skill for the write path.

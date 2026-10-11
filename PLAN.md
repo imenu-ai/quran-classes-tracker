@@ -46,6 +46,8 @@ Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bo
 | 34 | Postponed recitation | "تأجيل التسميع": when a student isn't ready, the teacher postpones instead of giving a bad mark. The homework stays pending for the next day, the day shows "مؤجل", the student counts as present, and averages aren't affected. It can be undone the same day. |
 | 35 | Absence | Marked on the student's page for today (present / absent / excused, with the excuse note). |
 | 36 | Past days | Marking applies to today; a past day is corrected by tapping its row in the month table. The chart and month cards are removed. |
+| 37 | Mark input (2026-10-11) | A mark (1–10) is chosen with the phone's own number wheel: a native select, a wheel on iPhone. It replaces the 5×2 grids of buttons, which were too busy. |
+| 38 | Homework list | On the student page, each due homework item is a collapsible section showing its sura and ayat (and its marks or "مؤجل" when closed). All start closed, except an item just added with "recite now". |
 
 ### Resolved open items
 - **O1:** Keep a hidden `en.json`, the key-parity test and the LTR Playwright smoke test. Only `ar` is enabled (`ENABLED_LOCALES=ar`).
@@ -391,6 +393,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 7. Deployment (CloudFormation + Amplify) | [x] Done |
 | 8. Centers, roles and permissions | [x] Done |
 | 9. Simpler class and student screens, postponed recitation | [x] Done |
+| 10. Calmer marking on the student page | [x] Done |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -595,6 +598,15 @@ See §0 #33–36.
 - [x] **9.4 Simplify the class page and home cards.** The class page is the student list only; class cards lose "درس جديد". The lesson screens and the `/lesson` route are removed.
 - [x] **9.5 E2E, docs, wrap-up. Stop.** `main-flow` and `offline` rewritten for the student page, `roles` and `ltr-smoke` updated, README and skills.
 
+### [x] Phase 10: Calmer marking on the student page
+
+See §0 #37–38.
+
+- [x] **10.0 Plan.**
+- [x] **10.1 The picker.** `ScorePicker` becomes a native select ("—" and 1–10), used by the today card and the month table's edit sheet. Tests and the E2E helper follow.
+- [x] **10.2 Collapsible items.** Closed: portion plus marks or "مؤجل"; open: pickers, postpone, edit, undo. A new "recite now" item opens.
+- [x] **10.3 E2E, docs, wrap-up. Stop.**
+
 ---
 
 ## 7. Change log
@@ -757,4 +769,11 @@ See §0 #33–36.
 - 2026-10-10 (Phase 9 E2E; two more fixes):
   - **A score tapped just before "back" could be lost offline.** Offline, an in-app link becomes a full page load, which aborts IndexedDB transactions still in flight. `LocalStore` now knows when it's busy, and a navigation guard holds in-app link clicks until the writes are saved, then navigates; it's capped at 2 s. The browser's own back gesture can't be held.
   - **The search page navigated on every load** (to the URL it was already on), which could cut off another navigation. It now updates the URL only when the query changes.
+- 2026-10-11 (Phase 10):
+  - `ScorePicker` is a native select. It keeps the "show at once" behaviour and the rollback on a failed write. Choosing "—" clears a mark.
+  - The main flow's tap-latency measurement is removed: it measured grid buttons, and the native select shows the choice itself.
+  - `renderArabic` (tests) now passes the i18n provider as a wrapper, so `rerender` keeps it.
+  - The E2E specs open an item before marking it (`openHomework`) and pick marks with `setScore`.
+  - Checked in WebKit at 360 px: three due items start closed with no pickers shown; marked and postponed items show "9 · 10" and "مؤجل" when closed.
+  - Playwright can't show the real iOS wheel, so picking a mark on an actual iPhone belongs to the README's manual check.
 
