@@ -48,6 +48,9 @@ Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bo
 | 36 | Past days | Marking applies to today; a past day is corrected by tapping its row in the month table. The chart and month cards are removed. |
 | 37 | Mark input (2026-10-11) | A mark (1–10) is chosen with the phone's own number wheel: a native select, a wheel on iPhone. It replaces the 5×2 grids of buttons, which were too busy. |
 | 38 | Homework list | On the student page, each due homework item is a collapsible section showing its sura and ayat (and its marks or "مؤجل" when closed). All start closed, except an item just added with "recite now". |
+| 39 | Class statistics (2026-10-11) | A "الإحصائيات" button next to "إضافة طالب" opens the class's statistics: its attendance rate (present / absent / excused) and average marks, then its students ranked best first. All time by default; a year, or a year and a month, narrows it. |
+| 40 | Ranking | 1) attendance rate, where an excused absence counts as attended (in the ranking only); 2) average memorization mark; 3) average behavior mark; then name. |
+| 41 | Attendance rate | Attended days (present + excused) out of the class's lesson days in the period since the student joined. A lesson day with no record for him counts as not attended. |
 
 ### Resolved open items
 - **O1:** Keep a hidden `en.json`, the key-parity test and the LTR Playwright smoke test. Only `ar` is enabled (`ENABLED_LOCALES=ar`).
@@ -394,6 +397,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 8. Centers, roles and permissions | [x] Done |
 | 9. Simpler class and student screens, postponed recitation | [x] Done |
 | 10. Calmer marking on the student page | [x] Done |
+| 11. Class statistics and student ranking | [ ] In progress |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -606,6 +610,15 @@ See §0 #37–38.
 - [x] **10.1 The picker.** `ScorePicker` becomes a native select ("—" and 1–10), used by the today card and the month table's edit sheet. Tests and the E2E helper follow.
 - [x] **10.2 Collapsible items.** Closed: portion plus marks or "مؤجل"; open: pickers, postpone, edit, undo. A new "recite now" item opens.
 - [x] **10.3 E2E, docs, wrap-up. Stop.**
+
+### [ ] Phase 11: Class statistics and student ranking
+
+See §0 #39–41.
+
+- [x] **11.0 Plan.**
+- [ ] **11.1 The statistics.** A pure `classStatistics()` (`src/domain/stats/class.ts`) for the period, the summary and the ranking; `localDateOf()` for join dates.
+- [ ] **11.2 The page and the button.** `/class-stats?id=…` with the year and month filter (kept in the URL), the summary, the ranked list; the button on the class page for `reports.view`.
+- [ ] **11.3 E2E, docs, wrap-up. Stop.**
 
 ---
 
