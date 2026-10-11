@@ -266,7 +266,7 @@ function HomeworkItem({
         </div>
       ) : (
         <>
-          <div className="grid gap-3 @lg:grid-cols-2">
+          <div className="grid grid-cols-2 gap-3">
             <ScorePicker
               label={t("glossary.memorizationRate")}
               value={item.memorizationRate}

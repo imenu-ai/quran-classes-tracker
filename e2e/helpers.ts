@@ -42,15 +42,11 @@ export async function setPortion(
   await sheet.getByRole("textbox", { name: ar.glossary.toAyah, exact: true }).fill(to);
 }
 
-/** Taps a score in one of an evaluation card's 1–10 grids. */
-export async function tapScore(
+/** Chooses a mark (1–10) in one of the labelled mark pickers inside `scope`. */
+export async function setScore(
   scope: import("@playwright/test").Locator,
-  group: string,
+  label: string,
   score: number,
 ) {
-  await scope
-    .getByRole("group", { name: group })
-    .first()
-    .getByRole("button", { name: String(score), exact: true })
-    .click();
+  await scope.getByRole("combobox", { name: label }).first().selectOption(String(score));
 }

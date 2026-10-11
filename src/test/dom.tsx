@@ -34,16 +34,23 @@ export function installDomPolyfills() {
   Element.prototype.releasePointerCapture ??= () => {};
 }
 
-/** Renders inside the Arabic i18n provider (RTL), as the app does. */
-export function renderArabic(ui: React.ReactElement) {
-  return render(
+function ArabicProviders({ children }: { children: React.ReactNode }) {
+  return (
     <NextIntlClientProvider
       locale={getIntlLocale("ar")}
       messages={ar}
       formats={formats}
       timeZone={DEFAULT_TIME_ZONE}
     >
-      <div dir={getDirection("ar")}>{ui}</div>
-    </NextIntlClientProvider>,
+      <div dir={getDirection("ar")}>{children}</div>
+    </NextIntlClientProvider>
   );
+}
+
+/**
+ * Renders inside the Arabic i18n provider (RTL), as the app does. A wrapper,
+ * so `rerender` keeps the provider too.
+ */
+export function renderArabic(ui: React.ReactElement) {
+  return render(ui, { wrapper: ArabicProviders });
 }
