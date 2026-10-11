@@ -447,6 +447,7 @@
     "undoPostpone": "Undo postponement",
     "postponedToast": "Recitation postponed",
     "nextTitle": "Homework for the next day",
-    "addNext": "Add homework for the next day"
+    "addNext": "Add homework for the next day",
+    "marks": "{memorization} · {behavior}"
   }
 }

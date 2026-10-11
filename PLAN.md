@@ -604,7 +604,7 @@ See §0 #37–38.
 
 - [x] **10.0 Plan.**
 - [x] **10.1 The picker.** `ScorePicker` becomes a native select ("—" and 1–10), used by the today card and the month table's edit sheet. Tests and the E2E helper follow.
-- [ ] **10.2 Collapsible items.** Closed: portion plus marks or "مؤجل"; open: pickers, postpone, edit, undo. A new "recite now" item opens.
+- [x] **10.2 Collapsible items.** Closed: portion plus marks or "مؤجل"; open: pickers, postpone, edit, undo. A new "recite now" item opens.
 - [ ] **10.3 E2E, docs, wrap-up. Stop.**
 
 ---

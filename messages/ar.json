@@ -447,6 +447,7 @@
     "undoPostpone": "إلغاء التأجيل",
     "postponedToast": "تم تأجيل التسميع",
     "nextTitle": "واجب اليوم التالي",
-    "addNext": "إضافة واجب لليوم التالي"
+    "addNext": "إضافة واجب لليوم التالي",
+    "marks": "{memorization} · {behavior}"
   }
 }

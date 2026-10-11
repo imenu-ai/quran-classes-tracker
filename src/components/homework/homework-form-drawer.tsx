@@ -44,6 +44,7 @@ export function HomeworkFormDrawer({
   student,
   history,
   lessonId,
+  onCreated,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -55,6 +56,8 @@ export function HomeworkFormDrawer({
    * save time (today's lesson is only created when something is recorded).
    */
   lessonId: string | (() => Promise<string>);
+  /** Called with new homework once it's saved (not for edits). */
+  onCreated?: (item: HomeworkRecord) => void;
 }) {
   const t = useTranslations();
   const { store } = useApp();
@@ -101,13 +104,14 @@ export function HomeworkFormDrawer({
     if (mode.kind === "edit") {
       await updateHomework(store, mode.item.id, check.value, note);
     } else {
-      await addHomework(store, {
+      const created = await addHomework(store, {
         studentId: student.id,
         lessonId: typeof lessonId === "string" ? lessonId : await lessonId(),
         portion: check.value,
         note,
         evaluateNow: mode.kind === "recite",
       });
+      onCreated?.(created);
     }
     toast.success(t("homework.saved"));
     onOpenChange(false);
