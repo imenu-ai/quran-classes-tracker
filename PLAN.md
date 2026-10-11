@@ -776,4 +776,8 @@ See §0 #37–38.
   - The E2E specs open an item before marking it (`openHomework`) and pick marks with `setScore`.
   - Checked in WebKit at 360 px: three due items start closed with no pickers shown; marked and postponed items show "9 · 10" and "مؤجل" when closed.
   - Playwright can't show the real iOS wheel, so picking a mark on an actual iPhone belongs to the README's manual check.
+- 2026-10-11 (after Phase 10, from the user):
+  - The student's details box at the bottom of his page is removed; they're in the actions menu (edit student).
+  - The today card is larger: bigger title and date, taller attendance buttons, homework rows of at least 64 px with larger text.
+  - Next-day homework sits in its own dashed box, apart from today's marking, with a larger "add" button.
 

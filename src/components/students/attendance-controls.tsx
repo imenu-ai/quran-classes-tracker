@@ -50,7 +50,7 @@ export function AttendanceToggle({
         <ToggleGroupItem
           key={status}
           value={status}
-          className={cn("h-11 flex-1", SELECTED[status])}
+          className={cn("h-12 flex-1 text-base", SELECTED[status])}
         >
           {t(status)}
         </ToggleGroupItem>
