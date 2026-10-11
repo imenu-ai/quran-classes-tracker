@@ -36,7 +36,8 @@ export interface MonthStats {
 
 const roundToOneDecimal = (value: number) => Math.round(value * 10) / 10;
 
-function average(values: number[]): number | null {
+/** The mean to one decimal place, or null without values. */
+export function average(values: readonly number[]): number | null {
   if (values.length === 0) return null;
   return roundToOneDecimal(values.reduce((sum, v) => sum + v, 0) / values.length);
 }

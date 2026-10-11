@@ -29,6 +29,11 @@ export function todayInTimeZone(timeZone: string, now: Date = new Date()): Local
   return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
+/** The calendar date of a moment (epoch ms) in a time zone, e.g. when a student joined. */
+export function localDateOf(epochMs: number, timeZone: string): LocalDate {
+  return todayInTimeZone(timeZone, new Date(epochMs));
+}
+
 /**
  * Age in years from a birth year, as of `today`. Only the birth year is
  * known, so this is the age the student turns during the current year.

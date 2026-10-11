@@ -449,5 +449,26 @@
     "nextTitle": "Homework for the next day",
     "addNext": "Add homework for the next day",
     "marks": "{memorization} · {behavior}"
+  },
+  "classStats": {
+    "button": "Statistics",
+    "title": "Class statistics",
+    "period": "Period",
+    "year": "Year",
+    "month": "Month",
+    "allTime": "All time",
+    "allMonths": "All months",
+    "attendanceRate": "Attendance rate",
+    "attendanceCounts": "Present {present} · Absent {absent} · Excused {excused}",
+    "memorizationAverage": "Memorization average",
+    "behaviorAverage": "Behavior average",
+    "ranking": "Student ranking",
+    "rankingHint": "By attendance rate (an excused absence counts as attended), then memorization average, then behavior average",
+    "studentAttendance": "Attended {attended} of {possible}",
+    "rank": "Rank {rank}",
+    "memorizationShort": "Mem.",
+    "behaviorShort": "Beh.",
+    "noLessons": "No lessons in this period",
+    "notAllowed": "You don't have permission to view reports"
   }
 }

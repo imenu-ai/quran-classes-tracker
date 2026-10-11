@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, SearchX, UserPlus, Users } from "lucide-react";
+import { Archive, BarChart3, SearchX, UserPlus, Users } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -86,11 +86,21 @@ export function ClassView({ classId }: { classId: string | null }) {
         />
       ) : (
         <>
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-semibold text-muted-foreground">
               {t("classes.studentCount", { count: students.active.length })}
             </h2>
-            {addButton}
+            <div className="flex flex-wrap gap-2">
+              {access.can("reports.view") && (
+                <Button asChild variant="outline" size="lg" className="h-11">
+                  <Link href={`/class-stats?id=${cls.id}`}>
+                    <BarChart3 aria-hidden />
+                    {t("classStats.button")}
+                  </Link>
+                </Button>
+              )}
+              {addButton}
+            </div>
           </div>
           <StudentList students={students.active} />
         </>

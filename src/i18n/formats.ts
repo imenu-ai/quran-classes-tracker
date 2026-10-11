@@ -14,9 +14,13 @@ export const formats = {
     dayShort: { weekday: "short", day: "numeric", timeZone: "UTC" },
     month: { month: "long", year: "numeric", timeZone: "UTC" },
     monthShort: { month: "short", year: "2-digit", timeZone: "UTC" },
+    // The month picker: "أكتوبر".
+    monthName: { month: "long", timeZone: "UTC" },
   },
   number: {
     // Monthly averages: one decimal place.
     average: { minimumFractionDigits: 1, maximumFractionDigits: 1 },
+    // Attendance rates: "90%".
+    percent: { style: "percent", maximumFractionDigits: 0 },
   },
 } satisfies Formats;

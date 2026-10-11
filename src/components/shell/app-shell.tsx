@@ -21,7 +21,7 @@ const NAV_ITEMS: NavItem[] = [
     href: "/",
     labelKey: "home",
     icon: BookOpenText,
-    matches: ["/", "/class", "/student"],
+    matches: ["/", "/class", "/class-stats", "/student"],
   },
   { href: "/search", labelKey: "search", icon: Search, matches: ["/search"] },
   { href: "/users", labelKey: "users", icon: UsersRound, matches: ["/users"] },

@@ -22,6 +22,7 @@ test("LTR smoke: main screens in English at 360 px", async ({ page, projectName 
   for (const url of [
     `${E2E_BASE_URL}/`,
     classUrl,
+    classUrl.replace("/class?", "/class-stats?"),
     studentUrl,
     `${E2E_BASE_URL}/search?q=yusuf`,
     `${E2E_BASE_URL}/users`,
