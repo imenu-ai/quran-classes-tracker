@@ -1,6 +1,6 @@
 import { credentialsFor } from "./accounts";
 import { ar, expect, signIn, test, waitForSynced } from "./fixtures";
-import { addStudent, createClass, setPortion, setScore } from "./helpers";
+import { addStudent, createClass, openHomework, setPortion, setScore } from "./helpers";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -35,6 +35,7 @@ test("class → students → student page: mark, next-day homework, absence, pos
   await page.getByRole("dialog").getByRole("button", { name: ar.common.save }).click();
   await expect(today.getByText("الفلق 1–5")).toBeVisible();
 
+  // An item just recited on the spot opens by itself.
   await setScore(today, ar.glossary.memorizationRate, 9);
   await setScore(today, ar.glossary.behaviorRate, 10);
 
@@ -67,7 +68,8 @@ test("class → students → student page: mark, next-day homework, absence, pos
   await page.goto(classUrl);
   await page.getByRole("link", { name: /أحمد التجريبي/ }).click();
   await page.waitForURL(/\/student\?id=/);
-  const due = today.locator("li").filter({ hasText: "الناس 1–5" });
+  // Due items start closed: open it first.
+  const due = await openHomework(today, "الناس 1–5");
   await due.getByRole("button", { name: ar.today.postpone }).click();
   await expect(due.getByText(ar.today.postponed)).toBeVisible();
   await expect(table.locator("tbody tr").first()).toContainText(ar.today.postponed);

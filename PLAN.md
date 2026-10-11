@@ -393,7 +393,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 7. Deployment (CloudFormation + Amplify) | [x] Done |
 | 8. Centers, roles and permissions | [x] Done |
 | 9. Simpler class and student screens, postponed recitation | [x] Done |
-| 10. Calmer marking on the student page | [ ] In progress |
+| 10. Calmer marking on the student page | [x] Done |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -598,14 +598,14 @@ See §0 #33–36.
 - [x] **9.4 Simplify the class page and home cards.** The class page is the student list only; class cards lose "درس جديد". The lesson screens and the `/lesson` route are removed.
 - [x] **9.5 E2E, docs, wrap-up. Stop.** `main-flow` and `offline` rewritten for the student page, `roles` and `ltr-smoke` updated, README and skills.
 
-### [ ] Phase 10: Calmer marking on the student page
+### [x] Phase 10: Calmer marking on the student page
 
 See §0 #37–38.
 
 - [x] **10.0 Plan.**
 - [x] **10.1 The picker.** `ScorePicker` becomes a native select ("—" and 1–10), used by the today card and the month table's edit sheet. Tests and the E2E helper follow.
 - [x] **10.2 Collapsible items.** Closed: portion plus marks or "مؤجل"; open: pickers, postpone, edit, undo. A new "recite now" item opens.
-- [ ] **10.3 E2E, docs, wrap-up. Stop.**
+- [x] **10.3 E2E, docs, wrap-up. Stop.**
 
 ---
 
@@ -769,4 +769,11 @@ See §0 #37–38.
 - 2026-10-10 (Phase 9 E2E; two more fixes):
   - **A score tapped just before "back" could be lost offline.** Offline, an in-app link becomes a full page load, which aborts IndexedDB transactions still in flight. `LocalStore` now knows when it's busy, and a navigation guard holds in-app link clicks until the writes are saved, then navigates; it's capped at 2 s. The browser's own back gesture can't be held.
   - **The search page navigated on every load** (to the URL it was already on), which could cut off another navigation. It now updates the URL only when the query changes.
+- 2026-10-11 (Phase 10):
+  - `ScorePicker` is a native select. It keeps the "show at once" behaviour and the rollback on a failed write. Choosing "—" clears a mark.
+  - The main flow's tap-latency measurement is removed: it measured grid buttons, and the native select shows the choice itself.
+  - `renderArabic` (tests) now passes the i18n provider as a wrapper, so `rerender` keeps it.
+  - The E2E specs open an item before marking it (`openHomework`) and pick marks with `setScore`.
+  - Checked in WebKit at 360 px: three due items start closed with no pickers shown; marked and postponed items show "9 · 10" and "مؤجل" when closed.
+  - Playwright can't show the real iOS wheel, so picking a mark on an actual iPhone belongs to the README's manual check.
 

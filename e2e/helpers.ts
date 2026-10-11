@@ -42,6 +42,17 @@ export async function setPortion(
   await sheet.getByRole("textbox", { name: ar.glossary.toAyah, exact: true }).fill(to);
 }
 
+/**
+ * Opens a homework item on the student page (items start closed) and
+ * returns it. `portion` is its "sura from–to" label.
+ */
+export async function openHomework(scope: import("@playwright/test").Locator, portion: string) {
+  const item = scope.locator("li").filter({ hasText: portion });
+  const header = item.getByRole("button", { name: new RegExp(portion) }).first();
+  if ((await header.getAttribute("aria-expanded")) !== "true") await header.click();
+  return item;
+}
+
 /** Chooses a mark (1–10) in one of the labelled mark pickers inside `scope`. */
 export async function setScore(
   scope: import("@playwright/test").Locator,
