@@ -46,6 +46,8 @@ Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bo
 | 34 | Postponed recitation | "تأجيل التسميع": when a student isn't ready, the teacher postpones instead of giving a bad mark. The homework stays pending for the next day, the day shows "مؤجل", the student counts as present, and averages aren't affected. It can be undone the same day. |
 | 35 | Absence | Marked on the student's page for today (present / absent / excused, with the excuse note). |
 | 36 | Past days | Marking applies to today; a past day is corrected by tapping its row in the month table. The chart and month cards are removed. |
+| 37 | Mark input (2026-10-11) | A mark (1–10) is chosen with the phone's own number wheel: a native select, a wheel on iPhone. It replaces the 5×2 grids of buttons, which were too busy. |
+| 38 | Homework list | On the student page, each due homework item is a collapsible section showing its sura and ayat (and its marks or "مؤجل" when closed). All start closed, except an item just added with "recite now". |
 
 ### Resolved open items
 - **O1:** Keep a hidden `en.json`, the key-parity test and the LTR Playwright smoke test. Only `ar` is enabled (`ENABLED_LOCALES=ar`).
@@ -391,6 +393,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 7. Deployment (CloudFormation + Amplify) | [x] Done |
 | 8. Centers, roles and permissions | [x] Done |
 | 9. Simpler class and student screens, postponed recitation | [x] Done |
+| 10. Calmer marking on the student page | [ ] In progress |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -594,6 +597,15 @@ See §0 #33–36.
 - [x] **9.3 The month table.** Month switcher, one row per day (date, portion, marks, status), an averages row, and the existing edit sheet on tapping a row. It replaces the chart, month cards and history list.
 - [x] **9.4 Simplify the class page and home cards.** The class page is the student list only; class cards lose "درس جديد". The lesson screens and the `/lesson` route are removed.
 - [x] **9.5 E2E, docs, wrap-up. Stop.** `main-flow` and `offline` rewritten for the student page, `roles` and `ltr-smoke` updated, README and skills.
+
+### [ ] Phase 10: Calmer marking on the student page
+
+See §0 #37–38.
+
+- [x] **10.0 Plan.**
+- [ ] **10.1 The picker.** `ScorePicker` becomes a native select ("—" and 1–10), used by the today card and the month table's edit sheet. Tests and the E2E helper follow.
+- [ ] **10.2 Collapsible items.** Closed: portion plus marks or "مؤجل"; open: pickers, postpone, edit, undo. A new "recite now" item opens.
+- [ ] **10.3 E2E, docs, wrap-up. Stop.**
 
 ---
 
