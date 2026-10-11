@@ -108,6 +108,10 @@ The CLI scripts read `.env.local` then `.env`; variables already set in the shel
   - "تأجيل التسميع" (postpone the recitation) when he isn't ready: the homework stays for the next day and his averages aren't affected;
   - "تسميع الآن" when nothing is due;
   - "إضافة واجب لليوم التالي", pre-filled with the next portion.
+- **Class statistics** ("الإحصائيات" next to "إضافة طالب"):
+  - the class's attendance rate (present, absent, excused) and average marks;
+  - its students ranked by attendance rate, then memorization average, then behavior average. An excused absence counts as attended here, and a student's rate counts the lesson days since he joined.
+  - All time by default; pick a year, or a year and a month, to narrow it.
 - **Lessons** still exist in the data (one per class per day), but the teacher never manages them: today's is created the first time something is recorded.
 
 ## Architecture in short

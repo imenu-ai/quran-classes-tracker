@@ -397,7 +397,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 8. Centers, roles and permissions | [x] Done |
 | 9. Simpler class and student screens, postponed recitation | [x] Done |
 | 10. Calmer marking on the student page | [x] Done |
-| 11. Class statistics and student ranking | [ ] In progress |
+| 11. Class statistics and student ranking | [x] Done |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -611,14 +611,14 @@ See §0 #37–38.
 - [x] **10.2 Collapsible items.** Closed: portion plus marks or "مؤجل"; open: pickers, postpone, edit, undo. A new "recite now" item opens.
 - [x] **10.3 E2E, docs, wrap-up. Stop.**
 
-### [ ] Phase 11: Class statistics and student ranking
+### [x] Phase 11: Class statistics and student ranking
 
 See §0 #39–41.
 
 - [x] **11.0 Plan.**
 - [x] **11.1 The statistics.** A pure `classStatistics()` (`src/domain/stats/class.ts`) for the period, the summary and the ranking; `localDateOf()` for join dates.
 - [x] **11.2 The page and the button.** `/class-stats?id=…` with the year and month filter (kept in the URL), the summary, the ranked list; the button on the class page for `reports.view`.
-- [ ] **11.3 E2E, docs, wrap-up. Stop.**
+- [x] **11.3 E2E, docs, wrap-up. Stop.**
 
 ---
 
@@ -793,4 +793,10 @@ See §0 #39–41.
   - The student's details box at the bottom of his page is removed; they're in the actions menu (edit student).
   - The today card is larger: bigger title and date, taller attendance buttons, homework rows of at least 64 px with larger text.
   - Next-day homework sits in its own dashed box, apart from today's marking, with a larger "add" button.
+- 2026-10-11 (Phase 11):
+  - A student's possible days are the class's lesson days since he joined, plus any day he has a record for, so the rate never exceeds 100%. A lesson day with no record for him counts as not attended.
+  - The period is kept in the URL (`/class-stats?id=…&year=&month=`).
+  - The button needs `reports.view`; the page shows a notice otherwise.
+  - `main-flow` checks the ranking and the class rate after its two days. `ltr-smoke` covers the page.
+  - Checked in WebKit at 360 px: the ranking keys in order (an excused absence counts as attended), the September and October filters, and a row opening the student.
 

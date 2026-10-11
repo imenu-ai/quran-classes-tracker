@@ -79,4 +79,18 @@ test("class → students → student page: mark, next-day homework, absence, pos
   await expect(table.locator("tbody tr").first()).toContainText("الناس 1–5");
   await expect(table.locator("tbody")).not.toContainText(ar.today.postponed);
   await waitForSynced(page);
+
+  // The class statistics: أحمد attended both days, سالم neither (absent, then
+  // not recorded), so أحمد ranks first; the class attended 2 of 4 possible days.
+  await page.goto(classUrl);
+  await page.getByRole("link", { name: ar.classStats.button }).click();
+  await page.waitForURL(/\/class-stats\?id=/);
+  const ranked = page.locator("main ol > li");
+  await expect(ranked).toHaveCount(2);
+  await expect(ranked.nth(0)).toContainText("أحمد التجريبي");
+  // Arabic percentages carry invisible direction marks around "%".
+  await expect(ranked.nth(0)).toContainText(/100\W*%/);
+  await expect(ranked.nth(1)).toContainText("سالم التجريبي");
+  await expect(ranked.nth(1)).toContainText(/\b0\W*%/);
+  await expect(page.locator("main section").first()).toContainText(/50\W*%/);
 });
