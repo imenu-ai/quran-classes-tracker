@@ -449,5 +449,26 @@
     "nextTitle": "واجب اليوم التالي",
     "addNext": "إضافة واجب لليوم التالي",
     "marks": "{memorization} · {behavior}"
+  },
+  "classStats": {
+    "button": "الإحصائيات",
+    "title": "إحصائيات الحلقة",
+    "period": "الفترة",
+    "year": "السنة",
+    "month": "الشهر",
+    "allTime": "كل الأوقات",
+    "allMonths": "كل الأشهر",
+    "attendanceRate": "نسبة الحضور",
+    "attendanceCounts": "حضور {present} · غياب {absent} · بعذر {excused}",
+    "memorizationAverage": "معدل الحفظ",
+    "behaviorAverage": "معدل السلوك",
+    "ranking": "ترتيب الطلاب",
+    "rankingHint": "حسب نسبة الحضور (الغياب بعذر يُحسب حضورًا)، ثم معدل الحفظ، ثم معدل السلوك",
+    "studentAttendance": "الحضور {attended} من {possible}",
+    "rank": "المرتبة {rank}",
+    "memorizationShort": "الحفظ",
+    "behaviorShort": "السلوك",
+    "noLessons": "لا توجد دروس في هذه الفترة",
+    "notAllowed": "ليست لديك صلاحية عرض التقارير"
   }
 }

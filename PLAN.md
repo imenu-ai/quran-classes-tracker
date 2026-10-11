@@ -617,7 +617,7 @@ See §0 #39–41.
 
 - [x] **11.0 Plan.**
 - [x] **11.1 The statistics.** A pure `classStatistics()` (`src/domain/stats/class.ts`) for the period, the summary and the ranking; `localDateOf()` for join dates.
-- [ ] **11.2 The page and the button.** `/class-stats?id=…` with the year and month filter (kept in the URL), the summary, the ranked list; the button on the class page for `reports.view`.
+- [x] **11.2 The page and the button.** `/class-stats?id=…` with the year and month filter (kept in the URL), the summary, the ranked list; the button on the class page for `reports.view`.
 - [ ] **11.3 E2E, docs, wrap-up. Stop.**
 
 ---
