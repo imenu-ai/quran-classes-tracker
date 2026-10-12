@@ -56,10 +56,34 @@ function profileWithExam() {
   };
 }
 
+/** The table starts closed: open it by tapping the month. */
+async function openTable() {
+  await userEvent.click(within(screen.getByRole("heading", { level: 2 })).getByRole("button"));
+}
+
 describe("MonthTable", () => {
-  it("shows an exam in its own row, with its badge and one mark, outside the averages", () => {
+  it("starts closed, showing the month's averages, and opens on tap", async () => {
     const { student, profile } = profileWithExam();
-    renderArabic(<MonthTable profile={profile} student={student} />);
+    renderArabic(<MonthTable profile={profile} student={student} editable />);
+
+    const toggle = within(screen.getByRole("heading", { level: 2 })).getByRole("button");
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    expect(toggle.textContent).toMatch(/الحفظ 9\.0 · السلوك 9\.0 · الحضور 2/);
+    expect(screen.queryByRole("table")).toBeNull();
+    expect(screen.queryByRole("button", { name: "الشهر السابق" })).toBeNull();
+
+    await userEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    expect(screen.getByRole("table")).toBeTruthy();
+
+    await userEvent.click(toggle);
+    expect(screen.queryByRole("table")).toBeNull();
+  });
+
+  it("shows an exam in its own row, with its badge and one mark, outside the averages", async () => {
+    const { student, profile } = profileWithExam();
+    renderArabic(<MonthTable profile={profile} student={student} editable />);
+    await openTable();
 
     const examRow = screen.getByText("الملك 1–10").closest("tr")!;
     expect(examRow.className).toContain("bg-exam/10");
@@ -77,12 +101,23 @@ describe("MonthTable", () => {
 
   it("edits an exam with one mark", async () => {
     const { student, profile } = profileWithExam();
-    renderArabic(<MonthTable profile={profile} student={student} />);
+    renderArabic(<MonthTable profile={profile} student={student} editable />);
+    await openTable();
 
     await userEvent.click(screen.getByText("الملك 1–10"));
     const sheet = await screen.findByRole("dialog");
     expect(within(sheet).getByText("تعديل الاختبار")).toBeTruthy();
     expect(within(sheet).getAllByRole("combobox")).toHaveLength(1);
     expect(within(sheet).getByRole("combobox", { name: "درجة الاختبار" })).toBeTruthy();
+  });
+
+  it("view-only (without lessons.run): the table opens, but rows don't", async () => {
+    const { student, profile } = profileWithExam();
+    renderArabic(<MonthTable profile={profile} student={student} editable={false} />);
+    await openTable();
+
+    expect(screen.queryByRole("button", { name: /تعديل/ })).toBeNull();
+    await userEvent.click(screen.getByText("الملك 1–10"));
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 });

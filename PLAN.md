@@ -819,3 +819,8 @@ See §0 #42–44.
   - New `--exam` colour tokens (violet, light and dark). The drawer's title and saved toast say "اختبار" when adding or editing an exam.
   - `main-flow` adds an exam on day two and checks that the table and class averages stay 8.5 / 9.5.
   - Checked in WebKit at 360 px, light and dark: a mark of 6 next to homework averaging 9 keeps 9.0 in the table and the class statistics; the suggestion still follows the homework; undo removes the exam; no overflow.
+- 2026-10-12 (after Phase 12, from the user):
+  - The student's month table starts closed: one tappable row with the month, its averages and days attended. Open, it shows the month arrows and the table; the summary line hides, since the footer has it. It always starts closed when the page opens.
+  - Fixed on the way: the table sat in a `<fieldset disabled>` for users without `lessons.run`, which disabled the month arrows (and would have disabled the new toggle). Its edit sheet, in a portal outside the fieldset, still opened with working pickers. `MonthTable` now takes `editable`: rows open the sheet only with `lessons.run`, while the toggle and arrows work for everyone.
+  - The E2E specs open the table with `openMonthTable` before reading it.
+  - Checked in WebKit at 360 px, light and dark: closed and open states, the edit sheet from a row, no overflow.

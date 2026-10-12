@@ -101,7 +101,7 @@ The CLI scripts read `.env.local` then `.env`; variables already set in the shel
 ## Daily use
 
 - **Opening a class** lists its students.
-- **A student's page** shows his month as a simple table: one row per day with the portion and the memorization and behavior marks, "مؤجل" or "غائب", and the month's averages. Earlier months are one tap away, and tapping a row corrects it.
+- **A student's page** shows his month as a simple table: one row per day with the portion and the memorization and behavior marks, "مؤجل" or "غائب", and the month's averages. It starts closed, showing just the month, its averages and the days attended; tap it to open the table. Earlier months are one tap away, and tapping a row corrects it (for users who can run lessons).
 - **Under the table, "اليوم" (today):**
   - attendance (present, absent, excused with a note);
   - each due homework item as a collapsible section (sura and ayat; tap to open), with two mark pickers (1–10, the phone's own wheel on iPhone);

@@ -340,7 +340,8 @@
     "tableCaption": "سجل {month}",
     "editRow": "تعديل سجل {date}",
     "editPostponedTitle": "تسميع مؤجل",
-    "attendanceSummary": "أيام الحضور: {present} · الغياب: {absent} · الغياب بعذر: {excused}"
+    "attendanceSummary": "أيام الحضور: {present} · الغياب: {absent} · الغياب بعذر: {excused}",
+    "monthSummary": "الحفظ {memorization} · السلوك {behavior} · الحضور {present}"
   },
   "offline": {
     "title": "لا يوجد اتصال",

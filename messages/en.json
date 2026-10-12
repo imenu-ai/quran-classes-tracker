@@ -340,7 +340,8 @@
     "tableCaption": "Record for {month}",
     "editRow": "Edit the record of {date}",
     "editPostponedTitle": "Postponed recitation",
-    "attendanceSummary": "Present: {present} · Absent: {absent} · Excused: {excused}"
+    "attendanceSummary": "Present: {present} · Absent: {absent} · Excused: {excused}",
+    "monthSummary": "Memorization {memorization} · Behavior {behavior} · Attended {present}"
   },
   "offline": {
     "title": "You're offline",

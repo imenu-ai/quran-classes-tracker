@@ -1,6 +1,6 @@
 import { credentialsFor } from "./accounts";
 import { ar, expect, newContext, signIn, test, waitForSynced } from "./fixtures";
-import { addStudent, createClass, setPortion, setScore } from "./helpers";
+import { addStudent, createClass, openMonthTable, setPortion, setScore } from "./helpers";
 
 test("offline: mark a student without a connection, reconnect, and the server has it", async ({
   page,
@@ -49,6 +49,7 @@ test("offline: mark a student without a connection, reconnect, and the server ha
   // Reload while offline: everything is still there (page from the SW cache,
   // data from IndexedDB).
   await page.reload();
+  await openMonthTable(page);
   await expect(page.locator("main table tbody tr").first()).toContainText(ar.glossary.absent);
 
   await page.context().setOffline(false);
@@ -60,12 +61,16 @@ test("offline: mark a student without a connection, reconnect, and the server ha
   await signIn(other, account);
   await other.getByRole("link", { name: /حلقة دون اتصال/ }).click();
   await other.getByRole("link", { name: /خالد دون اتصال/ }).click();
+  await openMonthTable(other);
   const table = other.locator("main table");
   await expect(table.locator("tbody tr").first()).toContainText("الإخلاص 1–4");
   await expect(table.locator("tfoot")).toContainText("8.0");
   await expect(table.locator("tfoot")).toContainText("9.0");
   await other.goBack();
   await other.getByRole("link", { name: /زيد دون اتصال/ }).click();
+  // A new student page (not خالد's, whose table is open) before opening its table.
+  await expect(other.getByRole("heading", { level: 1, name: /زيد دون اتصال/ })).toBeVisible();
+  await openMonthTable(other);
   await expect(other.locator("main table tbody tr").first()).toContainText(ar.glossary.absent);
   await otherContext.close();
 });

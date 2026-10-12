@@ -26,6 +26,14 @@ export async function addStudent(page: Page, fullName: string, birthYear: string
   await expect(page.getByRole("link", { name: new RegExp(fullName) })).toBeVisible();
 }
 
+/** The month table starts closed on the student page (month and averages): opens it. */
+export async function openMonthTable(page: Page) {
+  const toggle = page.locator("#month-title button");
+  await expect(toggle).toBeVisible();
+  if ((await toggle.getAttribute("aria-expanded")) !== "true") await toggle.click();
+  await expect(page.locator("main table")).toBeVisible();
+}
+
 /** Opens the sura picker in the homework sheet, picks a sura, sets the range. */
 export async function setPortion(
   page: Page,
