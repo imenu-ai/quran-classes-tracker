@@ -65,4 +65,28 @@ describe("HomeworkItem", () => {
     renderArabic(<Harness postponed />);
     expect(screen.getByRole("button", { name: /الفلق 1–5/ }).textContent).toContain("مؤجل");
   });
+
+  it("shows an exam with its badge and one mark, and no postponing", async () => {
+    renderArabic(
+      <Harness
+        exam
+        evaluated
+        item={homeworkRecord(STUDENT, {
+          kind: "exam",
+          evaluatedLessonId: "01928c5e-7b3a-7cde-8f00-00000000aa01",
+          memorizationRate: 6,
+        })}
+      />,
+    );
+    const header = screen.getByRole("button", { name: /الفلق 1–5/ });
+    expect(header.textContent).toContain("اختبار");
+    expect(header.textContent).toContain("6");
+
+    await userEvent.click(header);
+    expect(
+      screen.getAllByRole("combobox").map((box) => box.getAttribute("id") !== null),
+    ).toHaveLength(1);
+    expect(screen.getByRole("combobox", { name: "درجة الاختبار" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "تأجيل التسميع" })).toBeNull();
+  });
 });

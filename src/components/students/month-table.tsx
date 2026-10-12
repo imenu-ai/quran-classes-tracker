@@ -23,6 +23,7 @@ import { buildMonthHistory, type HistoryRow, type StudentProfile } from "@/clien
 import { localDateToUtcDate, monthKey, todayInTimeZone } from "@/domain/dates/local-date";
 import { cn } from "@/lib/utils";
 import type { AttendanceStatus } from "@/shared/schemas/attendance";
+import { isExam } from "@/shared/schemas/homework";
 import type { StudentRecord } from "@/shared/schemas/student";
 import { AttendanceToggle, ExcuseNoteInput } from "./attendance-controls";
 
@@ -159,7 +160,11 @@ export function MonthTable({
             {rows.map((row) => (
               <tr
                 key={rowKey(row)}
-                className="cursor-pointer border-t align-top hover:bg-accent/40"
+                className={cn(
+                  "cursor-pointer border-t align-top hover:bg-accent/40",
+                  // An exam row has its own colour (and a badge, below).
+                  row.kind === "evaluation" && isExam(row.item) && "bg-exam/10 hover:bg-exam/15",
+                )}
                 onClick={() =>
                   setEditing({
                     kind: row.kind,
@@ -199,9 +204,22 @@ export function MonthTable({
                 ) : (
                   <>
                     <td className="px-2 py-2.5">
-                      <bdi className="break-words">{label(row.item)}</bdi>
+                      <span className="flex flex-wrap items-center gap-1.5">
+                        <bdi className="break-words">{label(row.item)}</bdi>
+                        {isExam(row.item) && (
+                          <Badge className="bg-exam text-exam-foreground">{t("exam.badge")}</Badge>
+                        )}
+                      </span>
                     </td>
-                    {row.kind === "postponed" ? (
+                    {isExam(row.item) ? (
+                      // One exam mark, across both mark columns.
+                      <td
+                        colSpan={2}
+                        className="px-1 py-2.5 text-center font-semibold text-exam tabular-nums"
+                      >
+                        {score(row.item.memorizationRate)}
+                      </td>
+                    ) : row.kind === "postponed" ? (
                       <td colSpan={2} className="px-1 py-2.5 text-center">
                         <Badge className="bg-warning text-warning-foreground">
                           <Clock aria-hidden />
@@ -277,8 +295,10 @@ function RowEditDrawer({
   const formatLessonDate = useLessonDate();
   const [editingRange, setEditingRange] = useState(false);
 
-  const title =
-    row?.kind === "evaluation"
+  const exam = row !== null && row.kind !== "absence" && isExam(row.item);
+  const title = exam
+    ? t("exam.editTitle")
+    : row?.kind === "evaluation"
       ? t("profile.editEvaluationTitle")
       : row?.kind === "postponed"
         ? t("profile.editPostponedTitle")
@@ -344,19 +364,21 @@ function RowEditDrawer({
                     ) : (
                       <div className="grid grid-cols-2 gap-3">
                         <ScorePicker
-                          label={t("glossary.memorizationRate")}
+                          label={exam ? t("exam.mark") : t("glossary.memorizationRate")}
                           value={row.item.memorizationRate}
                           onChange={(value) =>
                             rateHomework(store, row.item, row.lesson.id, "memorizationRate", value)
                           }
                         />
-                        <ScorePicker
-                          label={t("glossary.behaviorRate")}
-                          value={row.item.behaviorRate}
-                          onChange={(value) =>
-                            rateHomework(store, row.item, row.lesson.id, "behaviorRate", value)
-                          }
-                        />
+                        {!exam && (
+                          <ScorePicker
+                            label={t("glossary.behaviorRate")}
+                            value={row.item.behaviorRate}
+                            onChange={(value) =>
+                              rateHomework(store, row.item, row.lesson.id, "behaviorRate", value)
+                            }
+                          />
+                        )}
                       </div>
                     )}
                   </>
