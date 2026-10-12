@@ -51,6 +51,9 @@ Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bo
 | 39 | Class statistics (2026-10-11) | A "الإحصائيات" button next to "إضافة طالب" opens the class's statistics: its attendance rate (present / absent / excused) and average marks, then its students ranked best first. All time by default; a year, or a year and a month, narrows it. |
 | 40 | Ranking | 1) attendance rate, where an excused absence counts as attended (in the ranking only); 2) average memorization mark; 3) average behavior mark; then name. |
 | 41 | Attendance rate | Attended days (present + excused) out of the class's lesson days in the period since the student joined. A lesson day with no record for him counts as not attended. |
+| 42 | Exams (2026-10-12) | On the student page, "إضافة اختبار" records an exam: a sura and ayah range with one mark (1–10), added and marked on the spot (never assigned beforehand). |
+| 43 | Exams in statistics | Exams are ignored in every average (the student's months, the class statistics) and don't count as progress for the next-homework suggestion. Recording one marks the student present. |
+| 44 | Exams on screen | An exam row has its own colour (violet) and an "اختبار" badge, in the month table and in today's card. |
 
 ### Resolved open items
 - **O1:** Keep a hidden `en.json`, the key-parity test and the LTR Playwright smoke test. Only `ar` is enabled (`ENABLED_LOCALES=ar`).
@@ -299,6 +302,7 @@ Tests sit next to the code as `*.test.ts`. Server integration tests are `*.int.t
 - `assignedLessonId | null`, `evaluatedLessonId | null`
 - `memorizationRate`, `behaviorRate`: int 1–10 or null
 - `postponedLessonIds: string[]` (Phase 9, default `[]`): lessons in which the recitation was postponed
+- `kind: 'homework' | 'exam'` (Phase 12, default `'homework'`). An exam's single mark is stored in `memorizationRate`; its `behaviorRate` stays null.
 - Pending = `evaluatedLessonId == null`.
 
 ### Derived rules (computed, never stored)
@@ -398,6 +402,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 9. Simpler class and student screens, postponed recitation | [x] Done |
 | 10. Calmer marking on the student page | [x] Done |
 | 11. Class statistics and student ranking | [x] Done |
+| 12. Exams | [ ] In progress |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -619,6 +624,15 @@ See §0 #39–41.
 - [x] **11.1 The statistics.** A pure `classStatistics()` (`src/domain/stats/class.ts`) for the period, the summary and the ranking; `localDateOf()` for join dates.
 - [x] **11.2 The page and the button.** `/class-stats?id=…` with the year and month filter (kept in the URL), the summary, the ranked list; the button on the class page for `reports.view`.
 - [x] **11.3 E2E, docs, wrap-up. Stop.**
+
+### [ ] Phase 12: Exams
+
+See §0 #42–44.
+
+- [x] **12.0 Plan.**
+- [ ] **12.1 Exams in the data.** `kind` (default homework) and `kindOf`; `addExam`; exams left out of `monthlyStats`, `classStatistics` and the suggestion.
+- [ ] **12.2 Exams on the screen.** Violet tokens; "إضافة اختبار" and today's exam items; the month table's exam row and sheet.
+- [ ] **12.3 E2E, docs, wrap-up. Stop.**
 
 ---
 
