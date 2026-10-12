@@ -107,6 +107,7 @@ The CLI scripts read `.env.local` then `.env`; variables already set in the shel
   - each due homework item as a collapsible section (sura and ayat; tap to open), with two mark pickers (1–10, the phone's own wheel on iPhone);
   - "تأجيل التسميع" (postpone the recitation) when he isn't ready: the homework stays for the next day and his averages aren't affected;
   - "تسميع الآن" when nothing is due;
+  - "إضافة اختبار" (add an exam): any portion, added and marked on the spot with one mark (1–10). Exams show in violet with an "اختبار" badge, in today's list and in the month table. They're left out of every average (the student's and the class statistics) and don't move the next-homework suggestion;
   - "إضافة واجب لليوم التالي", pre-filled with the next portion.
 - **Class statistics** ("الإحصائيات" next to "إضافة طالب"):
   - the class's attendance rate (present, absent, excused) and average marks;

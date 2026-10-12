@@ -402,7 +402,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 9. Simpler class and student screens, postponed recitation | [x] Done |
 | 10. Calmer marking on the student page | [x] Done |
 | 11. Class statistics and student ranking | [x] Done |
-| 12. Exams | [ ] In progress |
+| 12. Exams | [x] Done |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -625,14 +625,14 @@ See §0 #39–41.
 - [x] **11.2 The page and the button.** `/class-stats?id=…` with the year and month filter (kept in the URL), the summary, the ranked list; the button on the class page for `reports.view`.
 - [x] **11.3 E2E, docs, wrap-up. Stop.**
 
-### [ ] Phase 12: Exams
+### [x] Phase 12: Exams
 
 See §0 #42–44.
 
 - [x] **12.0 Plan.**
 - [x] **12.1 Exams in the data.** `kind` (default homework) and `kindOf`; `addExam`; exams left out of `monthlyStats`, `classStatistics` and the suggestion.
 - [x] **12.2 Exams on the screen.** Violet tokens; "إضافة اختبار" and today's exam items; the month table's exam row and sheet.
-- [ ] **12.3 E2E, docs, wrap-up. Stop.**
+- [x] **12.3 E2E, docs, wrap-up. Stop.**
 
 ---
 
@@ -813,4 +813,9 @@ See §0 #42–44.
   - The button needs `reports.view`; the page shows a notice otherwise.
   - `main-flow` checks the ranking and the class rate after its two days. `ltr-smoke` covers the page.
   - Checked in WebKit at 360 px: the ranking keys in order (an excused absence counts as attended), the September and October filters, and a row opening the student.
-
+- 2026-10-12 (Phase 12):
+  - An exam is a homework record with `kind: "exam"`; its one mark lives in `memorizationRate`, and the schema refuses a behavior mark on it.
+  - Exams are left out of `monthlyStats`, `classStatistics` and `latestPortion`. Attendance is unaffected; adding an exam marks the student present, as "recite now" does.
+  - New `--exam` colour tokens (violet, light and dark). The drawer's title and saved toast say "اختبار" when adding or editing an exam.
+  - `main-flow` adds an exam on day two and checks that the table and class averages stay 8.5 / 9.5.
+  - Checked in WebKit at 360 px, light and dark: a mark of 6 next to homework averaging 9 keeps 9.0 in the table and the class statistics; the suggestion still follows the homework; undo removes the exam; no overflow.
