@@ -123,6 +123,7 @@ describe("SyncEngine", () => {
       memorizationRate: null,
       behaviorRate: null,
       postponedLessonIds: [],
+      kind: "homework",
     });
     // Later: today's lesson is created and the (still unsynced) homework scored in it.
     const lesson = await store.create("lessons", { classId: cls.id, date: "2026-10-10", note: "" });

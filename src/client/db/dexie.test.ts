@@ -68,6 +68,7 @@ describe("LocalDb", () => {
       memorizationRate: null,
       behaviorRate: null,
       postponedLessonIds: [],
+      kind: "homework",
     });
     await db.outbox.add({
       recordId: "c1",

@@ -340,7 +340,8 @@
     "tableCaption": "Record for {month}",
     "editRow": "Edit the record of {date}",
     "editPostponedTitle": "Postponed recitation",
-    "attendanceSummary": "Present: {present} · Absent: {absent} · Excused: {excused}"
+    "attendanceSummary": "Present: {present} · Absent: {absent} · Excused: {excused}",
+    "monthSummary": "Memorization {memorization} · Behavior {behavior} · Attended {present}"
   },
   "offline": {
     "title": "You're offline",
@@ -470,5 +471,13 @@
     "behaviorShort": "Beh.",
     "noLessons": "No lessons in this period",
     "notAllowed": "You don't have permission to view reports"
+  },
+  "exam": {
+    "add": "Add exam",
+    "addTitle": "New exam",
+    "badge": "Exam",
+    "mark": "Exam mark",
+    "editTitle": "Edit exam",
+    "saved": "Exam saved"
   }
 }

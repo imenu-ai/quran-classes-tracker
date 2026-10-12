@@ -1,8 +1,8 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Clock, Pencil } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Clock, Pencil } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { DirectionalIcon } from "@/components/directional-icon";
 import { usePortionLabel } from "@/components/homework/use-portion-label";
 import { HomeworkFormDrawer } from "@/components/homework/homework-form-drawer";
@@ -23,6 +23,7 @@ import { buildMonthHistory, type HistoryRow, type StudentProfile } from "@/clien
 import { localDateToUtcDate, monthKey, todayInTimeZone } from "@/domain/dates/local-date";
 import { cn } from "@/lib/utils";
 import type { AttendanceStatus } from "@/shared/schemas/attendance";
+import { isExam } from "@/shared/schemas/homework";
 import type { StudentRecord } from "@/shared/schemas/student";
 import { AttendanceToggle, ExcuseNoteInput } from "./attendance-controls";
 
@@ -53,14 +54,19 @@ function resolveTarget(target: EditTarget | null, profile: StudentProfile): Hist
 /**
  * The student's month as a simple table: one row per recorded day (a mark,
  * a postponement or an absence), the month's averages at the bottom, and a
- * switcher for earlier months. Tapping a row corrects it.
+ * switcher for earlier months. It starts closed, showing the month and its
+ * averages; tapping that opens the table. Tapping a row corrects it, when
+ * `editable`.
  */
 export function MonthTable({
   profile,
   student,
+  editable,
 }: {
   profile: StudentProfile;
   student: StudentRecord;
+  /** Rows open the edit sheet (lessons.run); otherwise the table is view-only. */
+  editable: boolean;
 }) {
   const t = useTranslations();
   const format = useFormatter();
@@ -77,6 +83,8 @@ export function MonthTable({
   );
   const [month, setMonth] = useState(currentMonth);
   const [editing, setEditing] = useState<EditTarget | null>(null);
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
 
   const rows = useMemo(
     () => buildMonthHistory(profile.homework, profile.attendance, profile.lessonsById, month),
@@ -94,157 +102,217 @@ export function MonthTable({
   const score = (value: number | null) => (value === null ? t("common.noValue") : String(value));
 
   return (
-    <section aria-labelledby="month-title" className="flex flex-col gap-3">
-      <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-11"
-          disabled={!older}
-          aria-label={t("profile.olderMonth")}
-          onClick={() => older && setMonth(older)}
-        >
-          <DirectionalIcon icon={ChevronLeft} className="size-5" />
-        </Button>
-        <h2 id="month-title" className="flex-1 text-center text-lg font-semibold">
-          {monthLabel(month)}
+    <section aria-labelledby="month-title" className="overflow-hidden rounded-xl border bg-card">
+      <div className="flex items-center gap-1 px-1">
+        {open && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-11 shrink-0"
+            disabled={!older}
+            aria-label={t("profile.olderMonth")}
+            onClick={() => older && setMonth(older)}
+          >
+            <DirectionalIcon icon={ChevronLeft} className="size-5" />
+          </Button>
+        )}
+        <h2 id="month-title" className="min-w-0 flex-1">
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls={panelId}
+            onClick={() => setOpen((value) => !value)}
+            className="flex min-h-16 w-full items-center gap-3 rounded-xl px-3 py-3 text-start hover:bg-accent/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          >
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="text-lg font-semibold">{monthLabel(month)}</span>
+              {/* Closed, the month at a glance; open, the table's footer has it. */}
+              {!open && (
+                <span className="text-sm text-muted-foreground tabular-nums">
+                  {t("profile.monthSummary", {
+                    memorization: average(stats?.memorizationAverage),
+                    behavior: average(stats?.behaviorAverage),
+                    present: stats?.present ?? 0,
+                  })}
+                </span>
+              )}
+            </span>
+            <ChevronDown
+              aria-hidden
+              className={cn(
+                "size-5 shrink-0 text-muted-foreground transition-transform",
+                open && "rotate-180",
+              )}
+            />
+          </button>
         </h2>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-11"
-          disabled={!newer}
-          aria-label={t("profile.newerMonth")}
-          onClick={() => newer && setMonth(newer)}
-        >
-          <DirectionalIcon icon={ChevronRight} className="size-5" />
-        </Button>
+        {open && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-11 shrink-0"
+            disabled={!newer}
+            aria-label={t("profile.newerMonth")}
+            onClick={() => newer && setMonth(newer)}
+          >
+            <DirectionalIcon icon={ChevronRight} className="size-5" />
+          </Button>
+        )}
       </div>
 
-      <div className="overflow-hidden rounded-xl border bg-card">
-        <table className="w-full table-fixed border-collapse text-sm">
-          <caption className="sr-only">
-            {t("profile.tableCaption", { month: monthLabel(month) })}
-          </caption>
-          <colgroup>
-            <col className="w-[4.5rem]" />
-            <col />
-            <col className="w-14" />
-            <col className="w-14" />
-          </colgroup>
-          <thead className="bg-muted/50 text-muted-foreground">
-            <tr>
-              <th scope="col" className="px-2 py-2 text-start font-medium">
-                {t("profile.dateHeader")}
-              </th>
-              <th scope="col" className="px-2 py-2 text-start font-medium">
-                {t("glossary.homework")}
-              </th>
-              <th scope="col" className="px-1 py-2 text-center font-medium">
-                {t("profile.memorizationShort")}
-              </th>
-              <th scope="col" className="px-1 py-2 text-center font-medium">
-                {t("profile.behaviorShort")}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 && (
+      {open && (
+        <div id={panelId} className="flex flex-col gap-3 border-t pb-3">
+          <table className="w-full table-fixed border-collapse text-sm">
+            <caption className="sr-only">
+              {t("profile.tableCaption", { month: monthLabel(month) })}
+            </caption>
+            <colgroup>
+              <col className="w-[4.5rem]" />
+              <col />
+              <col className="w-14" />
+              <col className="w-14" />
+            </colgroup>
+            <thead className="bg-muted/50 text-muted-foreground">
               <tr>
-                <td colSpan={4} className="px-3 py-6 text-center text-muted-foreground">
-                  {t("profile.noHistory")}
-                </td>
+                <th scope="col" className="px-2 py-2 text-start font-medium">
+                  {t("profile.dateHeader")}
+                </th>
+                <th scope="col" className="px-2 py-2 text-start font-medium">
+                  {t("glossary.homework")}
+                </th>
+                <th scope="col" className="px-1 py-2 text-center font-medium">
+                  {t("profile.memorizationShort")}
+                </th>
+                <th scope="col" className="px-1 py-2 text-center font-medium">
+                  {t("profile.behaviorShort")}
+                </th>
               </tr>
-            )}
-            {rows.map((row) => (
-              <tr
-                key={rowKey(row)}
-                className="cursor-pointer border-t align-top hover:bg-accent/40"
-                onClick={() =>
-                  setEditing({
-                    kind: row.kind,
-                    id: row.kind === "absence" ? row.record.id : row.item.id,
-                    lessonId: row.lesson.id,
-                  })
-                }
-              >
-                <td className="px-2 py-2.5">
-                  {/* The button makes the row reachable and editable by keyboard. */}
-                  <button
-                    type="button"
-                    className="text-start font-medium tabular-nums focus-visible:underline focus-visible:outline-none"
-                    aria-label={t("profile.editRow", { date: day(row.lesson.date) })}
-                  >
-                    {day(row.lesson.date)}
-                  </button>
-                </td>
-                {row.kind === "absence" ? (
-                  <td colSpan={3} className="px-2 py-2.5">
-                    <span className="flex flex-wrap items-center gap-2">
-                      <Badge
-                        variant={row.record.status === "absent" ? "destructive" : "secondary"}
-                        className={cn(
-                          row.record.status === "excused" && "bg-warning text-warning-foreground",
-                        )}
-                      >
-                        {t(`glossary.${row.record.status}`)}
-                      </Badge>
-                      {row.record.excuseNote && (
-                        <span dir="auto" className="text-muted-foreground">
-                          {row.record.excuseNote}
-                        </span>
-                      )}
-                    </span>
+            </thead>
+            <tbody>
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-3 py-6 text-center text-muted-foreground">
+                    {t("profile.noHistory")}
                   </td>
-                ) : (
-                  <>
-                    <td className="px-2 py-2.5">
-                      <bdi className="break-words">{label(row.item)}</bdi>
-                    </td>
-                    {row.kind === "postponed" ? (
-                      <td colSpan={2} className="px-1 py-2.5 text-center">
-                        <Badge className="bg-warning text-warning-foreground">
-                          <Clock aria-hidden />
-                          {t("today.postponed")}
-                        </Badge>
-                      </td>
+                </tr>
+              )}
+              {rows.map((row) => (
+                <tr
+                  key={rowKey(row)}
+                  className={cn(
+                    "border-t align-top",
+                    editable && "cursor-pointer hover:bg-accent/40",
+                    // An exam row has its own colour (and a badge, below).
+                    row.kind === "evaluation" && isExam(row.item) && "bg-exam/10 hover:bg-exam/15",
+                  )}
+                  onClick={
+                    editable
+                      ? () =>
+                          setEditing({
+                            kind: row.kind,
+                            id: row.kind === "absence" ? row.record.id : row.item.id,
+                            lessonId: row.lesson.id,
+                          })
+                      : undefined
+                  }
+                >
+                  <td className="px-2 py-2.5">
+                    {editable ? (
+                      // The button makes the row reachable and editable by keyboard.
+                      <button
+                        type="button"
+                        className="text-start font-medium tabular-nums focus-visible:underline focus-visible:outline-none"
+                        aria-label={t("profile.editRow", { date: day(row.lesson.date) })}
+                      >
+                        {day(row.lesson.date)}
+                      </button>
                     ) : (
-                      <>
-                        <td className="px-1 py-2.5 text-center font-semibold tabular-nums">
+                      <span className="font-medium tabular-nums">{day(row.lesson.date)}</span>
+                    )}
+                  </td>
+                  {row.kind === "absence" ? (
+                    <td colSpan={3} className="px-2 py-2.5">
+                      <span className="flex flex-wrap items-center gap-2">
+                        <Badge
+                          variant={row.record.status === "absent" ? "destructive" : "secondary"}
+                          className={cn(
+                            row.record.status === "excused" && "bg-warning text-warning-foreground",
+                          )}
+                        >
+                          {t(`glossary.${row.record.status}`)}
+                        </Badge>
+                        {row.record.excuseNote && (
+                          <span dir="auto" className="text-muted-foreground">
+                            {row.record.excuseNote}
+                          </span>
+                        )}
+                      </span>
+                    </td>
+                  ) : (
+                    <>
+                      <td className="px-2 py-2.5">
+                        <span className="flex flex-wrap items-center gap-1.5">
+                          <bdi className="break-words">{label(row.item)}</bdi>
+                          {isExam(row.item) && (
+                            <Badge className="bg-exam text-exam-foreground">
+                              {t("exam.badge")}
+                            </Badge>
+                          )}
+                        </span>
+                      </td>
+                      {isExam(row.item) ? (
+                        // One exam mark, across both mark columns.
+                        <td
+                          colSpan={2}
+                          className="px-1 py-2.5 text-center font-semibold text-exam tabular-nums"
+                        >
                           {score(row.item.memorizationRate)}
                         </td>
-                        <td className="px-1 py-2.5 text-center font-semibold tabular-nums">
-                          {score(row.item.behaviorRate)}
+                      ) : row.kind === "postponed" ? (
+                        <td colSpan={2} className="px-1 py-2.5 text-center">
+                          <Badge className="bg-warning text-warning-foreground">
+                            <Clock aria-hidden />
+                            {t("today.postponed")}
+                          </Badge>
                         </td>
-                      </>
-                    )}
-                  </>
-                )}
+                      ) : (
+                        <>
+                          <td className="px-1 py-2.5 text-center font-semibold tabular-nums">
+                            {score(row.item.memorizationRate)}
+                          </td>
+                          <td className="px-1 py-2.5 text-center font-semibold tabular-nums">
+                            {score(row.item.behaviorRate)}
+                          </td>
+                        </>
+                      )}
+                    </>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+            <tfoot className="border-t-2 bg-muted/30">
+              <tr>
+                <th scope="row" colSpan={2} className="px-2 py-2.5 text-start font-semibold">
+                  {t("profile.average")}
+                </th>
+                <td className="px-1 py-2.5 text-center font-semibold tabular-nums">
+                  {average(stats?.memorizationAverage)}
+                </td>
+                <td className="px-1 py-2.5 text-center font-semibold tabular-nums">
+                  {average(stats?.behaviorAverage)}
+                </td>
               </tr>
-            ))}
-          </tbody>
-          <tfoot className="border-t-2 bg-muted/30">
-            <tr>
-              <th scope="row" colSpan={2} className="px-2 py-2.5 text-start font-semibold">
-                {t("profile.average")}
-              </th>
-              <td className="px-1 py-2.5 text-center font-semibold tabular-nums">
-                {average(stats?.memorizationAverage)}
-              </td>
-              <td className="px-1 py-2.5 text-center font-semibold tabular-nums">
-                {average(stats?.behaviorAverage)}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-      <p className="text-sm text-muted-foreground">
-        {t("profile.attendanceSummary", {
-          present: stats?.present ?? 0,
-          absent: stats?.absent ?? 0,
-          excused: stats?.excused ?? 0,
-        })}
-      </p>
+            </tfoot>
+          </table>
+          <p className="px-3 text-sm text-muted-foreground">
+            {t("profile.attendanceSummary", {
+              present: stats?.present ?? 0,
+              absent: stats?.absent ?? 0,
+              excused: stats?.excused ?? 0,
+            })}
+          </p>
+        </div>
+      )}
 
       <RowEditDrawer
         row={resolveTarget(editing, profile)}
@@ -277,8 +345,10 @@ function RowEditDrawer({
   const formatLessonDate = useLessonDate();
   const [editingRange, setEditingRange] = useState(false);
 
-  const title =
-    row?.kind === "evaluation"
+  const exam = row !== null && row.kind !== "absence" && isExam(row.item);
+  const title = exam
+    ? t("exam.editTitle")
+    : row?.kind === "evaluation"
       ? t("profile.editEvaluationTitle")
       : row?.kind === "postponed"
         ? t("profile.editPostponedTitle")
@@ -344,19 +414,21 @@ function RowEditDrawer({
                     ) : (
                       <div className="grid grid-cols-2 gap-3">
                         <ScorePicker
-                          label={t("glossary.memorizationRate")}
+                          label={exam ? t("exam.mark") : t("glossary.memorizationRate")}
                           value={row.item.memorizationRate}
                           onChange={(value) =>
                             rateHomework(store, row.item, row.lesson.id, "memorizationRate", value)
                           }
                         />
-                        <ScorePicker
-                          label={t("glossary.behaviorRate")}
-                          value={row.item.behaviorRate}
-                          onChange={(value) =>
-                            rateHomework(store, row.item, row.lesson.id, "behaviorRate", value)
-                          }
-                        />
+                        {!exam && (
+                          <ScorePicker
+                            label={t("glossary.behaviorRate")}
+                            value={row.item.behaviorRate}
+                            onChange={(value) =>
+                              rateHomework(store, row.item, row.lesson.id, "behaviorRate", value)
+                            }
+                          />
+                        )}
                       </div>
                     )}
                   </>

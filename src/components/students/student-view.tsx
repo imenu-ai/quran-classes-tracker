@@ -71,9 +71,7 @@ export function StudentView({ studentId }: { studentId: string | null }) {
 
       {profile && access.can("reports.view") && (
         // Without lessons.run the table is shown, not edited.
-        <fieldset disabled={!access.can("lessons.run")} className="min-w-0">
-          <MonthTable profile={profile} student={student} />
-        </fieldset>
+        <MonthTable profile={profile} student={student} editable={access.can("lessons.run")} />
       )}
 
       {/* Today: attendance, marks, postponing and the next day's homework. */}

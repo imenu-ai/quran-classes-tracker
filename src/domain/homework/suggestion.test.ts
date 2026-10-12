@@ -63,6 +63,11 @@ describe("latestPortion", () => {
     expect(latestPortion([item("a", 1), item("b", 3), item("c", 2)])?.id).toBe("b");
   });
 
+  it("ignores exams (a review of older parts, not progress)", () => {
+    const exam = { ...item("exam", 5), kind: "exam" };
+    expect(latestPortion([item("a", 1), exam])?.id).toBe("a");
+  });
+
   it("ignores deleted items and returns null when there are none", () => {
     expect(latestPortion([item("a", 1), item("b", 3, 9)])?.id).toBe("a");
     expect(latestPortion([])).toBeNull();

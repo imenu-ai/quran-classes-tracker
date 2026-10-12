@@ -16,7 +16,7 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useApp } from "@/client/app-context";
-import { addHomework, updateHomework } from "@/client/data/homework";
+import { addExam, addHomework, updateHomework } from "@/client/data/homework";
 import {
   checkAyahRange,
   type AyahRangeDraft,
@@ -24,11 +24,11 @@ import {
 } from "@/client/forms/ayah-range";
 import { latestPortion, suggestNextHomework } from "@/domain/homework/suggestion";
 import { NOTE_MAX } from "@/shared/schemas/base";
-import type { HomeworkRecord } from "@/shared/schemas/homework";
+import { isExam, type HomeworkRecord } from "@/shared/schemas/homework";
 import type { StudentRecord } from "@/shared/schemas/student";
 
 export type HomeworkFormMode =
-  { kind: "next" } | { kind: "recite" } | { kind: "edit"; item: HomeworkRecord };
+  { kind: "next" } | { kind: "recite" } | { kind: "exam" } | { kind: "edit"; item: HomeworkRecord };
 
 const ALL_FIELDS: AyahRangeField[] = ["surah", "fromAyah", "toAyah"];
 
@@ -77,7 +77,11 @@ export function HomeworkFormDrawer({
       setSuggested(false);
       return;
     }
-    const suggestion = suggestNextHomework(latestPortion(history), student.memorizationDirection);
+    // An exam reviews any part: nothing is suggested for it.
+    const suggestion =
+      mode.kind === "exam"
+        ? null
+        : suggestNextHomework(latestPortion(history), student.memorizationDirection);
     setDraft(
       suggestion
         ? {
@@ -94,6 +98,7 @@ export function HomeworkFormDrawer({
   }, [open]);
 
   const check = checkAyahRange(draft);
+  const exam = mode.kind === "exam" || (mode.kind === "edit" && isExam(mode.item));
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -104,25 +109,38 @@ export function HomeworkFormDrawer({
     if (mode.kind === "edit") {
       await updateHomework(store, mode.item.id, check.value, note);
     } else {
-      const created = await addHomework(store, {
-        studentId: student.id,
-        lessonId: typeof lessonId === "string" ? lessonId : await lessonId(),
-        portion: check.value,
-        note,
-        evaluateNow: mode.kind === "recite",
-      });
+      const lesson = typeof lessonId === "string" ? lessonId : await lessonId();
+      const created =
+        mode.kind === "exam"
+          ? await addExam(store, {
+              studentId: student.id,
+              lessonId: lesson,
+              portion: check.value,
+              note,
+            })
+          : await addHomework(store, {
+              studentId: student.id,
+              lessonId: lesson,
+              portion: check.value,
+              note,
+              evaluateNow: mode.kind === "recite",
+            });
       onCreated?.(created);
     }
-    toast.success(t("homework.saved"));
+    toast.success(exam ? t("exam.saved") : t("homework.saved"));
     onOpenChange(false);
   }
 
   const title =
     mode.kind === "edit"
-      ? t("homework.editTitle")
+      ? exam
+        ? t("exam.editTitle")
+        : t("homework.editTitle")
       : mode.kind === "recite"
         ? t("homework.reciteTitle")
-        : t("homework.addTitle");
+        : mode.kind === "exam"
+          ? t("exam.addTitle")
+          : t("homework.addTitle");
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} repositionInputs={false}>

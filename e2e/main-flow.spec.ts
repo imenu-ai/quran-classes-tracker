@@ -1,15 +1,23 @@
 import { credentialsFor } from "./accounts";
 import { ar, expect, signIn, test, waitForSynced } from "./fixtures";
-import { addStudent, createClass, openHomework, setPortion, setScore } from "./helpers";
+import {
+  addStudent,
+  createClass,
+  openHomework,
+  openMonthTable,
+  setPortion,
+  setScore,
+} from "./helpers";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Two days with one class: day one, a student recites on the spot, gets
  * marks and homework for the next day; another is absent. Day two, the
- * homework is due: postponed, undone, then marked. The month table shows it all.
+ * homework is due: postponed, undone, then marked, and an exam is recorded.
+ * The month table shows it all.
  */
-test("class → students → student page: mark, next-day homework, absence, postpone", async ({
+test("class → students → student page: mark, next-day homework, absence, postpone, exam", async ({
   page,
   projectName,
 }) => {
@@ -47,7 +55,12 @@ test("class → students → student page: mark, next-day homework, absence, pos
   await page.getByRole("dialog").getByRole("button", { name: ar.common.save }).click();
   await expect(today.getByText("الناس 1–5")).toBeVisible();
 
-  // The month table: today's row and the averages.
+  // The month table starts closed, showing the month's averages; opened, it
+  // has today's row and the averages again.
+  await expect(page.locator("#month-title")).toContainText("9.0");
+  await expect(page.locator("#month-title")).toContainText("10.0");
+  await expect(page.locator("main table")).toHaveCount(0);
+  await openMonthTable(page);
   const table = page.locator("main table");
   await expect(table.locator("tbody tr").first()).toContainText("الفلق 1–5");
   await expect(table.locator("tbody tr").first()).toContainText("9");
@@ -60,6 +73,7 @@ test("class → students → student page: mark, next-day homework, absence, pos
   await page.waitForURL(/\/student\?id=/);
   await today.getByRole("radio", { name: ar.glossary.absent, exact: true }).click();
   await expect(today.getByText(ar.today.absentNote)).toBeVisible();
+  await openMonthTable(page);
   await expect(table.locator("tbody tr").first()).toContainText(ar.glossary.absent);
   await waitForSynced(page);
 
@@ -68,6 +82,7 @@ test("class → students → student page: mark, next-day homework, absence, pos
   await page.goto(classUrl);
   await page.getByRole("link", { name: /أحمد التجريبي/ }).click();
   await page.waitForURL(/\/student\?id=/);
+  await openMonthTable(page);
   // Due items start closed: open it first.
   const due = await openHomework(today, "الناس 1–5");
   await due.getByRole("button", { name: ar.today.postpone }).click();
@@ -78,6 +93,21 @@ test("class → students → student page: mark, next-day homework, absence, pos
   await setScore(due, ar.glossary.behaviorRate, 9);
   await expect(table.locator("tbody tr").first()).toContainText("الناس 1–5");
   await expect(table.locator("tbody")).not.toContainText(ar.today.postponed);
+  await expect(table.locator("tfoot")).toContainText("8.5");
+  await expect(table.locator("tfoot")).toContainText("9.5");
+
+  // An exam, added and marked on the spot: its own tinted row with a badge
+  // and one mark, left out of the averages.
+  await today.getByRole("button", { name: ar.exam.add }).click();
+  await setPortion(page, "الملك", /^67 · الملك/, "1", "10");
+  await page.getByRole("dialog").getByRole("button", { name: ar.common.save }).click();
+  await setScore(today.locator("li").filter({ hasText: "الملك 1–10" }), ar.exam.mark, 3);
+  const examRow = table.locator("tbody tr").filter({ hasText: "الملك 1–10" });
+  await expect(examRow).toContainText(ar.exam.badge);
+  await expect(examRow).toContainText("3");
+  await expect(examRow).toHaveClass(/bg-exam/);
+  await expect(table.locator("tfoot")).toContainText("8.5");
+  await expect(table.locator("tfoot")).toContainText("9.5");
   await waitForSynced(page);
 
   // The class statistics: أحمد attended both days, سالم neither (absent, then
@@ -90,6 +120,9 @@ test("class → students → student page: mark, next-day homework, absence, pos
   await expect(ranked.nth(0)).toContainText("أحمد التجريبي");
   // Arabic percentages carry invisible direction marks around "%".
   await expect(ranked.nth(0)).toContainText(/100\W*%/);
+  // Averages without the exam.
+  await expect(ranked.nth(0)).toContainText("8.5");
+  await expect(ranked.nth(0)).toContainText("9.5");
   await expect(ranked.nth(1)).toContainText("سالم التجريبي");
   await expect(ranked.nth(1)).toContainText(/\b0\W*%/);
   await expect(page.locator("main section").first()).toContainText(/50\W*%/);

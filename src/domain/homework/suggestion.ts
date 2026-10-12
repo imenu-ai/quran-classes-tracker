@@ -47,14 +47,15 @@ export function suggestNextHomework(
 /**
  * The portion to continue from: the student's most recently created
  * homework, pending or evaluated (so assigning after a pending item
- * continues after it). Deleted items are ignored.
+ * continues after it). Deleted items and exams (usually a review of older
+ * parts) are ignored.
  */
 export function latestPortion<
-  T extends Portion & { createdAt: number; id: string; deletedAt: number | null },
+  T extends Portion & { createdAt: number; id: string; deletedAt: number | null; kind?: string },
 >(homework: readonly T[]): T | null {
   let latest: T | null = null;
   for (const item of homework) {
-    if (item.deletedAt !== null) continue;
+    if (item.deletedAt !== null || item.kind === "exam") continue;
     if (
       !latest ||
       item.createdAt > latest.createdAt ||

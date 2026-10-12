@@ -101,12 +101,13 @@ The CLI scripts read `.env.local` then `.env`; variables already set in the shel
 ## Daily use
 
 - **Opening a class** lists its students.
-- **A student's page** shows his month as a simple table: one row per day with the portion and the memorization and behavior marks, "مؤجل" or "غائب", and the month's averages. Earlier months are one tap away, and tapping a row corrects it.
+- **A student's page** shows his month as a simple table: one row per day with the portion and the memorization and behavior marks, "مؤجل" or "غائب", and the month's averages. It starts closed, showing just the month, its averages and the days attended; tap it to open the table. Earlier months are one tap away, and tapping a row corrects it (for users who can run lessons).
 - **Under the table, "اليوم" (today):**
   - attendance (present, absent, excused with a note);
   - each due homework item as a collapsible section (sura and ayat; tap to open), with two mark pickers (1–10, the phone's own wheel on iPhone);
   - "تأجيل التسميع" (postpone the recitation) when he isn't ready: the homework stays for the next day and his averages aren't affected;
   - "تسميع الآن" when nothing is due;
+  - "إضافة اختبار" (add an exam): any portion, added and marked on the spot with one mark (1–10). Exams show in violet with an "اختبار" badge, in today's list and in the month table. They're left out of every average (the student's and the class statistics) and don't move the next-homework suggestion;
   - "إضافة واجب لليوم التالي", pre-filled with the next portion.
 - **Class statistics** ("الإحصائيات" next to "إضافة طالب"):
   - the class's attendance rate (present, absent, excused) and average marks;

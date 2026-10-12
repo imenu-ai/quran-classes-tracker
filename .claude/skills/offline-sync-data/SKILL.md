@@ -67,6 +67,8 @@ The UI no longer manages lessons. Today's lesson for a class is created the firs
 
 A postponed recitation is stored on the homework item (`postponedLessonIds`). Read it through `postponedLessonsOf()`, since records pulled from the server may predate the field. Marking a student absent goes through `setStudentAttendance`, which also cancels his postponements in that lesson.
 
+An exam is a homework record with `kind: "exam"`, created by `addExam` already assigned and evaluated in today's lesson. Its single mark is in `memorizationRate`, and `behaviorRate` stays null (the schema enforces this). Read the kind through `kindOf()` / `isExam()`, for the same reason as `postponedLessonsOf()`. Anything that averages marks or follows the student's progress (`monthlyStats`, `classStatistics`, `latestPortion`) must skip exams.
+
 ## Adding a field to an existing entity
 
 Existing devices and the database already hold records **without** the new field. Devices may also still run the old app from the service-worker cache, and push records without it.

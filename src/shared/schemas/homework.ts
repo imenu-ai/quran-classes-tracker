@@ -7,6 +7,14 @@ export const RATE_MAX = 10;
 
 export const rateSchema = z.number().int().min(RATE_MIN).max(RATE_MAX);
 
+/**
+ * homework: assigned (or recited on the spot) and marked for memorization
+ * and behavior. exam: added and marked on the spot with ONE mark, stored in
+ * memorizationRate; ignored in every average.
+ */
+export const HOMEWORK_KINDS = ["homework", "exam"] as const;
+export type HomeworkKind = (typeof HOMEWORK_KINDS)[number];
+
 interface AyahRangeInput {
   surah: number;
   fromAyah: number;
@@ -53,6 +61,8 @@ export const homeworkFieldsSchema = z.object({
    * Defaults to [] so records from before Phase 9 stay valid.
    */
   postponedLessonIds: z.array(idSchema).max(200).default([]),
+  /** Defaults to "homework" so records from before Phase 12 stay valid. */
+  kind: z.enum(HOMEWORK_KINDS).default("homework"),
 });
 
 export const homeworkRecordSchema = syncableBaseSchema
@@ -67,9 +77,18 @@ export const homeworkRecordSchema = syncableBaseSchema
         path: ["evaluatedLessonId"],
       });
     }
+    // An exam has a single mark (memorizationRate).
+    if (homework.kind === "exam" && homework.behaviorRate !== null) {
+      ctx.addIssue({ code: "custom", message: "INVALID_VALUE", path: ["behaviorRate"] });
+    }
   });
 
 export type HomeworkRecord = z.infer<typeof homeworkRecordSchema>;
+
+/** "homework" or "exam" (records pulled from before Phase 12 lack the field). */
+export const kindOf = (item: { kind?: HomeworkKind }): HomeworkKind => item.kind ?? "homework";
+
+export const isExam = (item: { kind?: HomeworkKind }) => kindOf(item) === "exam";
 
 /** The lessons where this item was postponed (records pulled before Phase 9 lack the field). */
 export const postponedLessonsOf = (item: Pick<HomeworkRecord, "postponedLessonIds">): string[] =>

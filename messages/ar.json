@@ -340,7 +340,8 @@
     "tableCaption": "سجل {month}",
     "editRow": "تعديل سجل {date}",
     "editPostponedTitle": "تسميع مؤجل",
-    "attendanceSummary": "أيام الحضور: {present} · الغياب: {absent} · الغياب بعذر: {excused}"
+    "attendanceSummary": "أيام الحضور: {present} · الغياب: {absent} · الغياب بعذر: {excused}",
+    "monthSummary": "الحفظ {memorization} · السلوك {behavior} · الحضور {present}"
   },
   "offline": {
     "title": "لا يوجد اتصال",
@@ -470,5 +471,13 @@
     "behaviorShort": "السلوك",
     "noLessons": "لا توجد دروس في هذه الفترة",
     "notAllowed": "ليست لديك صلاحية عرض التقارير"
+  },
+  "exam": {
+    "add": "إضافة اختبار",
+    "addTitle": "اختبار جديد",
+    "badge": "اختبار",
+    "mark": "درجة الاختبار",
+    "editTitle": "تعديل الاختبار",
+    "saved": "تم حفظ الاختبار"
   }
 }

@@ -148,6 +148,17 @@ describe("attendanceRecordSchema", () => {
 });
 
 describe("homeworkRecordSchema", () => {
+  it("fills in kind for a record from before Phase 12, and gives an exam one mark", () => {
+    const result = parseWithCodes(homeworkRecordSchema, validHomework);
+    expect(result.success && result.data.kind).toBe("homework");
+
+    const exam = { ...validHomework, kind: "exam", evaluatedLessonId: ID2, memorizationRate: 7 };
+    expect(parseWithCodes(homeworkRecordSchema, exam).success).toBe(true);
+    expect(errorsOf(homeworkRecordSchema, { ...exam, behaviorRate: 7 })).toEqual([
+      { path: "behaviorRate", code: "INVALID_VALUE", params: {} },
+    ]);
+  });
+
   it("fills in postponedLessonIds for a record from before Phase 9", () => {
     const result = parseWithCodes(homeworkRecordSchema, validHomework);
     expect(result.success && result.data.postponedLessonIds).toEqual([]);

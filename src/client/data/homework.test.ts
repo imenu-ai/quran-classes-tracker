@@ -6,6 +6,7 @@ import { openLocalDb, type LocalDb } from "../db/dexie";
 import { LocalStore, LocalValidationError } from "../db/local-store";
 import { setAttendance } from "./attendance";
 import {
+  addExam,
   addHomework,
   postponeHomework,
   rateHomework,
@@ -74,6 +75,31 @@ describe("homework actions", () => {
       // The earlier day's postponement stays in his history.
       postponedLessonIds: [OLD_LESSON],
     });
+  });
+
+  it("records an exam on the spot: marked present, one mark, undo removes it", async () => {
+    const exam = await addExam(store, {
+      studentId: STUDENT,
+      lessonId: LESSON,
+      portion: { surah: 67, fromAyah: 1, toAyah: 10 },
+      note: "",
+    });
+    expect(exam).toMatchObject({
+      kind: "exam",
+      assignedLessonId: LESSON,
+      evaluatedLessonId: LESSON,
+      memorizationRate: null,
+      behaviorRate: null,
+    });
+    expect(await db.attendance.get(attendanceIdFor(LESSON, STUDENT))).toMatchObject({
+      status: "present",
+    });
+    await rateHomework(store, exam, LESSON, "memorizationRate", 6);
+    expect((await db.homework.get(exam.id))?.memorizationRate).toBe(6);
+    await expect(rateHomework(store, exam, LESSON, "behaviorRate", 6)).rejects.toThrow();
+
+    await undoEvaluation(store, (await db.homework.get(exam.id))!, LESSON);
+    expect((await db.homework.get(exam.id))?.deletedAt).not.toBeNull();
   });
 
   it("marking the student absent cancels his postponements in that lesson", async () => {

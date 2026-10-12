@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Clock, Mic, Pencil, Plus, Trash2, Undo2 } from "lucide-react";
+import { ChevronDown, ClipboardCheck, Clock, Mic, Pencil, Plus, Trash2, Undo2 } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useId, useState } from "react";
 import { toast } from "sonner";
@@ -26,7 +26,7 @@ import {
 } from "@/client/data/homework";
 import { todayLessonId, useStudentToday } from "@/client/data/today";
 import { localDateToUtcDate } from "@/domain/dates/local-date";
-import { postponedLessonsOf, type HomeworkRecord } from "@/shared/schemas/homework";
+import { isExam, postponedLessonsOf, type HomeworkRecord } from "@/shared/schemas/homework";
 import { cn } from "@/lib/utils";
 import type { StudentRecord } from "@/shared/schemas/student";
 import { AttendanceToggle, ExcuseNoteInput } from "./attendance-controls";
@@ -136,6 +136,7 @@ export function StudentToday({ student }: { student: StudentRecord }) {
                       label={label(item)}
                       open={openIds.has(item.id)}
                       onToggle={() => toggle(item.id)}
+                      exam={isExam(item)}
                       evaluated={lesson !== null && item.evaluatedLessonId === lesson.id}
                       postponed={postponedToday(item)}
                       onEdit={() => setForm({ kind: "edit", item })}
@@ -156,6 +157,14 @@ export function StudentToday({ student }: { student: StudentRecord }) {
                   ))}
                 </ul>
               )}
+              <Button
+                variant="outline"
+                className="h-12 self-start border-exam/50 text-base text-exam hover:bg-exam/10 hover:text-exam"
+                onClick={() => setForm({ kind: "exam" })}
+              >
+                <ClipboardCheck aria-hidden />
+                {t("exam.add")}
+              </Button>
             </section>
 
             <section className="mt-3 flex flex-col gap-3 rounded-xl border-2 border-dashed bg-muted/20 p-4">
@@ -231,6 +240,7 @@ export function HomeworkItem({
   label,
   open,
   onToggle,
+  exam = false,
   evaluated,
   postponed,
   onEdit,
@@ -243,6 +253,8 @@ export function HomeworkItem({
   label: string;
   open: boolean;
   onToggle: () => void;
+  /** An exam: its own colour and badge, one mark, never postponed. */
+  exam?: boolean;
   evaluated: boolean;
   postponed: boolean;
   onEdit: () => void;
@@ -256,7 +268,7 @@ export function HomeworkItem({
   const mark = (value: number | null) => (value === null ? t("common.noValue") : String(value));
 
   return (
-    <li className="rounded-xl border bg-background">
+    <li className={cn("rounded-xl border bg-background", exam && "border-exam/40 bg-exam/5")}>
       <button
         type="button"
         aria-expanded={open}
@@ -265,7 +277,14 @@ export function HomeworkItem({
         className="flex min-h-16 w-full items-center gap-3 rounded-xl px-4 py-3 text-start hover:bg-accent/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
       >
         <bdi className="min-w-0 flex-1 truncate text-lg font-semibold">{label}</bdi>
-        {postponed ? (
+        {exam && <Badge className="bg-exam text-exam-foreground">{t("exam.badge")}</Badge>}
+        {exam ? (
+          item.memorizationRate !== null && (
+            <span className="text-lg font-bold text-exam tabular-nums">
+              {item.memorizationRate}
+            </span>
+          )
+        ) : postponed ? (
           <Badge className="bg-warning text-warning-foreground">
             <Clock aria-hidden />
             {t("today.postponed")}
@@ -311,6 +330,14 @@ export function HomeworkItem({
                 <DirectionalIcon icon={Undo2} />
                 {t("today.undoPostpone")}
               </Button>
+            </div>
+          ) : exam ? (
+            <div className="grid grid-cols-2 gap-3">
+              <ScorePicker
+                label={t("exam.mark")}
+                value={item.memorizationRate}
+                onChange={(score) => onRate("memorizationRate", score)}
+              />
             </div>
           ) : (
             <>

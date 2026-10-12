@@ -84,6 +84,21 @@ describe("classStatistics", () => {
     expect(result.students[0]).toMatchObject({ memorizationAverage: 9, behaviorAverage: 9.5 });
   });
 
+  it("leaves exams out of every average", () => {
+    const exam = { ...scored("a", "l2", 1, 1), behaviorRate: null, kind: "exam" as const };
+    const result = classStatistics({
+      students,
+      lessons,
+      attendance,
+      homework: [...homework, exam],
+      period: ALL_TIME,
+      timeZone: TZ,
+      locale: "ar",
+    });
+    expect(result.memorizationAverage).toBe(9.3);
+    expect(result.students.find((s) => s.studentId === "a")?.memorizationAverage).toBe(9);
+  });
+
   it("summarizes the class", () => {
     expect(stats()).toMatchObject({
       lessonDays: 3,
