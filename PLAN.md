@@ -630,7 +630,7 @@ See §0 #39–41.
 See §0 #42–44.
 
 - [x] **12.0 Plan.**
-- [ ] **12.1 Exams in the data.** `kind` (default homework) and `kindOf`; `addExam`; exams left out of `monthlyStats`, `classStatistics` and the suggestion.
+- [x] **12.1 Exams in the data.** `kind` (default homework) and `kindOf`; `addExam`; exams left out of `monthlyStats`, `classStatistics` and the suggestion.
 - [ ] **12.2 Exams on the screen.** Violet tokens; "إضافة اختبار" and today's exam items; the month table's exam row and sheet.
 - [ ] **12.3 E2E, docs, wrap-up. Stop.**
 

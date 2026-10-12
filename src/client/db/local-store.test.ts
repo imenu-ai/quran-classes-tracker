@@ -103,6 +103,7 @@ describe("LocalStore + outbox", () => {
         memorizationRate: null,
         behaviorRate: null,
         postponedLessonIds: [],
+        kind: "homework",
       })
       .catch((e: unknown) => e);
     expect((error as LocalValidationError).errors[0]).toMatchObject({

@@ -49,7 +49,7 @@ describe("pushChanges", () => {
     const student = studentRecord(cls.id);
     const lesson = lessonRecord(cls.id);
     const postponed = homeworkRecord(student.id, { postponedLessonIds: [lesson.id] });
-    const { postponedLessonIds: _omitted, ...older } = homeworkRecord(student.id);
+    const { postponedLessonIds: _omitted, kind: _kind, ...older } = homeworkRecord(student.id);
     const results = await pushChanges(
       db,
       "tenant-postpone",
@@ -72,7 +72,10 @@ describe("pushChanges", () => {
     expect(await stored("homework", postponed.id)).toMatchObject({
       postponedLessonIds: [lesson.id],
     });
-    expect(await stored("homework", older.id)).toMatchObject({ postponedLessonIds: [] });
+    expect(await stored("homework", older.id)).toMatchObject({
+      postponedLessonIds: [],
+      kind: "homework",
+    });
   });
 
   it("writes parents first, so a child listed before its parent is accepted", async () => {

@@ -7,6 +7,8 @@ interface StatsLesson {
 }
 
 interface StatsHomework {
+  /** Exams are left out of every average. */
+  kind?: "homework" | "exam";
   evaluatedLessonId: string | null;
   memorizationRate: number | null;
   behaviorRate: number | null;
@@ -78,6 +80,7 @@ export function monthlyStats(
 
   for (const item of homework) {
     if (item.deletedAt !== null || item.evaluatedLessonId === null) continue;
+    if (item.kind === "exam") continue;
     const month = lessonMonth.get(item.evaluatedLessonId);
     if (!month) continue;
     const b = bucket(month);

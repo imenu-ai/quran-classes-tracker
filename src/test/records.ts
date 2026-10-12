@@ -77,5 +77,6 @@ export const homeworkRecord = (
   memorizationRate: null,
   behaviorRate: null,
   postponedLessonIds: [],
+  kind: "homework",
   ...overrides,
 });

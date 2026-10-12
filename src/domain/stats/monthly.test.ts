@@ -120,6 +120,16 @@ describe("monthlyStats", () => {
     expect(stats.map((s) => s.month)).toEqual(["2026-09"]);
   });
 
+  it("leaves exams out of the averages and the evaluated count", () => {
+    const exam = { ...hw("oct-01", 2, null), kind: "exam" as const };
+    const [october] = monthlyStats([hw("oct-01", 9, 9), exam], [], lessons);
+    expect(october).toMatchObject({
+      memorizationAverage: 9,
+      behaviorAverage: 9,
+      evaluatedCount: 1,
+    });
+  });
+
   it("returns nothing without data", () => {
     expect(monthlyStats([], [], lessons)).toEqual([]);
   });

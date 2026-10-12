@@ -158,6 +158,33 @@ export async function addHomework(
       memorizationRate: null,
       behaviorRate: null,
       postponedLessonIds: [],
+      kind: "homework",
+    });
+  });
+}
+
+/**
+ * Records an exam in this lesson: added and marked on the spot (one mark,
+ * set afterwards), never assigned beforehand. Marks the student present.
+ * Undo (undoEvaluation) removes it, since it was assigned in this lesson.
+ */
+export async function addExam(
+  store: LocalStore,
+  input: { studentId: string; lessonId: string; portion: Portion; note: string },
+) {
+  const { db } = store;
+  return db.transaction("rw", homeworkTables(db), async () => {
+    await ensurePresent(store, input.lessonId, input.studentId);
+    return store.create("homework", {
+      studentId: input.studentId,
+      ...input.portion,
+      note: input.note,
+      assignedLessonId: input.lessonId,
+      evaluatedLessonId: input.lessonId,
+      memorizationRate: null,
+      behaviorRate: null,
+      postponedLessonIds: [],
+      kind: "exam",
     });
   });
 }

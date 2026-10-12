@@ -37,6 +37,8 @@ interface StatsAttendance {
 }
 
 interface StatsHomework {
+  /** Exams are left out of every average. */
+  kind?: "homework" | "exam";
   studentId: string;
   evaluatedLessonId: string | null;
   memorizationRate: number | null;
@@ -135,6 +137,7 @@ export function classStatistics(input: {
   const allBehavior: number[] = [];
   for (const item of input.homework) {
     if (item.deletedAt !== null || item.evaluatedLessonId === null) continue;
+    if (item.kind === "exam") continue;
     if (!lessonDate.has(item.evaluatedLessonId) || !studentIds.has(item.studentId)) continue;
     const scores = scoresOf.get(item.studentId) ?? { memorization: [], behavior: [] };
     if (item.memorizationRate !== null) {
