@@ -122,7 +122,6 @@ export function usePrintSheets(
   return useLiveQuery(
     async () => (classId && month ? loadPrintSheets(db, classId, studentIds, month) : null),
     // The ids by value, so a new array with the same ids doesn't reload.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [db, classId, key, month],
   );
 }
