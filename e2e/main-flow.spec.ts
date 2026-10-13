@@ -163,7 +163,13 @@ test("class → students → student page: mark, next-day homework, absence, pos
   await expect(sheets.nth(1)).toContainText("سالم التجريبي");
   // Chromium can save the PDF here: one A4 page per student.
   if (browserName === "chromium") {
-    const pdf = (await page.pdf({ preferCSSPageSize: true })).toString("latin1");
-    expect(pdf.match(/\/Type\s*\/Page[^s]/g)).toHaveLength(2);
+    const pages = async () =>
+      (await page.pdf({ preferCSSPageSize: true })).toString("latin1").match(/\/Type\s*\/Page[^s]/g)
+        ?.length;
+    expect(await pages()).toBe(2);
+    // As on an iPhone: its own paper (US Letter) and margins, whatever @page
+    // says. Still a page each, with no extra page for the footer.
+    await page.addStyleTag({ content: "@page { size: letter; margin: 12mm !important; }" });
+    expect(await pages()).toBe(2);
   }
 });

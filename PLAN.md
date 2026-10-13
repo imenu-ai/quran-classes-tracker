@@ -846,3 +846,9 @@ See §0 #45–47. The print page is `/print?class=…&month=YYYY-MM&students=id,
   - `ClassStatisticsView` gains `months` (the class's months with lessons), used by the month picker. The native-select style moved to `src/lib/native-select.ts`.
   - `main-flow` prints أحمد's month from his page, then both students from the statistics page with "select all"; on Chromium it saves the PDF and checks for two A4 pages.
   - Checked at 360 px (WebKit and Chromium), light and dark: the preview, the drawer, both entry points; the PDFs rendered with pdf.js: A4, Arabic right to left, one page per student.
+- 2026-10-13 (after Phase 13, from the user):
+  - On an iPhone, a blank page with only the footer followed each sheet. iOS prints on its own paper (US Letter in some regions) with its own margins, whatever `@page` says, and each sheet was forced to A4's full height with its footer pinned to the bottom. Reproduced in Chromium by forcing Letter with 12 mm margins: 6 pages for 3 students.
+  - On paper a sheet is now only as tall as its content and as wide as the printable area, with 8 mm of padding (devices add their own margins).
+  - The sheet is more compact (smaller header, the six counts in one row), and the density limits are measured against about 250 mm of height: up to 24 rows normal, up to 34 dense, then denser (fits about 43).
+  - `main-flow` also saves the PDF on Letter with margins and expects one page per student.
+

@@ -9,17 +9,19 @@ import { isExam } from "@/shared/schemas/homework";
 
 /**
  * Smaller text and tighter rows for longer months, so a month stays on one
- * A4 page: up to 28 rows as is, up to 40 dense, beyond that denser. (A month
- * longer still continues on a second page, its table header repeated.)
+ * page. The limits leave room for the smallest likely paper: iOS prints on
+ * its own paper (US Letter in some regions) with its own margins, about
+ * 250 mm of height. Up to 24 rows as is, up to 34 dense, then denser (fits
+ * about 43). A longer month continues on a second page, its header repeated.
  */
 function densityOf(rows: number) {
-  return rows > 40 ? "denser" : rows > 28 ? "dense" : "normal";
+  return rows > 34 ? "denser" : rows > 24 ? "dense" : "normal";
 }
 
 const DENSITY = {
-  normal: { sheet: "gap-4 text-[10pt]", cell: "py-1" },
-  dense: { sheet: "gap-3 text-[8.5pt] leading-snug", cell: "py-0.5" },
-  denser: { sheet: "gap-2 text-[7.5pt] leading-tight", cell: "py-px" },
+  normal: { sheet: "gap-3 text-[10pt]", cell: "py-0.5" },
+  dense: { sheet: "gap-2 text-[8.5pt] leading-snug", cell: "py-px" },
+  denser: { sheet: "gap-1.5 text-[7.5pt] leading-tight", cell: "py-px" },
 } as const;
 
 /**
@@ -64,17 +66,17 @@ export function MonthSheet({
 
   return (
     <article className={cn("print-sheet flex flex-col bg-white text-neutral-900", density.sheet)}>
-      <header className="flex flex-col gap-1 border-b-2 border-neutral-800 pb-3">
-        <p dir="auto" className="text-[18pt] leading-tight font-bold">
+      <header className="flex flex-col border-b-2 border-neutral-800 pb-1.5">
+        <p dir="auto" className="text-[15pt] leading-tight font-bold">
           {centerName}
         </p>
-        <p className="text-[12pt] text-neutral-600">{t("print.title")}</p>
+        <p className="text-[10.5pt] text-neutral-600">{t("print.title")}</p>
       </header>
 
-      <dl className="grid grid-cols-2 gap-x-6 gap-y-1.5">
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-0.5">
         <div className="flex gap-2">
           <dt className="text-neutral-600">{t("print.student")}:</dt>
-          <dd dir="auto" className="text-[13pt] leading-tight font-bold">
+          <dd dir="auto" className="text-[12pt] leading-tight font-bold">
             {sheet.student.fullName}
           </dd>
         </div>
@@ -107,16 +109,16 @@ export function MonthSheet({
         </colgroup>
         <thead className="bg-neutral-100">
           <tr>
-            <th scope="col" className="border border-neutral-400 px-2 py-1.5 text-start">
+            <th scope="col" className="border border-neutral-400 px-2 py-1 text-start">
               {t("profile.dateHeader")}
             </th>
-            <th scope="col" className="border border-neutral-400 px-2 py-1.5 text-start">
+            <th scope="col" className="border border-neutral-400 px-2 py-1 text-start">
               {t("glossary.homework")}
             </th>
-            <th scope="col" className="border border-neutral-400 px-1 py-1.5 text-center">
+            <th scope="col" className="border border-neutral-400 px-1 py-1 text-center">
               {t("profile.memorizationShort")}
             </th>
-            <th scope="col" className="border border-neutral-400 px-1 py-1.5 text-center">
+            <th scope="col" className="border border-neutral-400 px-1 py-1 text-center">
               {t("profile.behaviorShort")}
             </th>
           </tr>
@@ -194,36 +196,33 @@ export function MonthSheet({
         </tbody>
         <tfoot className="bg-neutral-100 font-bold">
           <tr>
-            <th
-              scope="row"
-              colSpan={2}
-              className="border border-neutral-400 px-2 py-1.5 text-start"
-            >
+            <th scope="row" colSpan={2} className="border border-neutral-400 px-2 py-1 text-start">
               {t("profile.average")}
             </th>
-            <td className="border border-neutral-400 px-1 py-1.5 text-center tabular-nums">
+            <td className="border border-neutral-400 px-1 py-1 text-center tabular-nums">
               {average(sheet.memorizationAverage)}
             </td>
-            <td className="border border-neutral-400 px-1 py-1.5 text-center tabular-nums">
+            <td className="border border-neutral-400 px-1 py-1 text-center tabular-nums">
               {average(sheet.behaviorAverage)}
             </td>
           </tr>
         </tfoot>
       </table>
 
-      <dl className="grid grid-cols-3 gap-2">
+      {/* One row of six, to leave the page to the table. */}
+      <dl className="grid grid-cols-6 gap-1.5">
         {counts.map(([name, value]) => (
           <div
             key={name}
-            className="flex items-center justify-between gap-2 rounded border border-neutral-400 px-2 py-1.5"
+            className="flex flex-col items-center rounded border border-neutral-400 px-1 py-0.5 text-center"
           >
-            <dt className="text-neutral-600">{name}</dt>
-            <dd className="text-[1.15em] font-bold tabular-nums">{value}</dd>
+            <dt className="text-[0.85em] leading-tight text-neutral-600">{name}</dt>
+            <dd className="text-[1.15em] leading-tight font-bold tabular-nums">{value}</dd>
           </div>
         ))}
       </dl>
 
-      <footer className="mt-auto flex justify-between border-t border-neutral-300 pt-2 text-[8pt] text-neutral-500">
+      <footer className="mt-auto flex justify-between border-t border-neutral-300 pt-1 text-[8pt] text-neutral-500">
         <span>{t("app.name")}</span>
         <span>
           {t("print.printedOn")}: {format.dateTime(localDateToUtcDate(printedOn), "lessonDate")}

@@ -186,9 +186,17 @@
   .print-page {
     zoom: 1 !important;
   }
-  /* Just under a page, so rounding never adds an empty one. */
+  /*
+   * On paper the sheet is only as tall as its content and as wide as the
+   * printable area. iOS prints on its own paper size (often US Letter) with
+   * its own margins, whatever @page says: a sheet forced to A4's full height
+   * overflowed, and its footer landed alone on an extra page.
+   */
   .print-sheet {
-    min-height: 296mm;
+    width: auto;
+    min-height: 0;
+    /* Devices add their own margins; Chrome prints with none (@page). */
+    padding: 8mm;
   }
   .print-page:not(:last-child) {
     break-after: page;
