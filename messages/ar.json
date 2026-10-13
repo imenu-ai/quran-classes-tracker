@@ -497,6 +497,12 @@
     "excused": "الغياب بعذر",
     "evaluated": "الواجبات المسمّعة",
     "exams": "الاختبارات",
-    "postponed": "التسميع المؤجل"
+    "postponed": "التسميع المؤجل",
+    "printMonth": "طباعة الشهر",
+    "printStudents": "طباعة كشوف الطلاب",
+    "students": "الطلاب",
+    "selectAll": "تحديد الكل",
+    "selectedCount": "{selected} من {total}",
+    "show": "عرض للطباعة"
   }
 }

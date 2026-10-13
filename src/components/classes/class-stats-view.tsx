@@ -1,24 +1,27 @@
 "use client";
 
-import { BarChart3, ChevronRight, SearchX, ShieldAlert } from "lucide-react";
+import { BarChart3, ChevronRight, Printer, SearchX, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useFormatter, useTranslations } from "next-intl";
-import { useId } from "react";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
+import { useId, useMemo, useState } from "react";
 import { DirectionalIcon } from "@/components/directional-icon";
 import { EmptyState } from "@/components/empty-state";
 import { PageContainer, PageHeader } from "@/components/shell/page";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAccess } from "@/client/access";
+import { useApp } from "@/client/app-context";
 import { useClass } from "@/client/data/classes";
 import { useClassStatistics } from "@/client/data/class-stats";
+import { sortByName } from "@/client/data/students";
+import { monthKey, todayInTimeZone } from "@/domain/dates/local-date";
 import type { StatsPeriod, StudentStanding } from "@/domain/stats/class";
+import { nativeSelectClass } from "@/lib/native-select";
 import { cn } from "@/lib/utils";
+import { PrintStudentsDrawer } from "./print-students-drawer";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
-
-const selectClass =
-  "h-12 w-full rounded-lg border border-input bg-background px-3 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 dark:bg-input/30";
 
 /**
  * A class's statistics: its attendance rate and average marks, then its
@@ -33,12 +36,21 @@ export function ClassStatsView({
 }) {
   const t = useTranslations("classStats");
   const tCommon = useTranslations("common");
+  const tPrint = useTranslations("print");
   const format = useFormatter();
   const router = useRouter();
   const ids = { year: useId(), month: useId() };
   const canView = useAccess().can("reports.view");
   const cls = useClass(classId);
   const view = useClassStatistics(classId, period);
+  const { session } = useApp();
+  const locale = useLocale();
+  const [printing, setPrinting] = useState(false);
+  // Printing lists the students by name.
+  const byName = useMemo(
+    () => (view ? sortByName([...view.students.values()], locale) : []),
+    [view, locale],
+  );
 
   if (!canView) {
     return (
@@ -79,6 +91,16 @@ export function ClassStatsView({
     router.replace(`/class-stats?${params.toString()}`, { scroll: false });
   };
 
+  // Printing defaults to the month shown here, else the current month.
+  const currentMonth = monthKey(todayInTimeZone(session.timezone));
+  const printMonth =
+    period.year !== null && period.month !== null
+      ? `${period.year}-${String(period.month).padStart(2, "0")}`
+      : currentMonth;
+  const printMonths = [...new Set([printMonth, currentMonth, ...view.months])].sort((a, b) =>
+    b.localeCompare(a),
+  );
+
   const percent = (rate: number | null) =>
     rate === null ? tCommon("noValue") : format.number(rate, "percent");
   const average = (value: number | null) =>
@@ -101,7 +123,7 @@ export function ClassStatsView({
           </label>
           <select
             id={ids.year}
-            className={selectClass}
+            className={nativeSelectClass}
             value={period.year === null ? "" : String(period.year)}
             onChange={(event) =>
               setPeriod({
@@ -124,7 +146,7 @@ export function ClassStatsView({
           </label>
           <select
             id={ids.month}
-            className={selectClass}
+            className={nativeSelectClass}
             disabled={period.year === null}
             value={period.month === null ? "" : String(period.month)}
             onChange={(event) =>
@@ -143,6 +165,25 @@ export function ClassStatsView({
           </select>
         </div>
       </fieldset>
+
+      {byName.length > 0 && (
+        <Button
+          variant="outline"
+          className="h-12 self-start text-base"
+          onClick={() => setPrinting(true)}
+        >
+          <Printer aria-hidden />
+          {tPrint("printStudents")}
+        </Button>
+      )}
+      <PrintStudentsDrawer
+        open={printing}
+        onOpenChange={setPrinting}
+        classId={cls.id}
+        students={byName}
+        months={printMonths}
+        defaultMonth={printMonth}
+      />
 
       {statistics.lessonDays === 0 ? (
         <EmptyState icon={BarChart3} title={t("noLessons")} />

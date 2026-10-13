@@ -497,6 +497,12 @@
     "excused": "Excused",
     "evaluated": "Homework recited",
     "exams": "Exams",
-    "postponed": "Postponed"
+    "postponed": "Postponed",
+    "printMonth": "Print month",
+    "printStudents": "Print student sheets",
+    "students": "Students",
+    "selectAll": "Select all",
+    "selectedCount": "{selected} of {total}",
+    "show": "Show for printing"
   }
 }

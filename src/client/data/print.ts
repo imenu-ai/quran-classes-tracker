@@ -13,6 +13,12 @@ import {
   type StudentProfile,
 } from "./profile";
 
+/** The print page for some of a class's students and a month ("YYYY-MM"). */
+export function printHref(classId: string, month: string, studentIds: readonly string[]) {
+  const params = new URLSearchParams({ class: classId, month, students: studentIds.join(",") });
+  return `/print?${params.toString()}`;
+}
+
 export interface MonthSheetCounts {
   present: number;
   absent: number;

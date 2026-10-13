@@ -111,6 +111,19 @@ describe("MonthTable", () => {
     expect(within(sheet).getByRole("combobox", { name: "درجة الاختبار" })).toBeTruthy();
   });
 
+  it("prints the month shown, for this student", async () => {
+    const { student, profile } = profileWithExam();
+    renderArabic(<MonthTable profile={profile} student={student} editable />);
+    await openTable();
+
+    const link = screen.getByRole("link", { name: "طباعة الشهر" });
+    const url = new URL(link.getAttribute("href")!, "https://app.test");
+    expect(url.pathname).toBe("/print");
+    expect(url.searchParams.get("class")).toBe(student.classId);
+    expect(url.searchParams.get("month")).toBe(todayInTimeZone(DEFAULT_TIME_ZONE).slice(0, 7));
+    expect(url.searchParams.get("students")).toBe(student.id);
+  });
+
   it("view-only (without lessons.run): the table opens, but rows don't", async () => {
     const { student, profile } = profileWithExam();
     renderArabic(<MonthTable profile={profile} student={student} editable={false} />);
