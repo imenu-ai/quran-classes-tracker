@@ -19,6 +19,7 @@ describe("pageCacheKey", () => {
       "/search",
       "/users",
       "/settings",
+      "/print",
     ]);
   });
 });

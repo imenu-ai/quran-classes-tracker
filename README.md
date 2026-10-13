@@ -113,6 +113,10 @@ The CLI scripts read `.env.local` then `.env`; variables already set in the shel
   - the class's attendance rate (present, absent, excused) and average marks;
   - its students ranked by attendance rate, then memorization average, then behavior average. An excused absence counts as attended here, and a student's rate counts the lesson days since he joined.
   - All time by default; pick a year, or a year and a month, to narrow it.
+- **Printing** (needs "view reports"): a student's month prints on one A4 sheet. It shows the center, class, student and the user who printed it; the month's table (oldest day first) with its averages; and counts of days present, absent and excused, homework recited, exams and postponements.
+  - From the student page: open the month table, then "طباعة الشهر" (the month shown).
+  - From the class statistics: "طباعة كشوف الطلاب", then pick the month (the one shown there, else the current month) and the students ("تحديد الكل" selects or clears them all). It makes one document with a page per student.
+  - The print page shows the sheets; "طباعة / حفظ PDF" opens the device's print dialog, which prints them or saves a PDF ("Save as PDF", or Share → Save to Files on iPhone). It works offline.
 - **Lessons** still exist in the data (one per class per day), but the teacher never manages them: today's is created the first time something is recorded.
 
 ## Architecture in short
@@ -199,6 +203,13 @@ On the iPhone:
 - [ ] Close and reopen the app, still offline: everything is still there, and the pending count shows.
 - [ ] Turn airplane mode off and return to the app. The indicator goes "جارٍ المزامنة" → "متصل".
 - [ ] On another device (or a laptop), sign in: the marks, postponement and absence are in the students' tables.
+
+**Manual print check** (from the home-screen app):
+
+- [ ] On a student's page, open the month table and tap "طباعة الشهر", then "طباعة / حفظ PDF": the iOS print sheet opens with one A4 page.
+- [ ] Share → Save to Files gives a PDF: Arabic joined and right to left, the center, class, student and your name at the top.
+- [ ] From the class statistics, print all students: one page each.
+- [ ] Try it offline too (airplane mode).
 
 ## Deployment
 

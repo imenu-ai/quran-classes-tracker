@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronDown, ChevronLeft, ChevronRight, Clock, Pencil } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Clock, Pencil, Printer } from "lucide-react";
+import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
 import { useId, useMemo, useState } from "react";
 import { DirectionalIcon } from "@/components/directional-icon";
@@ -19,6 +20,7 @@ import {
 } from "@/components/ui/drawer";
 import { useApp } from "@/client/app-context";
 import { rateHomework, setStudentAttendance, undoPostpone } from "@/client/data/homework";
+import { printHref } from "@/client/data/print";
 import { buildMonthHistory, type HistoryRow, type StudentProfile } from "@/client/data/profile";
 import { localDateToUtcDate, monthKey, todayInTimeZone } from "@/domain/dates/local-date";
 import { cn } from "@/lib/utils";
@@ -311,6 +313,12 @@ export function MonthTable({
               excused: stats?.excused ?? 0,
             })}
           </p>
+          <Button asChild variant="outline" className="mx-3 h-11 self-start">
+            <Link href={printHref(student.classId, month, [student.id])}>
+              <Printer aria-hidden />
+              {t("print.printMonth")}
+            </Link>
+          </Button>
         </div>
       )}
 

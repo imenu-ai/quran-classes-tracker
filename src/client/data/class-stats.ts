@@ -1,5 +1,6 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { useLocale } from "next-intl";
+import { monthKey } from "@/domain/dates/local-date";
 import { classStatistics, type ClassStatistics, type StatsPeriod } from "@/domain/stats/class";
 import type { StudentRecord } from "@/shared/schemas/student";
 import { useApp } from "../app-context";
@@ -11,6 +12,8 @@ export interface ClassStatisticsView {
   students: Map<string, StudentRecord>;
   /** Years that have lessons, newest first (for the year picker). */
   years: number[];
+  /** Months that have lessons ("YYYY-MM"), newest first (for printing). */
+  months: string[];
 }
 
 /** A class's statistics and student ranking for a period, live from the local database. */
@@ -34,13 +37,13 @@ export function useClassStatistics(classId: string | null, period: StatsPeriod) 
         .anyOf(students.map((student) => student.id))
         .toArray(),
     ]);
-    const years = [
-      ...new Set(
-        lessons
-          .filter((lesson) => lesson.deletedAt === null)
-          .map((lesson) => Number(lesson.date.slice(0, 4))),
-      ),
-    ].sort((a, b) => b - a);
+    const liveLessons = lessons.filter((lesson) => lesson.deletedAt === null);
+    const years = [...new Set(liveLessons.map((lesson) => Number(lesson.date.slice(0, 4))))].sort(
+      (a, b) => b - a,
+    );
+    const months = [...new Set(liveLessons.map((lesson) => monthKey(lesson.date)))].sort((a, b) =>
+      b.localeCompare(a),
+    );
     return {
       statistics: classStatistics({
         students,
@@ -53,6 +56,7 @@ export function useClassStatistics(classId: string | null, period: StatsPeriod) 
       }),
       students: new Map(students.map((student) => [student.id, student])),
       years,
+      months,
     };
   }, [db, classId, period.year, period.month, session.timezone, locale]);
 }

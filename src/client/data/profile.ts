@@ -59,6 +59,45 @@ export interface StudentProfile {
   months: MonthStats[];
 }
 
+/** The lessons a student's records refer to (to load before building the profile). */
+export function referencedLessonIds(
+  homework: readonly HomeworkRecord[],
+  attendance: readonly AttendanceRecord[],
+): string[] {
+  return [
+    ...new Set([
+      ...homework.flatMap((h) => [
+        h.evaluatedLessonId,
+        h.assignedLessonId,
+        ...postponedLessonsOf(h),
+      ]),
+      ...attendance.map((a) => a.lessonId),
+    ]),
+  ].filter((id): id is string => id !== null);
+}
+
+/**
+ * A student's profile from his records (deleted ones are left out) and the
+ * lessons they refer to. Extra lessons (another student's) are harmless.
+ */
+export function buildStudentProfile(
+  homework: readonly HomeworkRecord[],
+  attendance: readonly AttendanceRecord[],
+  lessons: readonly LessonRecord[],
+): StudentProfile {
+  const liveHomework = homework.filter((h) => h.deletedAt === null);
+  const liveAttendance = attendance.filter((a) => a.deletedAt === null);
+  return {
+    homework: liveHomework,
+    attendance: liveAttendance,
+    lessonsById: new Map(lessons.map((l) => [l.id, l])),
+    pending: liveHomework
+      .filter((h) => h.evaluatedLessonId === null)
+      .sort((a, b) => a.createdAt - b.createdAt),
+    months: monthlyStats(liveHomework, liveAttendance, lessons),
+  };
+}
+
 /** Everything the student profile shows, live from the local database. */
 export function useStudentProfile(studentId: string | null) {
   const { db } = useApp();
@@ -68,29 +107,13 @@ export function useStudentProfile(studentId: string | null) {
       db.homework.where("studentId").equals(studentId).toArray(),
       db.attendance.where("studentId").equals(studentId).toArray(),
     ]);
-    const liveHomework = homework.filter((h) => h.deletedAt === null);
-    const liveAttendance = attendance.filter((a) => a.deletedAt === null);
-    const lessonIds = [
-      ...new Set([
-        ...liveHomework.flatMap((h) => [
-          h.evaluatedLessonId,
-          h.assignedLessonId,
-          ...postponedLessonsOf(h),
-        ]),
-        ...liveAttendance.map((a) => a.lessonId),
-      ]),
-    ].filter((id): id is string => id !== null);
+    const lessonIds = referencedLessonIds(
+      homework.filter((h) => h.deletedAt === null),
+      attendance.filter((a) => a.deletedAt === null),
+    );
     const lessons = (await db.lessons.bulkGet(lessonIds)).filter(
       (l): l is LessonRecord => l !== undefined,
     );
-    return {
-      homework: liveHomework,
-      attendance: liveAttendance,
-      lessonsById: new Map(lessons.map((l) => [l.id, l])),
-      pending: liveHomework
-        .filter((h) => h.evaluatedLessonId === null)
-        .sort((a, b) => a.createdAt - b.createdAt),
-      months: monthlyStats(liveHomework, liveAttendance, lessons),
-    };
+    return buildStudentProfile(homework, attendance, lessons);
   }, [db, studentId]);
 }
