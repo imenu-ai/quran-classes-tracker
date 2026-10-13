@@ -479,5 +479,24 @@
     "mark": "Exam mark",
     "editTitle": "Edit exam",
     "saved": "Exam saved"
+  },
+  "print": {
+    "pageTitle": "Print",
+    "title": "Monthly record",
+    "printButton": "Print / Save PDF",
+    "hint": "To get a PDF file, choose “Save as PDF” (or “Share” on iPhone) in the print dialog.",
+    "sheetCount": "Sheets: {count}",
+    "noStudents": "No students to print",
+    "student": "Student",
+    "class": "Class",
+    "month": "Month",
+    "preparedBy": "Prepared by",
+    "printedOn": "Printed on",
+    "present": "Days present",
+    "absent": "Days absent",
+    "excused": "Excused",
+    "evaluated": "Homework recited",
+    "exams": "Exams",
+    "postponed": "Postponed"
   }
 }

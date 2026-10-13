@@ -644,7 +644,7 @@ See §0 #45–47. The print page is `/print?class=…&month=YYYY-MM&students=id,
 
 - [x] **13.0 Plan.**
 - [x] **13.1 Sheet data.** `buildStudentProfile` taken out of `useStudentProfile`; `buildMonthSheet` (rows oldest first, averages, counts); `usePrintSheets` for a class's chosen students.
-- [ ] **13.2 The print page.** `/print`, the A4 `MonthSheet`, toolbar ("طباعة / حفظ PDF"), the scaled preview, print CSS (`@page` A4, a page per student, always light), `APP_SHELL_PATHS`.
+- [x] **13.2 The print page.** `/print`, the A4 `MonthSheet`, toolbar ("طباعة / حفظ PDF"), the scaled preview, print CSS (`@page` A4, a page per student, always light), `APP_SHELL_PATHS`.
 - [ ] **13.3 Entry points.** The student page's "طباعة الشهر"; the statistics page's drawer with the month picker and "تحديد الكل".
 - [ ] **13.4 E2E, docs, wrap-up. Stop.**
 

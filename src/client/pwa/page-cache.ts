@@ -10,6 +10,7 @@ export const APP_SHELL_PATHS = [
   "/search",
   "/users",
   "/settings",
+  "/print",
 ];
 
 /** A page's cache key: origin + pathname, without the query string. */

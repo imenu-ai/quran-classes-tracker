@@ -161,3 +161,36 @@
     font-size: max(16px, 1em);
   }
 }
+
+/* Printable month sheets (/print): A4, one student per page, always on white. */
+.print-sheet {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 14mm;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* No page margin: the sheet has its own, and browsers then drop their header and footer lines. */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body {
+    background: #fff !important;
+  }
+  /* The preview's fit-to-screen zoom is for the screen only. */
+  .print-page {
+    zoom: 1 !important;
+  }
+  /* Just under a page, so rounding never adds an empty one. */
+  .print-sheet {
+    min-height: 296mm;
+  }
+  .print-page:not(:last-child) {
+    break-after: page;
+  }
+}
