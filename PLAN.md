@@ -406,7 +406,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 10. Calmer marking on the student page | [x] Done |
 | 11. Class statistics and student ranking | [x] Done |
 | 12. Exams | [x] Done |
-| 13. Printable month sheets | [ ] In progress |
+| 13. Printable month sheets | [x] Done |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -638,7 +638,7 @@ See §0 #42–44.
 - [x] **12.2 Exams on the screen.** Violet tokens; "إضافة اختبار" and today's exam items; the month table's exam row and sheet.
 - [x] **12.3 E2E, docs, wrap-up. Stop.**
 
-### [ ] Phase 13: Printable month sheets
+### [x] Phase 13: Printable month sheets
 
 See §0 #45–47. The print page is `/print?class=…&month=YYYY-MM&students=id,…`, in its own route group (the app's sign-in gate and local data, without the app shell), cached for offline like the other pages.
 
@@ -646,7 +646,7 @@ See §0 #45–47. The print page is `/print?class=…&month=YYYY-MM&students=id,
 - [x] **13.1 Sheet data.** `buildStudentProfile` taken out of `useStudentProfile`; `buildMonthSheet` (rows oldest first, averages, counts); `usePrintSheets` for a class's chosen students.
 - [x] **13.2 The print page.** `/print`, the A4 `MonthSheet`, toolbar ("طباعة / حفظ PDF"), the scaled preview, print CSS (`@page` A4, a page per student, always light), `APP_SHELL_PATHS`.
 - [x] **13.3 Entry points.** The student page's "طباعة الشهر"; the statistics page's drawer with the month picker and "تحديد الكل".
-- [ ] **13.4 E2E, docs, wrap-up. Stop.**
+- [x] **13.4 E2E, docs, wrap-up. Stop.**
 
 ---
 
@@ -838,3 +838,11 @@ See §0 #45–47. The print page is `/print?class=…&month=YYYY-MM&students=id,
   - Fixed on the way: the table sat in a `<fieldset disabled>` for users without `lessons.run`, which disabled the month arrows (and would have disabled the new toggle). Its edit sheet, in a portal outside the fieldset, still opened with working pickers. `MonthTable` now takes `editable`: rows open the sheet only with `lessons.run`, while the toggle and arrows work for everyone.
   - The E2E specs open the table with `openMonthTable` before reading it.
   - Checked in WebKit at 360 px, light and dark: closed and open states, the edit sheet from a row, no overflow.
+- 2026-10-13 (Phase 13):
+  - The browser prints the sheets (decision #45): a PDF library would have needed an Arabic font and shaping, which they handle poorly. Whether `window.print()` opens the print sheet from the iPhone home-screen app is in the README's manual print check; if it doesn't, the fallback is opening `/print` in Safari.
+  - Long months use denser rows, chosen by row count: up to 28 rows normal, up to 40 dense, beyond that denser. In Chromium, 43 rows (a mark every day, plus exams, postponements and absences) still fit on one page. A longer month continues on a second page, with the table header repeated.
+  - The preview scales the sheets to the screen width with CSS `zoom`, and print CSS sets it back to 1. The document title (the student, or the class, plus the month) becomes the PDF's suggested file name.
+  - The print page's "back" returns to where the user came from, keeping the statistics page's period.
+  - `ClassStatisticsView` gains `months` (the class's months with lessons), used by the month picker. The native-select style moved to `src/lib/native-select.ts`.
+  - `main-flow` prints أحمد's month from his page, then both students from the statistics page with "select all"; on Chromium it saves the PDF and checks for two A4 pages.
+  - Checked at 360 px (WebKit and Chromium), light and dark: the preview, the drawer, both entry points; the PDFs rendered with pdf.js: A4, Arabic right to left, one page per student.

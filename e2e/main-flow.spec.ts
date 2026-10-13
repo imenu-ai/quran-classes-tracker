@@ -20,6 +20,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 test("class → students → student page: mark, next-day homework, absence, postpone, exam", async ({
   page,
   projectName,
+  browserName,
 }) => {
   // A controllable clock, to move to the next day later.
   await page.clock.install({ time: new Date() });
@@ -110,6 +111,24 @@ test("class → students → student page: mark, next-day homework, absence, pos
   await expect(table.locator("tfoot")).toContainText("9.5");
   await waitForSynced(page);
 
+  // Print his month: an A4 sheet naming the center, class, student and the
+  // teacher, with the month's rows.
+  await page.getByRole("link", { name: ar.print.printMonth }).click();
+  await page.waitForURL(/\/print\?/);
+  const sheets = page.locator("article.print-sheet");
+  await expect(sheets).toHaveCount(1);
+  await expect(sheets.first()).toContainText(
+    `center-${credentialsFor("main", projectName).username}`,
+  );
+  await expect(sheets.first()).toContainText("حلقة الاختبار");
+  await expect(sheets.first()).toContainText("أحمد التجريبي");
+  await expect(sheets.first()).toContainText("معلم الاختبار");
+  await expect(sheets.first()).toContainText("الناس 1–5");
+  await expect(sheets.first()).toContainText(ar.exam.badge);
+  await expect(page.getByRole("button", { name: ar.print.printButton })).toBeVisible();
+  await page.getByRole("button", { name: ar.nav.back }).click();
+  await page.waitForURL(/\/student\?id=/);
+
   // The class statistics: أحمد attended both days, سالم neither (absent, then
   // not recorded), so أحمد ranks first; the class attended 2 of 4 possible days.
   await page.goto(classUrl);
@@ -126,4 +145,25 @@ test("class → students → student page: mark, next-day homework, absence, pos
   await expect(ranked.nth(1)).toContainText("سالم التجريبي");
   await expect(ranked.nth(1)).toContainText(/\b0\W*%/);
   await expect(page.locator("main section").first()).toContainText(/50\W*%/);
+
+  // Print both students' sheets: everyone starts selected; "select all"
+  // clears and selects them in one tap.
+  await page.getByRole("button", { name: ar.print.printStudents }).click();
+  const drawer = page.getByRole("dialog");
+  const selectAll = drawer.getByRole("checkbox", { name: new RegExp(ar.print.selectAll) });
+  await expect(selectAll).toBeChecked();
+  await selectAll.uncheck();
+  await expect(drawer.getByRole("button", { name: ar.print.show })).toBeDisabled();
+  await selectAll.check();
+  await expect(drawer.getByRole("checkbox", { name: "سالم التجريبي" })).toBeChecked();
+  await drawer.getByRole("button", { name: ar.print.show }).click();
+  await page.waitForURL(/\/print\?/);
+  await expect(sheets).toHaveCount(2);
+  await expect(sheets.nth(0)).toContainText("أحمد التجريبي");
+  await expect(sheets.nth(1)).toContainText("سالم التجريبي");
+  // Chromium can save the PDF here: one A4 page per student.
+  if (browserName === "chromium") {
+    const pdf = (await page.pdf({ preferCSSPageSize: true })).toString("latin1");
+    expect(pdf.match(/\/Type\s*\/Page[^s]/g)).toHaveLength(2);
+  }
 });
