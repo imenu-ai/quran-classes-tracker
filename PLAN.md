@@ -54,6 +54,9 @@ Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bo
 | 42 | Exams (2026-10-12) | On the student page, "إضافة اختبار" records an exam: a sura and ayah range with one mark (1–10), added and marked on the spot (never assigned beforehand). |
 | 43 | Exams in statistics | Exams are ignored in every average (the student's months, the class statistics) and don't count as progress for the next-homework suggestion. Recording one marks the student present. |
 | 44 | Exams on screen | An exam row has its own colour (violet) and an "اختبار" badge, in the month table and in today's card. |
+| 45 | Printing (2026-10-13) | A student's month prints as one A4 sheet: center, class, student and the user who printed it; the month table (as on screen, oldest day first) with its averages; counts of days present, absent, excused, homework recited, exams and postponements. The browser prints it (a print-ready page and the device's print dialog, which also saves a PDF). No PDF library: Arabic shaping and right-to-left order stay exact, it works offline, and nothing extra is downloaded. |
+| 46 | Print from the student page | "طباعة الشهر" at the bottom of the open month table prints the month shown. Needs `reports.view`. |
+| 47 | Print from the statistics page | "طباعة كشوف الطلاب" opens a sheet: a month (default: the statistics page's month, else the current month), "تحديد الكل" and a checkbox per student (all selected at first). It prints one document with one A4 page per student. |
 
 ### Resolved open items
 - **O1:** Keep a hidden `en.json`, the key-parity test and the LTR Playwright smoke test. Only `ar` is enabled (`ENABLED_LOCALES=ar`).
@@ -403,6 +406,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 10. Calmer marking on the student page | [x] Done |
 | 11. Class statistics and student ranking | [x] Done |
 | 12. Exams | [x] Done |
+| 13. Printable month sheets | [ ] In progress |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -633,6 +637,16 @@ See §0 #42–44.
 - [x] **12.1 Exams in the data.** `kind` (default homework) and `kindOf`; `addExam`; exams left out of `monthlyStats`, `classStatistics` and the suggestion.
 - [x] **12.2 Exams on the screen.** Violet tokens; "إضافة اختبار" and today's exam items; the month table's exam row and sheet.
 - [x] **12.3 E2E, docs, wrap-up. Stop.**
+
+### [ ] Phase 13: Printable month sheets
+
+See §0 #45–47. The print page is `/print?class=…&month=YYYY-MM&students=id,…`, in its own route group (the app's sign-in gate and local data, without the app shell), cached for offline like the other pages.
+
+- [x] **13.0 Plan.**
+- [ ] **13.1 Sheet data.** `buildStudentProfile` taken out of `useStudentProfile`; `buildMonthSheet` (rows oldest first, averages, counts); `usePrintSheets` for a class's chosen students.
+- [ ] **13.2 The print page.** `/print`, the A4 `MonthSheet`, toolbar ("طباعة / حفظ PDF"), the scaled preview, print CSS (`@page` A4, a page per student, always light), `APP_SHELL_PATHS`.
+- [ ] **13.3 Entry points.** The student page's "طباعة الشهر"; the statistics page's drawer with the month picker and "تحديد الكل".
+- [ ] **13.4 E2E, docs, wrap-up. Stop.**
 
 ---
 
