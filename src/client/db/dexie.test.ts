@@ -43,6 +43,7 @@ describe("LocalDb", () => {
       birthYear: 2014,
       note: "",
       memorizationDirection: "forward",
+      parentId: "",
       archivedAt: null,
     });
     await db.lessons.add({ ...base, id: "l1", classId: "c1", date: "2026-10-05", note: "" });

@@ -6,6 +6,7 @@ import {
   homeworkRecordSchema,
   lessonRecordSchema,
   parseWithCodes,
+  normalizeParentId,
   studentRecordSchema,
   type FieldError,
 } from "@/shared/schemas";
@@ -103,6 +104,28 @@ describe("studentRecordSchema", () => {
     expect(errorsOf(studentRecordSchema, { ...student, memorizationDirection: "up" })).toEqual([
       { path: "memorizationDirection", code: "INVALID_VALUE", params: {} },
     ]);
+  });
+
+  it("takes a parent ID of 5–20 digits or none, and fills in none for older records", () => {
+    const parsed = parseWithCodes(studentRecordSchema, student);
+    expect(parsed.success && parsed.data.parentId).toBe("");
+    for (const good of ["12345", "123456789", "12345678901234567890"]) {
+      expect(parseWithCodes(studentRecordSchema, { ...student, parentId: good }).success).toBe(
+        true,
+      );
+    }
+    for (const bad of ["1234", "123456789012345678901", "12a456", " 123456", "١٢٣٤٥"]) {
+      expect(errorsOf(studentRecordSchema, { ...student, parentId: bad })).toEqual([
+        { path: "parentId", code: "INVALID_FORMAT", params: {} },
+      ]);
+    }
+  });
+
+  it("normalizes a typed parent ID", () => {
+    expect(normalizeParentId("١٢٣ ٤٥٦-٧٨٩")).toBe("123456789");
+    expect(normalizeParentId("۱۲۳۴۵")).toBe("12345");
+    expect(normalizeParentId(" 40 123.456 ")).toBe("40123456");
+    expect(normalizeParentId("")).toBe("");
   });
 });
 

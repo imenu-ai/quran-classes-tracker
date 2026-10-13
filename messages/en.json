@@ -229,7 +229,9 @@
     "notFound": "Student not found",
     "added": "Student added",
     "saved": "Changes saved",
-    "actions": "Student options"
+    "actions": "Student options",
+    "parentId": "Parent's ID number",
+    "parentIdHint": "Optional. The parent opens the student's progress link with it (digits only, 5 to 20)."
   },
   "search": {
     "title": "Find a student",

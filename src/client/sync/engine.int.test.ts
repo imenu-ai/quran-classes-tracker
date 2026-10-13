@@ -71,6 +71,7 @@ describe("two devices syncing through the real server", () => {
       birthYear: 2014,
       note: "",
       memorizationDirection: "forward",
+      parentId: "",
       archivedAt: null,
     });
     await phone.engine.syncNow();

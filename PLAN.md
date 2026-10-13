@@ -665,7 +665,7 @@ See §0 #45–47. The print page is `/print?class=…&month=YYYY-MM&students=id,
 See §0 #48–52 and §2.12.
 
 - [x] **14.0 Plan.**
-- [ ] **14.1 Parent ID and shared builders.** `Student.parentId` and `normalizeParentId`; the student form's field; the month builders moved to `src/domain/stats/month-sheet.ts`.
+- [x] **14.1 Parent ID and shared builders.** `Student.parentId` and `normalizeParentId`; the student form's field; the month builders moved to `src/domain/stats/month-sheet.ts`.
 - [ ] **14.2 The parent API.** `POST`/`DELETE /api/parent`: the check, the cookie, the rate limits, the month report.
 - [ ] **14.3 The parent page.** `/parent?s=…`: invalid link, the ID form, the report with its month filter, "خروج من هذا الجهاز".
 - [ ] **14.4 Sharing and the QR.** "رابط ولي الأمر" in the student menu (link, copy, share, QR); a QR on every printed sheet.

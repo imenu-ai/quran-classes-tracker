@@ -1,71 +1,26 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import type { LocalDb } from "../db/dexie";
 import { useApp } from "../app-context";
-import { isExam } from "@/shared/schemas/homework";
+import {
+  buildMonthSheet,
+  buildStudentProfile,
+  referencedLessonIds,
+  type MonthSheet,
+} from "@/domain/stats/month-sheet";
 import type { ClassRecord } from "@/shared/schemas/class";
 import type { LessonRecord } from "@/shared/schemas/lesson";
 import type { StudentRecord } from "@/shared/schemas/student";
-import {
-  buildMonthHistory,
-  buildStudentProfile,
-  referencedLessonIds,
-  type HistoryRow,
-  type StudentProfile,
-} from "./profile";
+
+export {
+  buildMonthSheet,
+  type MonthSheet,
+  type MonthSheetCounts,
+} from "@/domain/stats/month-sheet";
 
 /** The print page for some of a class's students and a month ("YYYY-MM"). */
 export function printHref(classId: string, month: string, studentIds: readonly string[]) {
   const params = new URLSearchParams({ class: classId, month, students: studentIds.join(",") });
   return `/print?${params.toString()}`;
-}
-
-export interface MonthSheetCounts {
-  present: number;
-  absent: number;
-  excused: number;
-  /** Homework recited and marked (exams aren't counted here). */
-  evaluated: number;
-  exams: number;
-  postponed: number;
-}
-
-/** One student's month on paper: the month table's rows and its summary. */
-export interface MonthSheet {
-  student: StudentRecord;
-  /** Oldest day first (on paper a month reads top to bottom). */
-  rows: HistoryRow[];
-  memorizationAverage: number | null;
-  behaviorAverage: number | null;
-  counts: MonthSheetCounts;
-}
-
-export function buildMonthSheet(
-  student: StudentRecord,
-  profile: StudentProfile,
-  month: string,
-): MonthSheet {
-  // The history is newest first; a stable sort keeps each day's own order.
-  const rows = buildMonthHistory(
-    profile.homework,
-    profile.attendance,
-    profile.lessonsById,
-    month,
-  ).sort((a, b) => a.lesson.date.localeCompare(b.lesson.date));
-  const stats = profile.months.find((m) => m.month === month);
-  return {
-    student,
-    rows,
-    memorizationAverage: stats?.memorizationAverage ?? null,
-    behaviorAverage: stats?.behaviorAverage ?? null,
-    counts: {
-      present: stats?.present ?? 0,
-      absent: stats?.absent ?? 0,
-      excused: stats?.excused ?? 0,
-      evaluated: stats?.evaluatedCount ?? 0,
-      exams: rows.filter((row) => row.kind === "evaluation" && isExam(row.item)).length,
-      postponed: rows.filter((row) => row.kind === "postponed").length,
-    },
-  };
 }
 
 export interface PrintSheets {

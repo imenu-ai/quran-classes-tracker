@@ -44,6 +44,21 @@ describe("pushChanges", () => {
     expect(doc).not.toHaveProperty("id");
   });
 
+  it("fills in an empty parent ID for a student from a device before Phase 14", async () => {
+    const cls = classRecord();
+    const { parentId: _omitted, ...older } = studentRecord(cls.id);
+    const withParent = studentRecord(cls.id, { parentId: "123456789" });
+    const results = await pushChanges(
+      db,
+      "tenant-parent",
+      [m("classes", cls), m("students", older), m("students", withParent)],
+      NOW,
+    );
+    expect(results.map((r) => r.status)).toEqual(["applied", "applied", "applied"]);
+    expect(await stored("students", older.id)).toMatchObject({ parentId: "" });
+    expect(await stored("students", withParent.id)).toMatchObject({ parentId: "123456789" });
+  });
+
   it("stores postponements, and fills them in for a device from before Phase 9", async () => {
     const cls = classRecord();
     const student = studentRecord(cls.id);
