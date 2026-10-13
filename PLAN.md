@@ -57,6 +57,11 @@ Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bo
 | 45 | Printing (2026-10-13) | A student's month prints as one A4 sheet: center, class, student and the user who printed it; the month table (as on screen, oldest day first) with its averages; counts of days present, absent, excused, homework recited, exams and postponements. The browser prints it (a print-ready page and the device's print dialog, which also saves a PDF). No PDF library: Arabic shaping and right-to-left order stay exact, it works offline, and nothing extra is downloaded. |
 | 46 | Print from the student page | "طباعة الشهر" at the bottom of the open month table prints the month shown. Needs `reports.view`. |
 | 47 | Print from the statistics page | "طباعة كشوف الطلاب" opens a sheet: a month (default: the statistics page's month, else the current month), "تحديد الكل" and a checkbox per student (all selected at first). It prints one document with one A4 page per student. |
+| 48 | Parent link (2026-10-13) | Each student has a link for his parent, `/parent?s=<studentId>`, showing what the printed sheet shows for a month (default: the current month; the parent can pick another). No account: it's protected by the parent's ID number. |
+| 49 | Parent ID | `Student.parentId`: the parent's ID number (رقم الهوية), set by users who can manage students. Stored as entered, not encrypted, so it can be compared; the same number may be on several students (siblings). Digits only, 5–20 long; Arabic-Indic and Persian digits are converted, spaces and dashes removed. Not set: the link says it isn't valid. |
+| 50 | Remembered parent | After the right ID number, the phone is remembered for 30 days (an HttpOnly cookie, an HMAC of the student and the ID). Changing the parent ID ends it; "خروج من هذا الجهاز" forgets it. |
+| 51 | Brute force | Wrong ID numbers are limited per IP (10 per 15 minutes) and per student (30 per day); all parent requests per IP (60 per 15 minutes). An unknown, deleted or unset student gives the same "not valid" answer. |
+| 52 | QR on printed sheets | Every printed sheet carries a QR code of the student's parent link (even before a parent ID is set). The student menu has "رابط ولي الأمر": the link, copy, share and its QR. |
 
 ### Resolved open items
 - **O1:** Keep a hidden `en.json`, the key-parity test and the LTR Playwright smoke test. Only `ar` is enabled (`ENABLED_LOCALES=ar`).
@@ -194,6 +199,11 @@ Response: `{ results: [{ id, status: 'applied' | 'stale' | 'rejected', code?, pa
 - **Scope changes:** changing a member's classes or permissions bumps his `accessVersion`. Sync responses carry it; a device that sees a new value pushes its outbox, clears its synced tables and pulls from 0. When a student changes class, the server re-versions his homework (so a teacher who gains him gets his history) and bumps `accessVersion` for teachers who lose sight of him.
 - **Offline:** unchanged for daily work. Registration, sign-in, user management and profile changes need a connection.
 
+### 2.12 The parent page (Phase 14)
+- The one page that reads from the server instead of the device: parents have no account and no local data. `/parent?s=<studentId>` (outside the app's route groups) calls `POST /api/parent { studentId, parentId?, month? }`.
+- The server finds the student by id in any center, checks the parent ID (or the remembered-phone cookie), and builds the month from MongoDB with the same pure builders as the screens and the printout (`src/domain/stats/month-sheet.ts`). The response carries names, the month's rows, averages and counts; no internal ids or notes.
+- `DELETE /api/parent?s=…` forgets the phone.
+
 ---
 
 ## 3. Folder structure
@@ -287,6 +297,7 @@ Tests sit next to the code as `*.test.ts`. Server integration tests are `*.int.t
 **`students`**
 - `classId`, `fullName`, `birthYear` (int, 1900–current year), `note`
 - `memorizationDirection: 'forward' | 'backward'` *(new)*
+- `parentId: string` (Phase 14, default `''`): the parent's ID number, `''` or 5–20 digits, stored as entered
 - `archivedAt`
 
 **`lessons`** *(was `sessions`)*
@@ -407,6 +418,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 11. Class statistics and student ranking | [x] Done |
 | 12. Exams | [x] Done |
 | 13. Printable month sheets | [x] Done |
+| 14. Parent link | [ ] In progress |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -647,6 +659,17 @@ See §0 #45–47. The print page is `/print?class=…&month=YYYY-MM&students=id,
 - [x] **13.2 The print page.** `/print`, the A4 `MonthSheet`, toolbar ("طباعة / حفظ PDF"), the scaled preview, print CSS (`@page` A4, a page per student, always light), `APP_SHELL_PATHS`.
 - [x] **13.3 Entry points.** The student page's "طباعة الشهر"; the statistics page's drawer with the month picker and "تحديد الكل".
 - [x] **13.4 E2E, docs, wrap-up. Stop.**
+
+### [ ] Phase 14: Parent link
+
+See §0 #48–52 and §2.12.
+
+- [x] **14.0 Plan.**
+- [ ] **14.1 Parent ID and shared builders.** `Student.parentId` and `normalizeParentId`; the student form's field; the month builders moved to `src/domain/stats/month-sheet.ts`.
+- [ ] **14.2 The parent API.** `POST`/`DELETE /api/parent`: the check, the cookie, the rate limits, the month report.
+- [ ] **14.3 The parent page.** `/parent?s=…`: invalid link, the ID form, the report with its month filter, "خروج من هذا الجهاز".
+- [ ] **14.4 Sharing and the QR.** "رابط ولي الأمر" in the student menu (link, copy, share, QR); a QR on every printed sheet.
+- [ ] **14.5 E2E, docs, wrap-up. Stop.**
 
 ---
 
