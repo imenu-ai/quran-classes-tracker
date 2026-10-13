@@ -418,7 +418,7 @@ Node: 22 LTS (`.nvmrc`, `engines`). Amplify supports Node 20, 22 and 24.
 | 11. Class statistics and student ranking | [x] Done |
 | 12. Exams | [x] Done |
 | 13. Printable month sheets | [x] Done |
-| 14. Parent link | [ ] In progress |
+| 14. Parent link | [x] Done |
 
 Every step ends with: `pnpm lint && pnpm typecheck && <relevant tests>`, then one Conventional Commit on `dev`, then a tick in this file.
 
@@ -660,7 +660,7 @@ See §0 #45–47. The print page is `/print?class=…&month=YYYY-MM&students=id,
 - [x] **13.3 Entry points.** The student page's "طباعة الشهر"; the statistics page's drawer with the month picker and "تحديد الكل".
 - [x] **13.4 E2E, docs, wrap-up. Stop.**
 
-### [ ] Phase 14: Parent link
+### [x] Phase 14: Parent link
 
 See §0 #48–52 and §2.12.
 
@@ -669,7 +669,7 @@ See §0 #48–52 and §2.12.
 - [x] **14.2 The parent API.** `POST`/`DELETE /api/parent`: the check, the cookie, the rate limits, the month report.
 - [x] **14.3 The parent page.** `/parent?s=…`: invalid link, the ID form, the report with its month filter, "خروج من هذا الجهاز".
 - [x] **14.4 Sharing and the QR.** "رابط ولي الأمر" in the student menu (link, copy, share, QR); a QR on every printed sheet.
-- [ ] **14.5 E2E, docs, wrap-up. Stop.**
+- [x] **14.5 E2E, docs, wrap-up. Stop.**
 
 ---
 
@@ -874,4 +874,12 @@ See §0 #48–52 and §2.12.
   - On paper a sheet is now only as tall as its content and as wide as the printable area, with 8 mm of padding (devices add their own margins).
   - The sheet is more compact (smaller header, the six counts in one row), and the density limits are measured against about 250 mm of height: up to 24 rows normal, up to 34 dense, then denser (fits about 43).
   - `main-flow` also saves the PDF on Letter with margins and expects one page per student.
+- 2026-10-13 (Phase 14):
+  - The month builders moved to `src/domain/stats/month-sheet.ts` (the client modules re-export them), so the server builds the parent's month with the same code as the screens and the printout.
+  - Once a failure limit is reached, even the right ID number is refused until the window ends, so it can't be guessed by trying past the limit. A remembered phone isn't affected.
+  - The cookie is per student (`qct_parent_<studentId>`, path `/api/parent`), so a parent with several children keeps each one. It's refreshed on every visit.
+  - The printed QR code sits beside the sheet's header and details, so the sheets keep their height: still one page per student on Letter with margins. QR codes are drawn as SVG from the `qrcode` package's matrix (works offline). In the browser check, jsQR decoded the printed code back to the student's link.
+  - The student form's parent-ID field accepts Arabic and Persian digits, spaces and dashes; it saves the digits only.
+  - A new E2E spec, `parent.spec.ts`, with its own accounts: the teacher sets the ID and marks the student; a signed-out phone opens the link and goes through a wrong number, the right one, another month, a reload and sign-out; a student without a parent ID shows "not valid"; the printed sheet carries the link.
+  - Checked in WebKit at 360 px, light and dark: the ID form and its error, the report, the month change, reload and sign-out; the link drawer; the printed QR.
 

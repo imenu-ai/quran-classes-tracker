@@ -3,7 +3,7 @@ export const E2E_BASE_URL = `http://localhost:${E2E_PORT}`;
 export const E2E_PASSWORD = "e2e-password-123";
 
 export const E2E_PROJECTS = ["iphone", "pixel", "desktop"] as const;
-export const E2E_SPECS = ["main", "offline", "ltr"] as const;
+export const E2E_SPECS = ["main", "offline", "ltr", "parent"] as const;
 
 export type E2ESpec = (typeof E2E_SPECS)[number];
 
