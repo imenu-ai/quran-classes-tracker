@@ -229,7 +229,9 @@
     "notFound": "Student not found",
     "added": "Student added",
     "saved": "Changes saved",
-    "actions": "Student options"
+    "actions": "Student options",
+    "parentId": "Parent's ID number",
+    "parentIdHint": "Optional. The parent opens the student's progress link with it (digits only, 5 to 20)."
   },
   "search": {
     "title": "Find a student",
@@ -503,6 +505,35 @@
     "students": "Students",
     "selectAll": "Select all",
     "selectedCount": "{selected} of {total}",
-    "show": "Show for printing"
+    "show": "Show for printing",
+    "qrCaption": "Follow your child's progress"
+  },
+  "parent": {
+    "title": "Student progress",
+    "loading": "Loading…",
+    "invalidTitle": "This link isn't valid",
+    "invalidHint": "Ask the center for a correct link, or to register the parent's ID number for the student.",
+    "askTitle": "Enter the parent's ID number",
+    "askHint": "To see the student's progress, enter the ID number registered with the center. This device will remember it for 30 days.",
+    "parentId": "Parent's ID number",
+    "show": "Show",
+    "wrong": "Wrong ID number",
+    "tooMany": "Too many attempts. Try again later.",
+    "offline": "No internet connection. This page needs one.",
+    "error": "Couldn't load the data. Try again.",
+    "retry": "Try again",
+    "forget": "Sign out on this device"
+  },
+  "parentLink": {
+    "menu": "Parent link",
+    "title": "Parent link",
+    "hint": "The parent opens this link with his ID number to follow the student's homework, exams and marks. The same code is printed on the month sheet.",
+    "notSet": "No parent ID number yet, so the link won't work. Add it in “Edit details”.",
+    "qr": "QR code of the parent link",
+    "copy": "Copy link",
+    "copied": "Link copied",
+    "copyFailed": "Couldn't copy. Copy the link by hand.",
+    "share": "Share",
+    "shareTitle": "Following {name}"
   }
 }

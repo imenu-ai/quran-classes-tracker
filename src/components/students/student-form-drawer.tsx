@@ -11,7 +11,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -32,11 +32,13 @@ import type { FieldError as FieldErrorData } from "@/shared/schemas/errors";
 import { NAME_MAX, NOTE_MAX } from "@/shared/schemas/base";
 import {
   MEMORIZATION_DIRECTIONS,
+  normalizeParentId,
   type MemorizationDirection,
   type StudentRecord,
 } from "@/shared/schemas/student";
 
-type FieldName = "fullName" | "birthYear" | "classId" | "memorizationDirection" | "note";
+type FieldName =
+  "fullName" | "birthYear" | "classId" | "memorizationDirection" | "note" | "parentId";
 
 interface FormState {
   fullName: string;
@@ -44,6 +46,7 @@ interface FormState {
   classId: string;
   memorizationDirection: MemorizationDirection;
   note: string;
+  parentId: string;
 }
 
 const initialState = (classId: string, existing?: StudentRecord): FormState => ({
@@ -52,6 +55,7 @@ const initialState = (classId: string, existing?: StudentRecord): FormState => (
   classId: existing?.classId ?? classId,
   memorizationDirection: existing?.memorizationDirection ?? "forward",
   note: existing?.note ?? "",
+  parentId: existing?.parentId ?? "",
 });
 
 /** Bottom sheet to add a student (class pre-selected) or edit one. */
@@ -78,6 +82,7 @@ export function StudentFormDrawer({
     classId: useId(),
     direction: useId(),
     note: useId(),
+    parentId: useId(),
   };
   const [form, setForm] = useState<FormState>(() => initialState(classId, existing));
   const [errors, setErrors] = useState<Partial<Record<FieldName, FieldErrorData>>>({});
@@ -103,6 +108,7 @@ export function StudentFormDrawer({
       birthYear: parseIntegerInput(form.birthYear),
       note: form.note,
       memorizationDirection: form.memorizationDirection,
+      parentId: normalizeParentId(form.parentId),
     };
     try {
       if (existing) await updateStudent(store, existing.id, input);
@@ -224,6 +230,24 @@ export function StudentFormDrawer({
                 onChange={(event) => set("note", event.target.value)}
               />
               {error("note")}
+            </Field>
+
+            <Field data-invalid={errors.parentId ? true : undefined}>
+              <FieldLabel htmlFor={ids.parentId}>{t("students.parentId")}</FieldLabel>
+              <Input
+                id={ids.parentId}
+                inputMode="numeric"
+                autoComplete="off"
+                dir="auto"
+                maxLength={30}
+                className="h-12 text-start"
+                value={form.parentId}
+                onChange={(event) => set("parentId", event.target.value)}
+                aria-invalid={errors.parentId ? true : undefined}
+              />
+              {error("parentId") ?? (
+                <FieldDescription>{t("students.parentIdHint")}</FieldDescription>
+              )}
             </Field>
           </div>
 

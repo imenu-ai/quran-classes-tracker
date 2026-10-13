@@ -49,6 +49,7 @@ Data belongs to a **center** (`tenantId`). Who may touch it is decided per user 
 - **Attendance carries `classId`** (its lesson's class, checked on push). Lessons and attendance never change class.
 - **Access changes resync the device.** Changing a member's classes or permissions bumps `accessVersion`. Sync responses carry it, and the engine rebuilds the local copy when it changes. When a student changes class, his homework is re-versioned, and teachers who lose him get a new `accessVersion`.
 - **The client only hides.** `useAccess()` (`src/client/access.ts`) shapes the UI; never rely on it for security.
+- **The parent page is the one server-read page (Phase 14).** `POST /api/parent` (`src/server/parent.ts`) finds a student by id in any center, checks the parent's ID number (`Student.parentId`, stored as entered, read through `normalizeParentId`) or the remembered-phone cookie, and builds the month from MongoDB inside that student's center (`createTenantRepositories`). It uses the same pure builders as the screens and the printout (`src/domain/stats/month-sheet.ts`), so a change to what a month shows belongs there. Keep its response free of ids and notes, and keep its rate limits (`src/server/rate-limit.ts`).
 
 ## Rules, and why they matter
 

@@ -13,6 +13,8 @@ export interface StudentInput {
   birthYear: number | undefined;
   note: string;
   memorizationDirection: MemorizationDirection;
+  /** The parent's ID number, normalized ("" when not set). */
+  parentId: string;
 }
 
 export function sortByName(students: StudentRecord[], locale: string): StudentRecord[] {

@@ -110,6 +110,7 @@ describe("SyncEngine", () => {
       birthYear: 2014,
       note: "",
       memorizationDirection: "forward",
+      parentId: "",
       archivedAt: null,
     });
     const homework = await store.create("homework", {

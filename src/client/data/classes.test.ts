@@ -55,6 +55,7 @@ describe("class actions", () => {
       birthYear: 2014,
       note: "",
       memorizationDirection: "forward",
+      parentId: "",
       archivedAt: null,
     });
 

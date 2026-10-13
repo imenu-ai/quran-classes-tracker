@@ -117,6 +117,11 @@ The CLI scripts read `.env.local` then `.env`; variables already set in the shel
   - From the student page: open the month table, then "طباعة الشهر" (the month shown).
   - From the class statistics: "طباعة كشوف الطلاب", then pick the month (the one shown there, else the current month) and the students ("تحديد الكل" selects or clears them all). It makes one document with a page per student.
   - The print page shows the sheets; "طباعة / حفظ PDF" opens the device's print dialog, which prints them or saves a PDF ("Save as PDF", or Share → Save to Files on iPhone). It works offline.
+- **The parent link.** Each student has a link for his parent, who opens it with his **ID number** (رقم الهوية); no account needed.
+  - Set the parent's ID number in the student's "تعديل البيانات" (users who can manage students). Digits only, 5–20; Arabic digits are fine. Siblings can share the same number.
+  - Hand the link out from the student menu, "رابط ولي الأمر" (copy, share or its QR code), or print the month: every printed sheet carries the link as a QR code.
+  - The parent sees what the printed sheet shows, for the current month or any other: homework and exams with their marks, absences and postponements, the averages and counts.
+  - The phone is remembered for 30 days; "خروج من هذا الجهاز" forgets it. Without a parent ID, the link says it isn't valid. The page needs a connection (it reads from the server).
 - **Lessons** still exist in the data (one per class per day), but the teacher never manages them: today's is created the first time something is recorded.
 
 ## Architecture in short
@@ -310,6 +315,14 @@ aws cloudformation describe-stacks --region eu-central-1 \
 - [ ] Optional: a custom domain. Put it into `BETTER_AUTH_URL` and redeploy.
 
 **If the build fails at the start** asking for `AMPLIFY_MONOREPO_APP_ROOT` (the build spec uses the `applications:` / `appRoot: .` form), add that app environment variable with the value `.` in `infra/amplify-stack.yml`, next to `APP_SECRET_ARN`.
+
+**The parent link's protection.** The parent page (`/parent?s=<studentId>`, `POST /api/parent`) has no account. The parent's ID number is the secret:
+
+- It's stored as entered (not hashed), by decision, so it can be compared and shown to whoever edits the student. It's synced to the devices of the student's teachers like his other fields.
+- Wrong numbers are limited to 10 per IP per 15 minutes and 30 per student per day. Past either limit, even the right number is refused until the window ends. All parent requests are limited to 60 per IP per 15 minutes.
+- An unknown, deleted or unset student all answer "not valid" alike.
+- The right number sets an HttpOnly cookie for 30 days (an HMAC of the student and his parent ID with `BETTER_AUTH_SECRET`). Changing the parent ID ends every remembered phone.
+- The page shows names, dates, portions and marks only: no ids, no teacher's notes. The IP comes from `x-forwarded-for`, so the CloudFront note below applies here too.
 
 **Sign-in rate limit behind CloudFront.** Sign-in is limited to 5 attempts a minute per client IP, taken from `x-forwarded-for`. Behind Amplify that header may carry a chain of IPs (`client, proxy`). Better Auth then finds no IP, and every user shares one bucket. That fails safe, but one person mistyping could briefly lock everyone out. After the first deploy:
 

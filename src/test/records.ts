@@ -32,6 +32,7 @@ export const studentRecord = (
   birthYear: 2014,
   note: "",
   memorizationDirection: "forward",
+  parentId: "",
   archivedAt: null,
   ...overrides,
 });

@@ -13,6 +13,7 @@ import { useAccess } from "@/client/access";
 import { useApp } from "@/client/app-context";
 import { usePrintSheets } from "@/client/data/print";
 import { todayInTimeZone } from "@/domain/dates/local-date";
+import { parentLink } from "@/shared/parent";
 import { MonthSheet } from "./month-sheet";
 
 /** An A4 sheet's width in CSS pixels (210 mm at 96 dpi). */
@@ -153,6 +154,7 @@ export function PrintView({
               userName={session.name}
               month={month!}
               printedOn={printedOn}
+              parentUrl={parentLink(window.location.origin, sheet.student.id)}
             />
           </div>
         ))}

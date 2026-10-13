@@ -1,6 +1,13 @@
 "use client";
 
-import { Archive, ArchiveRestore, ArrowLeftRight, EllipsisVertical, Pencil } from "lucide-react";
+import {
+  Archive,
+  ArchiveRestore,
+  ArrowLeftRight,
+  EllipsisVertical,
+  Link2,
+  Pencil,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -25,15 +32,17 @@ import { useApp } from "@/client/app-context";
 import { archiveStudent, unarchiveStudent } from "@/client/data/students";
 import type { StudentRecord } from "@/shared/schemas/student";
 import { MoveStudentDialog } from "./move-student-dialog";
+import { ParentLinkDrawer } from "./parent-link-drawer";
 import { StudentFormDrawer } from "./student-form-drawer";
 
-/** Edit / move / archive / restore a student. */
+/** Edit / move / archive / restore a student, and his parent link. */
 export function StudentActionsMenu({ student }: { student: StudentRecord }) {
   const t = useTranslations();
   const { store } = useApp();
   const [editing, setEditing] = useState(false);
   const [moving, setMoving] = useState(false);
   const [archiving, setArchiving] = useState(false);
+  const [linking, setLinking] = useState(false);
   const archived = student.archivedAt !== null;
 
   async function archive() {
@@ -64,6 +73,10 @@ export function StudentActionsMenu({ student }: { student: StudentRecord }) {
             <Pencil aria-hidden />
             {t("students.edit")}
           </DropdownMenuItem>
+          <DropdownMenuItem className="min-h-11" onSelect={() => setLinking(true)}>
+            <Link2 aria-hidden />
+            {t("parentLink.menu")}
+          </DropdownMenuItem>
           <DropdownMenuItem className="min-h-11" onSelect={() => setMoving(true)}>
             <ArrowLeftRight aria-hidden />
             {t("students.move")}
@@ -93,6 +106,7 @@ export function StudentActionsMenu({ student }: { student: StudentRecord }) {
         existing={student}
       />
       <MoveStudentDialog student={student} open={moving} onOpenChange={setMoving} />
+      <ParentLinkDrawer open={linking} onOpenChange={setLinking} student={student} />
       <AlertDialog open={archiving} onOpenChange={setArchiving}>
         <AlertDialogContent>
           <AlertDialogHeader>

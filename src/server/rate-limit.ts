@@ -57,3 +57,26 @@ export async function consumeRateLimit(
   );
   return (doc?.count ?? 1) <= rule.max;
 }
+
+/** Says whether `key` has used up `rule` in its current window, without counting a request. */
+export async function isRateLimited(
+  db: Db,
+  key: string,
+  rule: RateRule,
+  now: number = Date.now(),
+): Promise<boolean> {
+  const doc = await db
+    .collection<RateLimitDoc>(COLLECTIONS.rateLimits)
+    .findOne({ key: `app:${key}` });
+  if (!doc || doc.windowStart < now - rule.window * 1000) return false;
+  return doc.count >= rule.max;
+}
+
+/** The parent page: every request per IP (opening it, changing the month). */
+export const PARENT_RATE_LIMIT: RateRule = { window: 15 * 60, max: 60 };
+
+/** Wrong parent ID numbers per IP, against guessing from one place. */
+export const PARENT_FAILURES_PER_IP: RateRule = { window: 15 * 60, max: 10 };
+
+/** Wrong parent ID numbers per student, against guessing from many places. */
+export const PARENT_FAILURES_PER_STUDENT: RateRule = { window: 24 * 60 * 60, max: 30 };

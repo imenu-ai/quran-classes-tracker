@@ -2,6 +2,7 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import { usePortionLabel } from "@/components/homework/use-portion-label";
+import { QrCode } from "@/components/qr-code";
 import type { MonthSheet as MonthSheetData } from "@/client/data/print";
 import { localDateToUtcDate } from "@/domain/dates/local-date";
 import { cn } from "@/lib/utils";
@@ -9,17 +10,19 @@ import { isExam } from "@/shared/schemas/homework";
 
 /**
  * Smaller text and tighter rows for longer months, so a month stays on one
- * A4 page: up to 28 rows as is, up to 40 dense, beyond that denser. (A month
- * longer still continues on a second page, its table header repeated.)
+ * page. The limits leave room for the smallest likely paper: iOS prints on
+ * its own paper (US Letter in some regions) with its own margins, about
+ * 250 mm of height. Up to 24 rows as is, up to 34 dense, then denser (fits
+ * about 43). A longer month continues on a second page, its header repeated.
  */
 function densityOf(rows: number) {
-  return rows > 40 ? "denser" : rows > 28 ? "dense" : "normal";
+  return rows > 34 ? "denser" : rows > 24 ? "dense" : "normal";
 }
 
 const DENSITY = {
-  normal: { sheet: "gap-4 text-[10pt]", cell: "py-1" },
-  dense: { sheet: "gap-3 text-[8.5pt] leading-snug", cell: "py-0.5" },
-  denser: { sheet: "gap-2 text-[7.5pt] leading-tight", cell: "py-px" },
+  normal: { sheet: "gap-3 text-[10pt]", cell: "py-0.5" },
+  dense: { sheet: "gap-2 text-[8.5pt] leading-snug", cell: "py-px" },
+  denser: { sheet: "gap-1.5 text-[7.5pt] leading-tight", cell: "py-px" },
 } as const;
 
 /**
@@ -34,6 +37,7 @@ export function MonthSheet({
   userName,
   month,
   printedOn,
+  parentUrl,
 }: {
   sheet: MonthSheetData;
   centerName: string;
@@ -43,6 +47,8 @@ export function MonthSheet({
   month: string;
   /** Today, "YYYY-MM-DD" in the center's time zone. */
   printedOn: string;
+  /** The student's parent link, printed as a QR code. */
+  parentUrl: string;
 }) {
   const t = useTranslations();
   const format = useFormatter();
@@ -64,39 +70,50 @@ export function MonthSheet({
 
   return (
     <article className={cn("print-sheet flex flex-col bg-white text-neutral-900", density.sheet)}>
-      <header className="flex flex-col gap-1 border-b-2 border-neutral-800 pb-3">
-        <p dir="auto" className="text-[18pt] leading-tight font-bold">
-          {centerName}
-        </p>
-        <p className="text-[12pt] text-neutral-600">{t("print.title")}</p>
-      </header>
+      {/* The QR code sits beside the header and details: it adds little height. */}
+      <div className="flex items-start gap-4">
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <header className="flex flex-col border-b-2 border-neutral-800 pb-1.5">
+            <p dir="auto" className="text-[15pt] leading-tight font-bold">
+              {centerName}
+            </p>
+            <p className="text-[10.5pt] text-neutral-600">{t("print.title")}</p>
+          </header>
 
-      <dl className="grid grid-cols-2 gap-x-6 gap-y-1.5">
-        <div className="flex gap-2">
-          <dt className="text-neutral-600">{t("print.student")}:</dt>
-          <dd dir="auto" className="text-[13pt] leading-tight font-bold">
-            {sheet.student.fullName}
-          </dd>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-0.5">
+            <div className="flex gap-2">
+              <dt className="text-neutral-600">{t("print.student")}:</dt>
+              <dd dir="auto" className="text-[12pt] leading-tight font-bold">
+                {sheet.student.fullName}
+              </dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="text-neutral-600">{t("print.month")}:</dt>
+              <dd className="font-semibold">
+                {format.dateTime(new Date(`${month}-01T00:00:00Z`), "month")}
+              </dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="text-neutral-600">{t("print.class")}:</dt>
+              <dd dir="auto" className="font-semibold">
+                {className}
+              </dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="text-neutral-600">{t("print.preparedBy")}:</dt>
+              <dd dir="auto" className="font-semibold">
+                {userName}
+              </dd>
+            </div>
+          </dl>
         </div>
-        <div className="flex gap-2">
-          <dt className="text-neutral-600">{t("print.month")}:</dt>
-          <dd className="font-semibold">
-            {format.dateTime(new Date(`${month}-01T00:00:00Z`), "month")}
-          </dd>
-        </div>
-        <div className="flex gap-2">
-          <dt className="text-neutral-600">{t("print.class")}:</dt>
-          <dd dir="auto" className="font-semibold">
-            {className}
-          </dd>
-        </div>
-        <div className="flex gap-2">
-          <dt className="text-neutral-600">{t("print.preparedBy")}:</dt>
-          <dd dir="auto" className="font-semibold">
-            {userName}
-          </dd>
-        </div>
-      </dl>
+        <figure className="flex w-[22mm] shrink-0 flex-col items-center gap-0.5">
+          <QrCode value={parentUrl} label={t("print.qrCaption")} className="size-[20mm]" />
+          <figcaption className="text-center text-[7pt] leading-tight text-neutral-600">
+            {t("print.qrCaption")}
+          </figcaption>
+        </figure>
+      </div>
 
       <table className="w-full table-fixed border-collapse">
         <colgroup>
@@ -107,16 +124,16 @@ export function MonthSheet({
         </colgroup>
         <thead className="bg-neutral-100">
           <tr>
-            <th scope="col" className="border border-neutral-400 px-2 py-1.5 text-start">
+            <th scope="col" className="border border-neutral-400 px-2 py-1 text-start">
               {t("profile.dateHeader")}
             </th>
-            <th scope="col" className="border border-neutral-400 px-2 py-1.5 text-start">
+            <th scope="col" className="border border-neutral-400 px-2 py-1 text-start">
               {t("glossary.homework")}
             </th>
-            <th scope="col" className="border border-neutral-400 px-1 py-1.5 text-center">
+            <th scope="col" className="border border-neutral-400 px-1 py-1 text-center">
               {t("profile.memorizationShort")}
             </th>
-            <th scope="col" className="border border-neutral-400 px-1 py-1.5 text-center">
+            <th scope="col" className="border border-neutral-400 px-1 py-1 text-center">
               {t("profile.behaviorShort")}
             </th>
           </tr>
@@ -194,36 +211,33 @@ export function MonthSheet({
         </tbody>
         <tfoot className="bg-neutral-100 font-bold">
           <tr>
-            <th
-              scope="row"
-              colSpan={2}
-              className="border border-neutral-400 px-2 py-1.5 text-start"
-            >
+            <th scope="row" colSpan={2} className="border border-neutral-400 px-2 py-1 text-start">
               {t("profile.average")}
             </th>
-            <td className="border border-neutral-400 px-1 py-1.5 text-center tabular-nums">
+            <td className="border border-neutral-400 px-1 py-1 text-center tabular-nums">
               {average(sheet.memorizationAverage)}
             </td>
-            <td className="border border-neutral-400 px-1 py-1.5 text-center tabular-nums">
+            <td className="border border-neutral-400 px-1 py-1 text-center tabular-nums">
               {average(sheet.behaviorAverage)}
             </td>
           </tr>
         </tfoot>
       </table>
 
-      <dl className="grid grid-cols-3 gap-2">
+      {/* One row of six, to leave the page to the table. */}
+      <dl className="grid grid-cols-6 gap-1.5">
         {counts.map(([name, value]) => (
           <div
             key={name}
-            className="flex items-center justify-between gap-2 rounded border border-neutral-400 px-2 py-1.5"
+            className="flex flex-col items-center rounded border border-neutral-400 px-1 py-0.5 text-center"
           >
-            <dt className="text-neutral-600">{name}</dt>
-            <dd className="text-[1.15em] font-bold tabular-nums">{value}</dd>
+            <dt className="text-[0.85em] leading-tight text-neutral-600">{name}</dt>
+            <dd className="text-[1.15em] leading-tight font-bold tabular-nums">{value}</dd>
           </div>
         ))}
       </dl>
 
-      <footer className="mt-auto flex justify-between border-t border-neutral-300 pt-2 text-[8pt] text-neutral-500">
+      <footer className="mt-auto flex justify-between border-t border-neutral-300 pt-1 text-[8pt] text-neutral-500">
         <span>{t("app.name")}</span>
         <span>
           {t("print.printedOn")}: {format.dateTime(localDateToUtcDate(printedOn), "lessonDate")}

@@ -22,6 +22,7 @@ const input = (overrides: Partial<StudentInput> = {}): StudentInput => ({
   birthYear: 2014,
   note: "",
   memorizationDirection: "forward",
+  parentId: "",
   ...overrides,
 });
 
@@ -42,6 +43,14 @@ describe("student actions", () => {
 
   afterEach(async () => {
     await db.delete();
+  });
+
+  it("saves the parent ID, and rejects one that isn't 5–20 digits", async () => {
+    const student = await createStudent(store, input({ parentId: "123456789" }));
+    expect((await db.students.get(student.id))?.parentId).toBe("123456789");
+    expect(await codes(createStudent(store, input({ parentId: "12" })))).toEqual([
+      "parentId:INVALID_FORMAT",
+    ]);
   });
 
   it("creates a student (trimmed name, not archived) and queues it", async () => {

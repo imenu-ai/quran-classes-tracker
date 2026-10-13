@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { attendanceRecord, homeworkRecord, lessonRecord } from "@/test/records";
-import { buildMonthHistory } from "./profile";
+import { buildMonthHistory } from "./month-sheet";
 
 const CLASS = "01928c5e-7b3a-7cde-8f00-0000000000c1";
 const STUDENT = "01928c5e-7b3a-7cde-8f00-00000000bb01";
