@@ -2,6 +2,7 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import { usePortionLabel } from "@/components/homework/use-portion-label";
+import { QrCode } from "@/components/qr-code";
 import type { MonthSheet as MonthSheetData } from "@/client/data/print";
 import { localDateToUtcDate } from "@/domain/dates/local-date";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ export function MonthSheet({
   userName,
   month,
   printedOn,
+  parentUrl,
 }: {
   sheet: MonthSheetData;
   centerName: string;
@@ -45,6 +47,8 @@ export function MonthSheet({
   month: string;
   /** Today, "YYYY-MM-DD" in the center's time zone. */
   printedOn: string;
+  /** The student's parent link, printed as a QR code. */
+  parentUrl: string;
 }) {
   const t = useTranslations();
   const format = useFormatter();
@@ -66,39 +70,50 @@ export function MonthSheet({
 
   return (
     <article className={cn("print-sheet flex flex-col bg-white text-neutral-900", density.sheet)}>
-      <header className="flex flex-col border-b-2 border-neutral-800 pb-1.5">
-        <p dir="auto" className="text-[15pt] leading-tight font-bold">
-          {centerName}
-        </p>
-        <p className="text-[10.5pt] text-neutral-600">{t("print.title")}</p>
-      </header>
+      {/* The QR code sits beside the header and details: it adds little height. */}
+      <div className="flex items-start gap-4">
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <header className="flex flex-col border-b-2 border-neutral-800 pb-1.5">
+            <p dir="auto" className="text-[15pt] leading-tight font-bold">
+              {centerName}
+            </p>
+            <p className="text-[10.5pt] text-neutral-600">{t("print.title")}</p>
+          </header>
 
-      <dl className="grid grid-cols-2 gap-x-6 gap-y-0.5">
-        <div className="flex gap-2">
-          <dt className="text-neutral-600">{t("print.student")}:</dt>
-          <dd dir="auto" className="text-[12pt] leading-tight font-bold">
-            {sheet.student.fullName}
-          </dd>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-0.5">
+            <div className="flex gap-2">
+              <dt className="text-neutral-600">{t("print.student")}:</dt>
+              <dd dir="auto" className="text-[12pt] leading-tight font-bold">
+                {sheet.student.fullName}
+              </dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="text-neutral-600">{t("print.month")}:</dt>
+              <dd className="font-semibold">
+                {format.dateTime(new Date(`${month}-01T00:00:00Z`), "month")}
+              </dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="text-neutral-600">{t("print.class")}:</dt>
+              <dd dir="auto" className="font-semibold">
+                {className}
+              </dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="text-neutral-600">{t("print.preparedBy")}:</dt>
+              <dd dir="auto" className="font-semibold">
+                {userName}
+              </dd>
+            </div>
+          </dl>
         </div>
-        <div className="flex gap-2">
-          <dt className="text-neutral-600">{t("print.month")}:</dt>
-          <dd className="font-semibold">
-            {format.dateTime(new Date(`${month}-01T00:00:00Z`), "month")}
-          </dd>
-        </div>
-        <div className="flex gap-2">
-          <dt className="text-neutral-600">{t("print.class")}:</dt>
-          <dd dir="auto" className="font-semibold">
-            {className}
-          </dd>
-        </div>
-        <div className="flex gap-2">
-          <dt className="text-neutral-600">{t("print.preparedBy")}:</dt>
-          <dd dir="auto" className="font-semibold">
-            {userName}
-          </dd>
-        </div>
-      </dl>
+        <figure className="flex w-[22mm] shrink-0 flex-col items-center gap-0.5">
+          <QrCode value={parentUrl} label={t("print.qrCaption")} className="size-[20mm]" />
+          <figcaption className="text-center text-[7pt] leading-tight text-neutral-600">
+            {t("print.qrCaption")}
+          </figcaption>
+        </figure>
+      </div>
 
       <table className="w-full table-fixed border-collapse">
         <colgroup>

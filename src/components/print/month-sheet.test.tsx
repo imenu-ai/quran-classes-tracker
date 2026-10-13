@@ -53,6 +53,7 @@ function renderSheet(month: string) {
       userName="الأستاذ محمد"
       month={month}
       printedOn="2026-10-13"
+      parentUrl={`https://app.test/parent?s=${student.id}`}
     />,
   );
 }
@@ -68,6 +69,12 @@ describe("MonthSheet", () => {
     expect(sheet.textContent).toContain("أكتوبر 2026");
     expect(sheet.textContent).toContain("الأستاذ محمد");
     expect(sheet.textContent).toContain("13 أكتوبر 2026");
+  });
+
+  it("carries a QR code of the student's parent link", () => {
+    renderSheet("2026-10");
+    const qr = screen.getByRole("img", { name: "تابع تقدّم ابنك" });
+    expect(qr.getAttribute("data-qr-value")).toBe(`https://app.test/parent?s=${student.id}`);
   });
 
   it("lists the month oldest first, the exam marked, and averages without it", () => {

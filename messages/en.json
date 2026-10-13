@@ -505,7 +505,8 @@
     "students": "Students",
     "selectAll": "Select all",
     "selectedCount": "{selected} of {total}",
-    "show": "Show for printing"
+    "show": "Show for printing",
+    "qrCaption": "Follow your child's progress"
   },
   "parent": {
     "title": "Student progress",
@@ -522,5 +523,17 @@
     "error": "Couldn't load the data. Try again.",
     "retry": "Try again",
     "forget": "Sign out on this device"
+  },
+  "parentLink": {
+    "menu": "Parent link",
+    "title": "Parent link",
+    "hint": "The parent opens this link with his ID number to follow the student's homework, exams and marks. The same code is printed on the month sheet.",
+    "notSet": "No parent ID number yet, so the link won't work. Add it in “Edit details”.",
+    "qr": "QR code of the parent link",
+    "copy": "Copy link",
+    "copied": "Link copied",
+    "copyFailed": "Couldn't copy. Copy the link by hand.",
+    "share": "Share",
+    "shareTitle": "Following {name}"
   }
 }
