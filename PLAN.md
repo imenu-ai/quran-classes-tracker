@@ -1,4 +1,4 @@
-# Implementation Plan: Quran Memorization Tracker (متابعة تحفيظ القرآن)
+# Implementation Plan: Quran Memorization (تحفيظ القرآن)
 
 Status: **Phase 1 done (the PWA, deployed on Amplify). Phase 2 (React Native app) planned, waiting for the go-ahead.** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-22
 
@@ -22,7 +22,7 @@ Agreed with the user from 2026-10-05 on; the date marks when a group was added.
 | 8 | Archiving a class | Blocked while it has active students. The teacher moves or archives them first ("archive all" shortcut). Lessons, homework and attendance can be soft-deleted after a confirmation. |
 | 9 | Locale | No locale in the URL. Read `user.locale` → copied to the `NEXT_LOCALE` cookie at login → default `ar`. Only `ar` is enabled; `en.json`, the key-parity test and the LTR smoke test are kept (`ENABLED_LOCALES=ar`). |
 | 10 | Wording | Neutral wording where possible, masculine default. |
-| 11 | Branding | Name "متابعة تحفيظ القرآن" (becomes "تحفيظ القرآن" in 2.1, #46), calm green/teal theme, simple generated icon. |
+| 11 | Branding | Name "تحفيظ القرآن" (was "متابعة تحفيظ القرآن" until 2.1, #46), calm green/teal theme, simple generated icon. |
 | 12 | Auth | Better Auth + username plugin; argon2id hashes. |
 | 13 | Session length | **400 days** (the browser cap on cookie lifetime), renewed daily while used. |
 | 14 | Devices | **Multiple devices expected** (iPhone first; also Android, iPad, Android tablets, laptops). |
@@ -405,7 +405,7 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
 
 **Verification per step:** `pnpm lint && pnpm typecheck && pnpm test` from the root runs every workspace package. Web steps also run `pnpm build` and the web E2E suite. Mobile UI steps are checked on the Android emulator (Claude) and on your iPhone/iPad dev build (you), at 360 dp in RTL, light and dark.
 
-- [ ] **2.1 Rename to "تحفيظ القرآن".** Messages (`ar`/`en`), PWA manifest, page titles, printed sheet header, README and this file's title. Installed PWAs keep the old name until re-added; that's acceptable (#46).
+- [x] **2.1 Rename to "تحفيظ القرآن".** Messages (`ar`/`en`), PWA manifest, page titles, printed sheet header, README and this file's title. Installed PWAs keep the old name until re-added; that's acceptable (#46).
 - [ ] **2.2 Monorepo with `apps/web`.**
   - pnpm workspace; move the Next.js app, its configs, `e2e/` and `scripts/` into `apps/web`. `infra/`, `.github/` and the docs stay at the root.
   - Amplify build spec: `appRoot: apps/web` and `AMPLIFY_MONOREPO_APP_ROOT`; install only the web app's dependencies (`--filter`), still with the hoisted `node-linker`. CI runs lint and typecheck across the workspace.
@@ -493,3 +493,4 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
 - 2026-10-13 (1.14): after a failure limit is reached, even the right ID is refused until the window ends. The cookie is per student and refreshed on each visit. The printed QR sits beside the header so sheets keep one page; jsQR decoded it back to the link.
 - 2026-10-22: the plan was condensed: the 14 phases became Phase 1, and Phase 2 (React Native app) was added, to be planned.
 - 2026-10-22 (Phase 2 planned, with the user): option (b) for native components (#44), the PWA kept (#45), strict parity, registration in the app with deletion before release (#50), App Store first, the new name and `ai.imenu.quran` (#46), the `apps/web` monorepo (#47). Expo SDK 56 (May 2026, React Native 0.85) is the latest confirmed release; a later one is pinned in 2.5 if it's out.
+- 2026-10-22 (2.1): only the shown name changed (`app.*` messages, the reset email subject, README, examples). Internal `qct` ids stay (database names, the `qct.session_token` cookie, storage keys): renaming them would sign everyone out and orphan local data. `BRIEF.md` keeps the original name. The deployed `EMAIL_FROM` lives in the Secrets Manager secret, so its sender name is the user's to change.

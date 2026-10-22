@@ -1,4 +1,4 @@
-# متابعة تحفيظ القرآن (quran-classes-tracker)
+# تحفيظ القرآن (quran-classes-tracker)
 
 An offline-first PWA for Quran memorization centers. Teachers record attendance, evaluate each student's recitation, assign the next homework and review monthly progress. Everything works without a connection and syncs when one is back.
 
@@ -259,7 +259,7 @@ Not deployed yet. Do these in order.
   "BETTER_AUTH_SECRET": "<new value from: openssl rand -base64 32>",
   "BETTER_AUTH_URL": "https://example.invalid",
   "ENABLED_LOCALES": "ar",
-  "EMAIL_FROM": "متابعة التحفيظ <no-reply@your-domain.com>"
+  "EMAIL_FROM": "تحفيظ القرآن <no-reply@your-domain.com>"
 }
 ```
 
