@@ -1,4 +1,5 @@
-export const E2E_PORT = 3100;
+/** Set E2E_PORT when 3100 is taken (e.g. by another project's server). */
+export const E2E_PORT = Number(process.env.E2E_PORT || 3100);
 export const E2E_BASE_URL = `http://localhost:${E2E_PORT}`;
 export const E2E_PASSWORD = "e2e-password-123";
 

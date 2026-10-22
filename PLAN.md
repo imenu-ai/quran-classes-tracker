@@ -194,34 +194,38 @@ Response: `{ results: [{ id, status: 'applied' | 'stale' | 'rejected', code?, pa
 
 ## 3. Folder structure
 
+A pnpm workspace since 2.2 (`pnpm-workspace.yaml`, `.npmrc` with `node-linker=hoisted`). Root scripts pass through to the packages.
+
 ```
 .
 ├── BRIEF.md · PLAN.md · README.md · CLAUDE.md · LICENSE
-├── messages/            ar.json · en.json
-├── scripts/             center-create.ts · db-indexes.ts · dev-seed.ts
-├── e2e/                 main-flow · offline · roles · parent · ltr-smoke specs; server.mts
+├── package.json         root scripts (pass-through) · Prettier
 ├── infra/               amplify-stack.yml · github-deploy-role.yml
 ├── .github/workflows/   ci.yml (lint + typecheck on PRs) · deploy-stack.yml
-└── src/
-    ├── app/
-    │   ├── layout.tsx · manifest.ts · sw.ts      html lang/dir, providers, PWA
-    │   ├── login · register · change-password · forgot-password · reset-password
-    │   ├── (app)/       home · class · class-stats · student · search · settings · users
-    │   ├── (print)/     print
-    │   ├── parent/      the parent page
-    │   └── api/         auth · sync/push · sync/pull · me · account · centers · center · parent
-    ├── domain/          PURE: quran (sura map, validation, search) · homework (suggestion,
-    │                    progress) · stats (monthly, class, month-sheet) · dates · text
-    ├── shared/          client + server: schemas · sync (protocol, lww, tables) · access ·
-    │                    ids · session · parent
-    ├── i18n/            config · direction · request · formats · error messages
-    ├── server/          env · db · indexes · auth · repositories · sync · centers · members ·
-    │                    parent · email (SES) · rate-limit
-    ├── client/          db (Dexie, LocalStore, outbox) · data (hooks and actions per entity) ·
-    │                    sync (engine, apply-pull, triggers, backoff) · session · auth · pwa
-    ├── components/      ui (shadcn, rtl) · shell · classes · students · homework · lessons ·
-    │                    print · parent · users · settings · auth · quran
-    └── test/            setup, fake-indexeddb, mongo-memory helpers
+└── apps/web/            the Next.js app, package @qct/web
+    ├── messages/            ar.json · en.json
+    ├── scripts/             center-create.ts · db-indexes.ts · dev-seed.ts
+    ├── e2e/                 main-flow · offline · roles · parent · ltr-smoke specs; server.mts
+    └── src/
+        ├── app/
+        │   ├── layout.tsx · manifest.ts · sw.ts      html lang/dir, providers, PWA
+        │   ├── login · register · change-password · forgot-password · reset-password
+        │   ├── (app)/       home · class · class-stats · student · search · settings · users
+        │   ├── (print)/     print
+        │   ├── parent/      the parent page
+        │   └── api/         auth · sync/push · sync/pull · me · account · centers · center · parent
+        ├── domain/          PURE: quran (sura map, validation, search) · homework (suggestion,
+        │                    progress) · stats (monthly, class, month-sheet) · dates · text
+        ├── shared/          client + server: schemas · sync (protocol, lww, tables) · access ·
+        │                    ids · session · parent
+        ├── i18n/            config · direction · request · formats · error messages
+        ├── server/          env · db · indexes · auth · repositories · sync · centers · members ·
+        │                    parent · email (SES) · rate-limit
+        ├── client/          db (Dexie, LocalStore, outbox) · data (hooks and actions per entity) ·
+        │                    sync (engine, apply-pull, triggers, backoff) · session · auth · pwa
+        ├── components/      ui (shadcn, rtl) · shell · classes · students · homework · lessons ·
+        │                    print · parent · users · settings · auth · quran
+        └── test/            setup, fake-indexeddb, mongo-memory helpers
 ```
 
 Tests sit next to the code as `*.test.ts(x)`. Server integration tests are `*.int.test.ts` and use `mongodb-memory-server`.
@@ -406,7 +410,7 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
 **Verification per step:** `pnpm lint && pnpm typecheck && pnpm test` from the root runs every workspace package. Web steps also run `pnpm build` and the web E2E suite. Mobile UI steps are checked on the Android emulator (Claude) and on your iPhone/iPad dev build (you), at 360 dp in RTL, light and dark.
 
 - [x] **2.1 Rename to "تحفيظ القرآن".** Messages (`ar`/`en`), PWA manifest, page titles, printed sheet header, README and this file's title. Installed PWAs keep the old name until re-added; that's acceptable (#46).
-- [ ] **2.2 Monorepo with `apps/web`.**
+- [x] **2.2 Monorepo with `apps/web`.**
   - pnpm workspace; move the Next.js app, its configs, `e2e/` and `scripts/` into `apps/web`. `infra/`, `.github/` and the docs stay at the root.
   - Amplify build spec: `appRoot: apps/web` and `AMPLIFY_MONOREPO_APP_ROOT`; install only the web app's dependencies (`--filter`), still with the hoisted `node-linker`. CI runs lint and typecheck across the workspace.
   - Update README, `CLAUDE.md` and the three skills for the new paths.
@@ -494,3 +498,7 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
 - 2026-10-22: the plan was condensed: the 14 phases became Phase 1, and Phase 2 (React Native app) was added, to be planned.
 - 2026-10-22 (Phase 2 planned, with the user): option (b) for native components (#44), the PWA kept (#45), strict parity, registration in the app with deletion before release (#50), App Store first, the new name and `ai.imenu.quran` (#46), the `apps/web` monorepo (#47). Expo SDK 56 (May 2026, React Native 0.85) is the latest confirmed release; a later one is pinned in 2.5 if it's out.
 - 2026-10-22 (2.1): only the shown name changed (`app.*` messages, the reset email subject, README, examples). Internal `qct` ids stay (database names, the `qct.session_token` cookie, storage keys, the planned `@qct/core`): they abbreviate the repo name, which doesn't change. The app has no real users yet, so later steps may wipe sessions and data freely. `BRIEF.md` keeps the original name. The deployed `EMAIL_FROM` lives in the Secrets Manager secret, so its sender name is the user's to change.
+- 2026-10-22 (2.2):
+  - Amplify's docs require a root `.npmrc` with `node-linker=hoisted` for a pnpm monorepo, so local installs are hoisted now too (before, only the Amplify build passed the flag). The build spec runs from the workspace root (`buildPath: /`) with `appRoot: apps/web`, the matching `AMPLIFY_MONOREPO_APP_ROOT` app variable, a `--filter "@qct/web..."` install, the secret written to `apps/web/.env`, and artifacts in `apps/web/.next`. The filtered, frozen-lockfile install and the build were rehearsed on a clean export of the commit.
+  - Root scripts pass through (`pnpm --filter @qct/web …` or `pnpm -r …`), so every documented command still runs from the root; CI needed no change. Prettier stays at the root for the whole workspace. Root-anchored ignore patterns moved to `apps/web/.gitignore`.
+  - `E2E_PORT` overrides the E2E port: another project's `next start` held 3100 on this machine.

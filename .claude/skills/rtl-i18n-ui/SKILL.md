@@ -3,6 +3,8 @@ name: rtl-i18n-ui
 description: How to build UI in quran-classes-tracker so it stays Arabic-first, RTL and LTR at once, translated, mobile-first (iPhone) and offline-safe — next-intl messages (ar/en parity, glossary, error codes), logical Tailwind classes, DirectionalIcon, Intl date/number formats, shadcn/ui direction fixes, 360 px layouts. Use it whenever you create or change a component, page, dialog, sheet, form, toast, chart, label or any user-facing text, or fix a layout/overflow/direction bug, even for a "small" button or wording change.
 ---
 
+> Paths in this skill (`src/…`, `e2e/…`, `scripts/…`, `messages/…`) are relative to the web app, `apps/web/`. Run `pnpm` scripts from the repo root.
+
 # UI in this app: Arabic-first, RTL and LTR, phone-first
 
 Users see Arabic, written right to left. English (`messages/en.json`) is built, hidden and tested, so every screen must work in both directions without code changes. The main user is a teacher on an iPhone in the middle of a lesson: large tap targets, nothing that scrolls sideways, and it must keep working offline. The binding rules are in `BRIEF.md` §2 (i18n and direction) and §3 (the Arabic glossary).

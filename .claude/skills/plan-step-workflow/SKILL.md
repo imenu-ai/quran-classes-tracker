@@ -3,6 +3,8 @@ name: plan-step-workflow
 description: How work is planned, verified, committed and reported in the quran-classes-tracker repo (PLAN.md phases and steps, lint/type-check/tests, Conventional Commits on dev, never pushing). Use it whenever you implement a feature, fix a bug, start or finish a phase or step, change PLAN.md, commit, or run the app or its tests to check a change, even if the user only says "implement phase N", "fix this", "commit it" or "check it works".
 ---
 
+> Paths in this skill (`src/…`, `e2e/…`, `scripts/…`, `messages/…`) are relative to the web app, `apps/web/`. Run `pnpm` scripts from the repo root.
+
 # Working on a plan step
 
 This repo is built in phases. `PLAN.md` at the root is the source of truth: decisions (§0), architecture (§2), data model (§4), phases and steps (§6), and a dated change log (§7). `BRIEF.md` is the original product brief; read the relevant sections when a step touches product behaviour.
@@ -48,7 +50,7 @@ At the end of a phase: stop, summarize what was done and what's open, and wait f
 - **Port 3000 belongs to the user's `pnpm dev`.** Don't stop or reuse it.
 - For your own server, use another port and dist directory, so the two never share `.next`:
   ```sh
-  NEXT_DIST_DIR=.next-check pnpm exec next dev -p 3001
+  NEXT_DIST_DIR=.next-check pnpm --filter @qct/web exec next dev -p 3001
   ```
   For offline or service-worker behaviour you need a production build: `next build` and then `next start` with the same `NEXT_DIST_DIR`. The service worker is disabled in development.
 - **Local login:** center code + `demo` / `demo-password-123`.
@@ -70,6 +72,7 @@ Notes:
 
 - **Run it in the background.** A full run, build included, takes about 3–5 minutes.
 - **`SKIP_E2E_BUILD=1`** reuses the last build when only `e2e/` changed. Rebuild after any app change.
+- **`E2E_PORT`** moves the server off 3100, which another project on this machine may hold (Playwright then refuses to start).
 - **Projects:** iPhone 15 (WebKit), Pixel 7 and Desktop Chrome. The offline spec runs on Chromium only.
 - **Accounts:** one per spec and project (`e2e/accounts.ts`). Each browser context gets its own `x-forwarded-for`, so sign-ins don't share a rate-limit bucket.
 - **Arabic text in specs** comes from `messages/ar.json` via the `ar` export in `e2e/fixtures.ts`. Never hard-code UI strings.

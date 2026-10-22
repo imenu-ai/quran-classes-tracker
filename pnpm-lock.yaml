@@ -7,6 +7,15 @@ settings:
 importers:
 
   .:
+    devDependencies:
+      prettier:
+        specifier: ^3.9.9
+        version: 3.9.9
+      prettier-plugin-tailwindcss:
+        specifier: ^0.8.1
+        version: 0.8.1(prettier@3.9.9)
+
+  apps/web:
     dependencies:
       '@aws-sdk/client-sesv2':
         specifier: ^3.1149.0
@@ -129,12 +138,6 @@ importers:
       mongodb-memory-server:
         specifier: ^11.3.0
         version: 11.3.0(socks@2.8.10)
-      prettier:
-        specifier: ^3.9.9
-        version: 3.9.9
-      prettier-plugin-tailwindcss:
-        specifier: ^0.8.1
-        version: 0.8.1(prettier@3.9.9)
       serwist:
         specifier: ^9.5.13
         version: 9.5.13(browserslist@4.29.3)(typescript@5.9.3)

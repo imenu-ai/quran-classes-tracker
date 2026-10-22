@@ -23,6 +23,8 @@ The product brief is in [BRIEF.md](BRIEF.md). The full design (decisions, sync p
 
 Node 22 (see `.nvmrc`) and pnpm 10 (pinned in `package.json`; run `corepack enable` once).
 
+**Repo layout.** A pnpm workspace: the web app (package `@qct/web`) lives in `apps/web`; the React Native app will join it as `apps/mobile`, with shared code in `packages/` (PLAN.md, Phase 2). Run every command below from the repo root: the root scripts pass them on to the web app. `.npmrc` sets `node-linker=hoisted`, which Amplify needs for a pnpm monorepo.
+
 ## Local setup
 
 1. **Install a local MongoDB** (Community Server) and start it. The default URI is `mongodb://localhost:27017`. No Docker needed.
@@ -31,9 +33,9 @@ Node 22 (see `.nvmrc`) and pnpm 10 (pinned in `package.json`; run `corepack enab
    corepack enable
    pnpm install
    ```
-3. **Create `.env.local`** from the example and set a real secret:
+3. **Create `apps/web/.env.local`** from the example and set a real secret:
    ```sh
-   cp .env.example .env.local
+   cp apps/web/.env.example apps/web/.env.local
    # BETTER_AUTH_SECRET: 32+ random characters, e.g. `openssl rand -base64 32`
    ```
    | Variable             | Meaning                                                      |
@@ -79,7 +81,7 @@ The service worker is **off in development**. To try offline behaviour on your m
 | `pnpm center:create`                | Create a center and its admin (prints the center code)                   |
 | `pnpm dev:seed`                     | Fill a teacher's tenant with sample data                                 |
 
-The CLI scripts read `.env.local` then `.env`; variables already set in the shell win. To run one against Atlas, set `MONGODB_URI` in the shell.
+The CLI scripts read `apps/web/.env.local` then `apps/web/.env`; variables already set in the shell win. To run one against Atlas, set `MONGODB_URI` in the shell.
 
 ## Centers, users and sign-in
 
@@ -142,7 +144,7 @@ Service worker: cached assets and page shells
 - **Deterministic IDs** for lessons (class + date) and attendance (lesson + student), so two devices offline create the same record instead of duplicates.
 - **Pushes go parents first** (classes, students, lessons, attendance, homework), so a change never reaches the server before a record it refers to.
 - **Routes use query parameters** (`/class?id=…`, `/student?id=…`), so one cached page shell serves every class and student offline. Pages hold no data; only the API checks the session.
-- **Code layout:**
+- **Code layout** (under `apps/web`):
   - `src/domain`: pure logic (sura map and validation, homework suggestion, monthly stats, dates).
   - `src/shared`: schemas and the sync protocol, used by client and server.
   - `src/server`: Mongo, auth, sync services.
@@ -151,7 +153,7 @@ Service worker: cached assets and page shells
 
 ## i18n and direction rules
 
-- All text lives in `messages/ar.json` (and `messages/en.json`). Domain and server code return error **codes**, never text.
+- All text lives in `apps/web/messages/ar.json` (and `en.json`). Domain and server code return error **codes**, never text.
 - Use **logical** Tailwind classes only (`ms-`, `pe-`, `start-`, `text-start`, …). `pnpm lint` fails on physical ones (`ml-`, `right-`, `text-left`, …) and on literal `dir="rtl"` / `dir="ltr"`.
 - Icons that point a direction (back, next) go through `DirectionalIcon`, which mirrors them in RTL.
 - Numbers use Latin digits and dates the Gregorian calendar, via the locale tag `ar-u-ca-gregory-nu-latn`. Inputs accept Arabic-Indic digits too.
@@ -164,11 +166,11 @@ pnpm test        # unit + integration (mongodb-memory-server downloads a MongoDB
 pnpm test:e2e    # end-to-end
 ```
 
-`pnpm test:e2e` starts its own environment (`e2e/server.mts`). Your local database and dev server are not touched.
+`pnpm test:e2e` starts its own environment (`apps/web/e2e/server.mts`). Your local database and dev server are not touched.
 
 1. An in-memory MongoDB with fresh test accounts.
 2. A production build in `.next-e2e`.
-3. That build served on port 3100.
+3. That build served on port 3100 (set `E2E_PORT` if that port is taken).
 
 To reuse the last build: `SKIP_E2E_BUILD=1 pnpm test:e2e`.
 
@@ -179,7 +181,7 @@ To reuse the last build: `SKIP_E2E_BUILD=1 pnpm test:e2e`.
 | `roles`     | an admin registers, creates classes and a teacher with limited access; the teacher's forced password change, restricted view, reassignment and disabling | all three                                                                |
 | `ltr-smoke` | every main screen in English: `dir="ltr"` and no horizontal overflow at 360 px                                                                           | all three                                                                |
 
-The first time, install the browsers with `pnpm exec playwright install`. Playwright's WebKit on Windows is close to iOS Safari but not identical, so check on a real iPhone before a release (next section).
+The first time, install the browsers with `pnpm --filter @qct/web exec playwright install`. Playwright's WebKit on Windows is close to iOS Safari but not identical, so check on a real iPhone before a release (next section).
 
 ## Testing on an iPhone
 
@@ -188,7 +190,7 @@ Service workers, installing to the home screen and offline mode all need **HTTPS
 - **An Amplify branch deployment** (closest to production).
 - **A tunnel to a local production build.** For example, with Cloudflare's `cloudflared`:
   1. In one terminal: `cloudflared tunnel --url http://localhost:3000`. It prints a `https://….trycloudflare.com` URL.
-  2. Set `BETTER_AUTH_URL` in `.env.local` to that URL. Otherwise sign-in is rejected as coming from an unknown origin.
+  2. Set `BETTER_AUTH_URL` in `apps/web/.env.local` to that URL. Otherwise sign-in is rejected as coming from an unknown origin.
   3. In another terminal: `pnpm build && pnpm start` (stop `pnpm dev` first; both use port 3000).
 
   A quick tunnel gets a new URL each time, so repeat step 2 after restarting it.
@@ -231,7 +233,7 @@ Production runs on **AWS Amplify Hosting** (Next.js SSR, region `eu-central-1`) 
 
 Development happens on `dev`, and `dev` is merged into `main` through pull requests.
 
-**How the build gets its environment.** Amplify doesn't pass environment variables to the SSR runtime. So the build reads the secret with the service role, writes every key into `.env`, then runs `pnpm build`. Two consequences:
+**How the build gets its environment.** Amplify doesn't pass environment variables to the SSR runtime. So the build reads the secret with the service role, writes every key into `apps/web/.env`, then builds the web app. It runs from the workspace root (`buildPath: /`, `appRoot: apps/web`) and installs only the web app's packages (`--filter "@qct/web..."`). Two consequences:
 
 - After changing the secret, **redeploy** the app (Amplify console → the `main` branch → Redeploy this version) for it to take effect.
 - Values must not contain `#`, which `.env` files treat as the start of a comment. URL-encode it as `%23` in the Mongo password; `openssl rand -base64 32` never produces one.
@@ -314,7 +316,7 @@ aws cloudformation describe-stacks --region eu-central-1 \
 - [ ] Check the sign-in rate limit's client IP (below).
 - [ ] Optional: a custom domain. Put it into `BETTER_AUTH_URL` and redeploy.
 
-**If the build fails at the start** asking for `AMPLIFY_MONOREPO_APP_ROOT` (the build spec uses the `applications:` / `appRoot: .` form), add that app environment variable with the value `.` in `infra/amplify-stack.yml`, next to `APP_SECRET_ARN`.
+**`AMPLIFY_MONOREPO_APP_ROOT`.** Amplify requires this app environment variable to equal the build spec's `appRoot` (`apps/web`). Both are set in `infra/amplify-stack.yml`; change them together.
 
 **The parent link's protection.** The parent page (`/parent?s=<studentId>`, `POST /api/parent`) has no account. The parent's ID number is the secret:
 
@@ -327,4 +329,4 @@ aws cloudformation describe-stacks --region eu-central-1 \
 **Sign-in rate limit behind CloudFront.** Sign-in is limited to 5 attempts a minute per client IP, taken from `x-forwarded-for`. Behind Amplify that header may carry a chain of IPs (`client, proxy`). Better Auth then finds no IP, and every user shares one bucket. That fails safe, but one person mistyping could briefly lock everyone out. After the first deploy:
 
 1. Log the request headers once and check what `x-forwarded-for` looks like.
-2. Set `advanced.ipAddress` in `src/server/auth/auth.ts` accordingly, e.g. `trustedProxies`, or a CloudFront client-IP header.
+2. Set `advanced.ipAddress` in `apps/web/src/server/auth/auth.ts` accordingly, e.g. `trustedProxies`, or a CloudFront client-IP header.

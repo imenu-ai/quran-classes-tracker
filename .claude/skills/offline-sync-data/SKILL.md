@@ -3,6 +3,8 @@ name: offline-sync-data
 description: The offline-first data path of quran-classes-tracker (shared Zod schemas, the Dexie local DB, LocalStore + outbox, push/pull sync with last-write-wins, tenant-scoped MongoDB repositories, indexes). Use it whenever you add or change a synced entity or field, write code that reads or writes classes, students, lessons, attendance or homework, touch src/shared, src/client/db, src/client/data, src/client/sync or src/server/sync, add an index, or debug data that doesn't sync, duplicates or disappears, even if the request is phrased as a UI feature ("add a phone number to students", "let the teacher delete a lesson").
 ---
 
+> Paths in this skill (`src/…`, `e2e/…`, `scripts/…`, `messages/…`) are relative to the web app, `apps/web/`. Run `pnpm` scripts from the repo root.
+
 # Offline-first data in this app
 
 The teacher must be able to run a whole lesson with no connection, on several devices, without losing or duplicating anything. Every rule below protects that. `PLAN.md` §2 (architecture) and §4 (data model) describe the design. Read them for anything not covered here.
