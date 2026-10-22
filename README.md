@@ -246,7 +246,7 @@ Not deployed yet. Do these in order.
 
 - [ ] Create a cluster (ideally in or near `eu-central-1`) and a database user with read/write on the app database only.
 - [ ] Network access: Amplify's compute has no fixed outbound IP, so allow `0.0.0.0/0` and rely on a strong, generated database password.
-- [ ] **If the database has data from before centers and roles (Phase 8), drop it.** Older users and records can't sign in or sync. The app had no real data then.
+- [ ] **If the database has data from before centers and roles (Phase 1, part 1.8), drop it.** Older users and records can't sign in or sync. The app had no real data then.
 - [ ] From your machine, with `MONGODB_URI` (and `MONGODB_DB`) set to the Atlas values in the shell: `pnpm db:indexes`.
 - [ ] The first center registers itself at `/register` once the app is live (step 6). `pnpm center:create` does the same from the command line.
 

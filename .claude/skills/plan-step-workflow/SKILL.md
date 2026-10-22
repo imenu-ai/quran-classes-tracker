@@ -13,7 +13,7 @@ The user reviews the work phase by phase, so the plan and the git history must a
 
 1. Read the step in `PLAN.md` §6 and any section it refers to.
 2. If the step is ambiguous, or the code disagrees with the plan, ask. The brief says "ask instead of guessing", and the user prefers a question to a wrong assumption.
-3. For a new phase or a change of direction (as with Phase 7), write the phase into `PLAN.md` first and get it approved.
+3. For a new phase or a change of direction (as with the move to a CloudFormation deployment, or Phase 2), write the phase into `PLAN.md` first and get it approved.
 
 ## Doing a step
 

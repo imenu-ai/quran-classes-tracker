@@ -39,7 +39,7 @@ Sync engine ◀─ pull changes ─ GET /api/sync/pull?since=N ◀─ records wi
 | Test record builders, in-memory Mongo            | `src/test/records.ts`, `src/test/mongo.ts`                                                       |
 | Sample data                                      | `scripts/dev-seed.ts` (writes through the real `pushChanges`)                                    |
 
-## Centers and access (Phase 8)
+## Centers and access
 
 Data belongs to a **center** (`tenantId`). Who may touch it is decided per user by a server-only `members` document: role, permissions, assigned classes. See `src/shared/access.ts`, `src/server/members.ts` and PLAN.md §2.11.
 
@@ -49,7 +49,7 @@ Data belongs to a **center** (`tenantId`). Who may touch it is decided per user 
 - **Attendance carries `classId`** (its lesson's class, checked on push). Lessons and attendance never change class.
 - **Access changes resync the device.** Changing a member's classes or permissions bumps `accessVersion`. Sync responses carry it, and the engine rebuilds the local copy when it changes. When a student changes class, his homework is re-versioned, and teachers who lose him get a new `accessVersion`.
 - **The client only hides.** `useAccess()` (`src/client/access.ts`) shapes the UI; never rely on it for security.
-- **The parent page is the one server-read page (Phase 14).** `POST /api/parent` (`src/server/parent.ts`) finds a student by id in any center, checks the parent's ID number (`Student.parentId`, stored as entered, read through `normalizeParentId`) or the remembered-phone cookie, and builds the month from MongoDB inside that student's center (`createTenantRepositories`). It uses the same pure builders as the screens and the printout (`src/domain/stats/month-sheet.ts`), so a change to what a month shows belongs there. Keep its response free of ids and notes, and keep its rate limits (`src/server/rate-limit.ts`).
+- **The parent page is the one server-read page.** `POST /api/parent` (`src/server/parent.ts`) finds a student by id in any center, checks the parent's ID number (`Student.parentId`, stored as entered, read through `normalizeParentId`) or the remembered-phone cookie, and builds the month from MongoDB inside that student's center (`createTenantRepositories`). It uses the same pure builders as the screens and the printout (`src/domain/stats/month-sheet.ts`), so a change to what a month shows belongs there. Keep its response free of ids and notes, and keep its rate limits (`src/server/rate-limit.ts`).
 
 ## Rules, and why they matter
 
@@ -62,7 +62,7 @@ Data belongs to a **center** (`tenantId`). Who may touch it is decided per user 
 - **References are checked on push.** Add every new foreign key to `REFERENCES`. A missing parent is rejected as `REFERENCE_NOT_FOUND`. The outbox pushes by table in `SYNC_TABLES` order (parents first), then oldest first, and the server writes each batch in the same order. A new table must go in `SYNC_TABLES` after the tables it references.
 - **Rejections are never dropped.** A record the server refuses moves to the `rejected` store and appears in Settings → Sync, where only the user can retry or discard it.
 
-## Lessons are created on demand (Phase 9)
+## Lessons are created on demand
 
 The UI no longer manages lessons. Today's lesson for a class is created the first time something is recorded for one of its students (`todayLessonId` in `src/client/data/today.ts`, built on `startLesson`). Read with the derived id and never create a lesson just to display something.
 
