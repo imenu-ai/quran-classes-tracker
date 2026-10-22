@@ -1,0 +1,16 @@
+# next.js
+/.next/
+/.next-*/
+/out/
+/build
+next-env.d.ts
+
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# serwist (generated at build)
+/public/sw*
+/public/swe-worker*

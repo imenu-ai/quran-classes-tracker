@@ -1,7 +1,7 @@
 {
   "app": {
-    "name": "Quran Memorization Tracker",
-    "shortName": "Quran Tracker",
+    "name": "Quran Memorization",
+    "shortName": "Quran Memorization",
     "description": "Track students' Quran memorization: attendance, homework and monthly scores, even offline."
   },
   "glossary": {
@@ -431,7 +431,7 @@
   },
   "email": {
     "resetPassword": {
-      "subject": "Reset your password — Quran memorization tracker",
+      "subject": "Reset your password — Quran Memorization",
       "greeting": "Hello {name},",
       "body": "We received a request to set a new password for your account. Use the button to choose a new password.",
       "button": "Set a new password",
