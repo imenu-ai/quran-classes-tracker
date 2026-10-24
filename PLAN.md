@@ -185,10 +185,39 @@ Response: `{ results: [{ id, status: 'applied' | 'stale' | 'rejected', code?, pa
 
 ### 2.13 The mobile app (Phase 2, planned)
 - **Same server, same protocol.** The app calls the existing `/api/*` routes on Amplify (base URL from `EXPO_PUBLIC_API_URL`). Better Auth's Expo plugin sends the session cookie from SecureStore; the app's own API calls add it too and save a renewed one from `withTenant`.
-- **Local data:** one SQLite file per user (`qct-<userId>.db`) and a device-level one (`qct-app.db`: session snapshot, device id, center code). Each syncable table stores the record as JSON plus the columns the Dexie indexes use today (§4). Screens subscribe to the tables they read; `LocalStore` notifies them after each committed transaction, which replaces `useLiveQuery`.
+- **Local data:** one SQLite file per user (`qct-<userId>.db`) and a device-level one (`qct-app.db`: session snapshot, device id, center code). Each syncable table stores the record as JSON plus the columns the Dexie indexes use today (§4). Screens subscribe to the tables they read; `LocalStore` notifies them after each committed transaction, which replaces `useLiveQuery` (§2.14).
+- **SQLite rules (measured in the 2026-10-24 spike):**
+  - Writes only go through one in-app write queue, and transactions only through `withExclusiveTransactionAsync`, with `PRAGMA busy_timeout` as a safety net. `withTransactionAsync` doesn't isolate: a write made elsewhere during it joins it and is rolled back with it. Without `busy_timeout`, a write during an exclusive transaction fails with "database is locked".
+  - SQLite's own change listener isn't used: it fires once per row, mid-transaction, and even for rolled-back writes.
+  - Bulk writes insert up to 100 rows per statement: 5,000 records took 0.55 s, against 4.6 s one row at a time.
+- **Hermes gaps:** Hermes has no `Intl.PluralRules`, `Intl.Locale`, `Intl.RelativeTimeFormat`, `Intl.supportedValuesOf` or `crypto.getRandomValues`.
+  - Without them, plural messages render their key, `getDirection` falls back to `ltr` for Arabic, and `uuid` throws.
+  - The app loads FormatJS polyfills (with `ar` and `en` data) and `expo-crypto`'s `getRandomValues` before anything else. With them, every probed format matched Node.
+  - `DateTimeFormat` (including Asia/Hebron daylight saving) and `NumberFormat` are native and already match.
 - **Sync engine:** the shared engine from `packages/core` with mobile triggers: app start, `AppState → active`, NetInfo back online, 1.5 s after writes, every 60 s while active. Single-flight is an in-process lock (one JS runtime). Logout and a forced logout delete the user's database file.
 - **Not carried over:** the service worker, page-shell cache, install guide, `storage.persist()` and the navigation guard (native navigation doesn't abort pending writes).
 - **Printing:** the shared month-sheet builders produce an HTML sheet (embedded font, QR as SVG); `expo-print` opens the system print dialog or saves a PDF to share.
+
+### 2.14 One data layer (Phase 2, step 2.4, planned)
+`LocalStore`, the outbox, apply-pull, the sync engine and the per-entity actions and queries move into `packages/core` and talk to a small **storage interface**. Each app supplies an **adapter**: Dexie on the web (2.4), SQLite on mobile (2.7).
+
+- **Async.** Every operation returns a Promise. IndexedDB is async-only, and expo-sqlite's async API keeps queries off the UI thread. The synchronous `node:sqlite` is wrapped for tests.
+- **A small set of operations** per table, the only ones shared code may use:
+  - `get`, `bulkGet`, `put`, `bulkPut`, `delete`, `bulkDelete`;
+  - `query(table, index, …)` with `equals`, `between` or `anyOf`, on the indexes of §4's Dexie list (including `[classId+date]`).
+
+  Sorting, filtering and statistics stay in plain TypeScript after the fetch, as today. Each operation maps directly to Dexie, and to SQL on indexed columns.
+- **Transactions pass an explicit handle.** `store.transaction(async (tx) => { … })`. The callback can only reach `tx`, which has the reads above and the `LocalStore` writes (`create`, `update`, `upsert`, `softDelete`, `restore`). That makes it all or nothing on both platforms. Dexie's implicit transaction zone has no SQLite equivalent.
+  - Web: one Dexie read-write transaction over every data table, so actions no longer list their tables (`writableTables` goes away).
+  - Mobile: §2.13's write queue and exclusive transaction.
+- **Change notifications after commit.** `LocalStore`, and apply-pull for synced records, announce the set of tables a committed transaction changed.
+  - The mobile screen hook re-runs a query when a table it read changed.
+  - The web ignores the announcements: `useLiveQuery` already sees Dexie's writes, so web screens don't change.
+- **Shared queries.** The per-entity read functions (a class's students, a student's month…) live in core and take a reader, either the store or `tx`.
+  - The web's hooks wrap them in `useLiveQuery`; Dexie tracks reads made through its adapter.
+  - Mobile's hooks wrap them in the subscription hook.
+- **One contract test suite** runs against every adapter: Dexie on `fake-indexeddb` in 2.4, SQLite on `node:sqlite` in 2.7. The existing `LocalStore`, action and sync tests then run unchanged on top of each.
+- **Injected platform pieces.** The sync engine gets its lock, triggers, `fetch`, clock and online check from the app. The web passes Web Locks and the browser events it uses today.
 
 ---
 
@@ -362,10 +391,11 @@ Fonts: IBM Plex Sans Arabic (`ar`) and IBM Plex Sans (`en`) via `next/font/googl
 
 | Library | Why |
 |---|---|
-| expo (latest stable SDK at 2.5; SDK 56 = React Native 0.85, React 19.2) + dev client | New Architecture, config plugins, dev builds (Expo Go can't load our native modules). |
+| expo **SDK 58** (React Native 0.88, React 19.3; current on 2026-10-24) + dev client | New Architecture, config plugins, dev builds (Expo Go can't load our native modules). |
 | expo-router | File routes, native stack, native tabs, form sheets, header search. |
-| expo-sqlite | The local database (#48). |
-| better-auth + @better-auth/expo, expo-secure-store | Sign-in and the stored session (#49). A known issue: SecureStore rejects `:` in keys, so the storage adapter maps them. |
+| expo-sqlite | The local database (#48, §2.13 SQLite rules). |
+| better-auth + @better-auth/expo (same version as the server), expo-secure-store, expo-network, expo-linking, expo-constants, expo-web-browser | Sign-in and the stored session (#49). The plugin replaces `:` in SecureStore keys and splits large values itself. The last four are its required peers. |
+| @formatjs/intl-getcanonicallocales, -locale, -pluralrules, -relativetimeformat, -enumerator; expo-crypto | Hermes's missing `Intl` APIs and `crypto.getRandomValues` (§2.13). |
 | use-intl | The core of next-intl: same ICU messages and `useTranslations` API. |
 | @react-native-picker/picker, @react-native-community/datetimepicker | The mark wheel (#32) and the system date picker. |
 | @react-native-community/netinfo | Online/offline trigger. |
@@ -410,7 +440,11 @@ Built in 14 parts, in this order. Each part was planned, verified (unit, integra
 
 An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's features, native navigation and native controls (§0 #43–53, §2.13). Steps 2.1–2.4 prepare the repo and keep the web app unchanged; 2.5–2.13 build the app; 2.14–2.16 test, add account deletion and release.
 
-**Prerequisites:** an Expo (EAS) account; Android Studio with an emulator (phone and tablet) on the development machine; the Apple Developer account (have it); a Google Play developer account before 2.16's Android part.
+**Prerequisites:**
+- Done: an Expo (EAS) account (signed in); Android Studio with phone and tablet emulators (`qct_phone`, `qct_tablet`); the Apple Developer account.
+- Before 2.5: Windows long paths turned on (`LongPathsEnabled`, a one-time admin change). Otherwise local Android builds of `apps/mobile` may hit the 260-character path limit, and the app would build only on EAS.
+- Before 2.5's iPhone check: your iPhone registered for development builds (`eas device:create`).
+- Before 2.16's Android part: a Google Play developer account.
 
 **Verification per step:** `pnpm lint && pnpm typecheck && pnpm test` from the root runs every workspace package. Web steps also run `pnpm build` and the web E2E suite. Mobile UI steps are checked on the Android emulator (Claude) and on your iPhone/iPad dev build (you), at 360 dp in RTL, light and dark.
 
@@ -421,14 +455,25 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
   - Update README, `CLAUDE.md` and the three skills for the new paths.
   - Web behaviour unchanged: unit, integration and E2E tests and `pnpm build` green. **You deploy the stack change with the merge**; Amplify's first build of `main` may start before the stack update finishes and need one re-run.
 - [x] **2.3 `packages/core`.** Move the pure code: `src/domain`, `src/shared`, the platform-free parts of `src/i18n` (config, direction, formats, error codes) and `messages/`. React-free, Vitest, imported as `@qct/core/...`. Web unchanged; tests move with their code.
-- [ ] **2.4 One data layer (#48).**
-  - A small storage interface in `packages/core`: tables with get / bulk get / query by index / put / delete, a transaction over several tables, plus outbox, rejected and meta.
-  - Move `LocalStore`, the outbox, apply-pull, the sync engine (with injected lock, triggers, `fetch` and clock), backoff, the indicator state and the per-entity actions (`src/client/data`) onto it.
-  - The web keeps a Dexie adapter and its `useLiveQuery` hooks. Every existing test runs against the Dexie adapter; web behaviour unchanged.
+- [ ] **2.4 One data layer (#48, §2.14).**
+  - The storage interface in `packages/core`:
+    - async;
+    - per table: `get`, `bulkGet`, `query` by index (`equals`, `between`, `anyOf`), `put`, `bulkPut`, `delete`, `bulkDelete`;
+    - the outbox, rejected and meta stores;
+    - `transaction(fn)`, which passes an explicit `tx` handle;
+    - change notifications after commit.
+  - A contract test suite for adapters, and the Dexie adapter, which passes it on `fake-indexeddb`.
+  - Move these onto it: `LocalStore`, the outbox, apply-pull, the sync engine (with the lock, triggers, `fetch`, clock and online check injected), backoff, the indicator state, and the per-entity actions and queries (`src/client/data`).
+  - Multi-record actions take `tx` instead of Dexie's implicit transaction; `writableTables` goes away.
+  - The web keeps its `useLiveQuery` hooks, now wrapping the shared queries. Every existing test runs against the Dexie adapter, and web behaviour is unchanged: unit, integration and E2E tests and `pnpm build` green.
 - [ ] **2.5 Expo app scaffold (`apps/mobile`).**
-  - Latest stable Expo SDK, dev client, `ai.imenu.quran`, URL scheme, EAS profiles (development, preview, production), runtime version per app version.
+  - **Setup:**
+    - Expo SDK 58, dev client, `ai.imenu.quran`, URL scheme, EAS profiles (development, preview, production), runtime version per app version.
+    - Metro resolves `@qct/core` from the workspace.
+    - One TypeScript version across the workspace: the repo's 5.9.3, unless Expo needs 6, which its template ships. Core type-checks under both.
+  - **Polyfills first (§2.13):** FormatJS (`ar`, `en`) and `expo-crypto`, loaded before anything else. A Jest test renders Arabic plurals and dates through them.
+  - **A fix in core:** `toAppLocale` and `getDirection` read the language subtag without `Intl.Locale`, so a missing polyfill can't silently turn Arabic into LTR.
   - RTL at start (#53), IBM Plex Sans Arabic, light/dark theme tokens, `use-intl` with the shared messages.
-  - Check Hermes `Intl` on both platforms (Arabic `PluralRules`, `DateTimeFormat` with a time zone, `numberingSystem: 'latn'`); add `@formatjs` polyfills only where missing.
   - ESLint blocks physical style props (`marginLeft`, `paddingRight`, `left`, `textAlign: 'left'`…) like the web's logical-class rule.
   - Jest (jest-expo) with Testing Library. Expo Router skeleton with native tabs and stacks and empty screens.
   - Add the mobile UI rules (logical styles, native controls, RTL, tablet widths) to the `rtl-i18n-ui` skill.
@@ -437,8 +482,12 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
   - Server: the Better Auth Expo plugin and the app scheme in `trustedOrigins`; integration tests that the cookie-header client works with `withTenant` (including the renewed cookie) and sync.
   - App: SecureStore storage adapter; sign-in with center code + username + password (code remembered); center registration; forgot password (the email's link opens the web reset page); the forced first password change; the session snapshot from `/api/me`; the signed-out gate.
 - [ ] **2.7 SQLite storage and sync on mobile.**
-  - The SQLite adapter (§2.13): per-user and device databases, schema migrations, transactions, change notifications and the screen hook that replaces `useLiveQuery`.
-  - Tested in Vitest through the same SQL interface on `node:sqlite`, running the shared LocalStore and sync tests.
+  - The SQLite adapter (§2.13, §2.14):
+    - per-user and device databases, and schema migrations;
+    - the write queue with exclusive transactions and `busy_timeout`;
+    - `bulkPut` at up to 100 rows per statement;
+    - change notifications from `LocalStore`, and the screen hook that replaces `useLiveQuery`.
+  - Tested in Vitest through the same SQL on `node:sqlite`: it passes the 2.4 contract suite and runs the shared `LocalStore` and sync tests. `node:sqlite` needs no flag from Node 22.13, so `engines` and `.nvmrc` move to at least 22.13.
   - Mobile triggers and lock, the sync indicator, 401 → sign-in banner, `accessVersion` resync. Logout with the unsynced warning and "sync now"; database wipe.
   - Checked: offline writes on the emulator sync to a local server and show up in the web app.
 - [ ] **2.8 Home, classes and students.**
@@ -512,3 +561,16 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
   - Inside core, imports are relative. Its ESLint config (typescript-eslint, no Next rules) blocks React, Next, Dexie, Expo and `@/` imports. Its tsconfig has no DOM types, so code that only works in browsers fails the typecheck.
   - The test record builders (`src/test/records.ts`) moved too, because a domain test uses them; web tests import them from `@qct/core/test/records`. Core's i18n tests use `createTranslator` from `use-intl/core` (the library inside next-intl, and the one the app will use). `formats.ts` declares its own `Formats` shape instead of importing next-intl's. `request.ts` loads the messages through a fixed map, since a template-string import can't cross into a package.
   - Same totals as before: 487 tests in 67 files (core 202 in 18, web 285 in 49). `next build` and the E2E suite pass.
+- 2026-10-24 (native spike, before 2.4): the user asked for a short throwaway Expo app before designing the storage interface. It ran outside the repo on the `qct_phone` emulator, with a Better Auth server configured like `apps/web`, and compared Hermes with Node on 50 cases. It found:
+  - Expo SDK 58 (React Native 0.88, React 19.3, TypeScript 6 in its template) is current, so 2.5 pins it instead of 56. `@qct/core` loads in Metro as TypeScript source through its `exports`.
+  - The Hermes gaps of §2.13: 22 of 50 cases broke without the polyfills, and 49 matched Node with them. The last one is cosmetic: `resolvedOptions().locale` drops `ca-gregory`, but formatting is identical.
+  - The expo-sqlite rules of §2.13 (isolation, locking, the change listener, bulk speed). Reads are fast: 125 indexed rows parsed from JSON in 7 ms, the whole 5,000-row table in 80 ms. These shaped §2.14's design: an explicit transaction handle, notifications from `LocalStore`, and a batched `bulkPut`.
+  - `node:sqlite` runs the same SQL, but needs no flag only from Node 22.13 (see 2.7).
+  - Better Auth's Expo plugin works with the web config:
+    - username sign-in and the `expo-origin` header (server `expo()` plugin plus the scheme in `trustedOrigins`);
+    - the stored cookie on our own routes, and a renewed cookie readable from `set-cookie` and merged with `getSetCookie`;
+    - sign-out clears it, and Android's own cookie jar sends nothing.
+
+    The `:` key problem the plan expected is fixed upstream. Renewed cookies should be saved through the plugin's storage helper, not written straight to SecureStore: one session check went out without its cookie after a direct write.
+  - The first local Android build took 12 minutes and installed NDK 27.1 by itself. Windows long paths are off on the development machine, so the spike lived in a short folder (see the prerequisites).
+- 2026-10-24 (with the user): the app split was re-confirmed: two separate apps (the web PWA and a native Expo app with native controls) in one repo, sharing `packages/core` including the data layer; phones and tablets; the PWA stays complete (#43–48 unchanged).
