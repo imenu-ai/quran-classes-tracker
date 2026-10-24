@@ -9,6 +9,8 @@
     "dev": "pnpm --filter @qct/web dev",
     "build": "pnpm --filter @qct/web build",
     "start": "pnpm --filter @qct/web start",
+    "mobile": "pnpm --filter @qct/mobile start",
+    "mobile:android": "pnpm --filter @qct/mobile android",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",

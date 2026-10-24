@@ -1,6 +1,6 @@
 # Implementation Plan: Quran Memorization (تحفيظ القرآن)
 
-Status: **Phase 1 done (the PWA, deployed on Amplify). Phase 2 (React Native app) in progress: 2.1–2.4 done.** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-24
+Status: **Phase 1 done (the PWA, deployed on Amplify). Phase 2 (React Native app) in progress: 2.1–2.5 done.** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-24
 
 Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bottom)
 
@@ -244,6 +244,15 @@ A pnpm workspace since 2.2 (`pnpm-workspace.yaml`, `.npmrc` with `node-linker=ho
 │       │                    entities (actions and queries) · testing (suites for every adapter)
 │       ├── i18n/            config · direction · formats · error messages
 │       └── test/            record builders
+├── apps/mobile/         the Expo app, package @qct/mobile (EAS project @imenu/quran-classes-tracker)
+│   ├── index.ts             entry: polyfills first, then Expo Router
+│   ├── app.json · eas.json  ai.imenu.quran · RTL at start · fonts · splash · build profiles
+│   └── src/
+│       ├── app/             routes: (tabs) with native tabs, a stack per tab
+│       ├── components/      Text · Screen · EmptyState · stack options · the dev Intl check
+│       ├── i18n/            locale · use-intl provider · message types
+│       ├── theme/           colors (the web's tokens) · fonts · useTheme
+│       └── polyfills.ts     Intl and crypto for Hermes
 └── apps/web/            the Next.js app, package @qct/web
     ├── scripts/             center-create.ts · db-indexes.ts · dev-seed.ts
     ├── e2e/                 main-flow · offline · roles · parent · ltr-smoke specs; server.mts
@@ -390,7 +399,7 @@ Records pulled from the server aren't re-validated on the device, so newer field
 
 Fonts: IBM Plex Sans Arabic (`ar`) and IBM Plex Sans (`en`) via `next/font/google`, self-hosted. Node 22 LTS (`.nvmrc`, `engines`).
 
-**Mobile (Phase 2, planned; exact versions pinned in 2.5)**
+**Mobile (Phase 2; versions pinned in `apps/mobile/package.json` since 2.5: Expo 58.0.19, Expo Router 58.0.26, React Native 0.88.0, React 19.3.0, use-intl 4.14.9, jest-expo 58.0.12)**
 
 | Library | Why |
 |---|---|
@@ -469,7 +478,7 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
   - Move these onto it: `LocalStore`, the outbox, apply-pull, the sync engine (with the lock, triggers, `fetch`, clock and online check injected), backoff, the indicator state, and the per-entity actions and queries (`src/client/data`).
   - Multi-record actions take `tx` instead of Dexie's implicit transaction; `writableTables` goes away.
   - The web keeps its `useLiveQuery` hooks, now wrapping the shared queries. Every existing test runs against the Dexie adapter, and web behaviour is unchanged: unit, integration and E2E tests and `pnpm build` green.
-- [ ] **2.5 Expo app scaffold (`apps/mobile`).**
+- [x] **2.5 Expo app scaffold (`apps/mobile`).**
   - **Setup:**
     - Expo SDK 58, dev client, `ai.imenu.quran`, URL scheme, EAS profiles (development, preview, production), runtime version per app version.
     - Metro resolves `@qct/core` from the workspace.
@@ -590,3 +599,28 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
     - The web's `client/data` modules keep their hooks and re-export core's actions. The action-only `lessons`, `attendance` and `homework` modules were removed, and their importers point at core.
   - **The contract doesn't use an adapter after `destroy`:** Dexie 4 refuses to reopen a deleted database. Each adapter's own test checks that the data is gone.
   - Tests: core 317 in 22 files (the shared suites on memory, plus the existing core tests), web 286 in 36 files (the shared suites on Dexie, plus the web's own). `next build` compiles; E2E 14 passed, 1 skipped (the offline spec on iPhone WebKit, as always).
+
+- 2026-10-24 (2.5):
+  - **Decisions taken with the user:**
+    - The EAS project is owned by the `imenu` account: `@imenu/quran-classes-tracker`, slug `quran-classes-tracker`, URL scheme `ai.imenu.quran`.
+    - React moved to 19.3.0 across the workspace, the version Expo SDK 58 needs; the web's unit, integration and E2E tests and `next build` pass on it. With pnpm's hoisted layout, two React versions would have risked a duplicate React in the app.
+  - **Setup:**
+    - EAS profiles: `development` (dev client, internal), `preview` (internal) and `production` (auto-increment), each on its own update channel. Build numbers are kept by EAS (`appVersionSource: remote`), and `runtimeVersion` follows the app version.
+    - Metro finds `@qct/core` through Expo's own monorepo support, with no `metro.config.js`.
+    - TypeScript stays 5.9.3, the one workspace version; the app type-checks on it. `expo install` checks skip TypeScript, so `expo-doctor` passes 20/20.
+  - **Fonts are loaded at start with `useFonts`**, not embedded at build time. Embedded fonts get different family names on iOS and Android; loaded ones have one name on both. The splash screen stays up until they're ready, which takes a moment because they're bundled.
+  - **Polyfills:** `index.ts` loads them before Expo Router. The Jest test deletes `Intl.PluralRules`, `Intl.Locale`, `Intl.RelativeTimeFormat` and `Intl.supportedValuesOf` first, so it exercises FormatJS's data as on Hermes. The polyfills check `name in Intl`, so setting a property to `undefined` isn't enough. In core, `getDirection` and `toAppLocale` now use `languageOf()`, a hand parser, instead of `Intl.Locale`.
+  - **Checked on the `qct_phone` emulator, light and dark:**
+    - RTL from the start (even Expo's error overlay); IBM Plex Sans Arabic.
+    - The four native tabs, with labels always shown (Android hides them by default; the web always shows them).
+    - Through the development-only Intl check in Settings: Arabic's six plural forms, dates, weekday, percentage and `uuid` on Hermes.
+  - **Native tabs:** Material-symbol icons on Android need `expo-symbols`.
+  - **Windows toolchain findings:**
+    - `LongPathsEnabled` wasn't enough: the Android SDK's CMake 3.22.1 ships ninja 1.10.2, which still fails on paths over 260 characters (Reanimated's and Gesture Handler's generated C++). With the user's agreement, its `ninja.exe` was replaced by the official 1.12.1, keeping the old one beside it. An SDK update could bring it back (README, Mobile app).
+    - A `node_modules` built up by several incremental `pnpm add` runs with the hoisted linker once broke the Expo CLI: an old `chalk` resolved the wrong `ansi-styles`. A clean `pnpm install --frozen-lockfile` laid it out correctly, and every check ran again on a clean install.
+    - Expo's lint config brings `eslint-plugin-react-hooks` 7, which got hoisted over the web's 5.2 and turned on React Compiler rules in the web's lint. The web now declares `eslint-plugin-react-hooks@^5.2.0` itself.
+    - Metro's watcher on Windows sometimes misses edits; restart it with `--clear`.
+  - **Expo Router bundles every file under `src/app/`** as a route, so a test there broke the app bundle. Tests live outside it.
+  - The template's `AGENTS.md`, `LICENSE` and a `.claude/settings.json` (which turned on an Expo Claude plugin) were left out. Their useful advice (check the docs for the installed SDK, use `expo install`) is in the `rtl-i18n-ui` skill.
+  - **The iPhone check is the user's:** `eas build --profile development --platform ios` from `apps/mobile`. The first run asks for the Apple Developer sign-in, which can't run here.
+  - Tests: core 318 in 22 files, web 286 in 36, mobile 5 in 2 (Jest). Lint and typecheck cover all three packages. Web `next build` compiles and E2E passes on React 19.3.

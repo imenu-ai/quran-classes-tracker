@@ -10,3 +10,7 @@ apps/web/public/sw*
 apps/web/public/swe-worker*
 BRIEF.md
 PLAN.md
+apps/mobile/android
+apps/mobile/ios
+apps/mobile/.expo
+apps/mobile/expo-env.d.ts

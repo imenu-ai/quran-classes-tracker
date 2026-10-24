@@ -8,11 +8,17 @@ const RTL_LANGUAGES = new Set(["ar", "arc", "ckb", "dv", "fa", "he", "ps", "sd",
  * This is the only place direction is derived; never hardcode `dir`.
  */
 export function getDirection(locale: string): Direction {
-  let language: string;
-  try {
-    language = new Intl.Locale(locale).language;
-  } catch {
-    return "ltr";
-  }
-  return RTL_LANGUAGES.has(language) ? "rtl" : "ltr";
+  const language = languageOf(locale);
+  return language !== undefined && RTL_LANGUAGES.has(language) ? "rtl" : "ltr";
+}
+
+/**
+ * The language subtag of a BCP 47 tag ("ar-u-ca-gregory-nu-latn" → "ar"),
+ * lowercased, or undefined when it isn't one. Parsed by hand rather than with
+ * `Intl.Locale`, which Hermes (the mobile app's engine) doesn't have: without
+ * it, Arabic would silently fall back to LTR.
+ */
+export function languageOf(tag: string): string | undefined {
+  const language = tag.trim().split(/[-_]/)[0]?.toLowerCase() ?? "";
+  return /^[a-z]{2,8}$/.test(language) ? language : undefined;
 }

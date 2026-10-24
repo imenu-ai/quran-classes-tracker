@@ -1,3 +1,5 @@
+import { languageOf } from "./direction";
+
 /** Every locale the app has messages for. */
 export const LOCALES = ["ar", "en"] as const;
 
@@ -43,11 +45,6 @@ export function getIntlLocale(locale: Locale): string {
 
 /** Maps an Intl tag (e.g. "ar-u-ca-gregory-nu-latn") back to the app locale. */
 export function toAppLocale(intlLocale: string): Locale {
-  let language: string;
-  try {
-    language = new Intl.Locale(intlLocale).language;
-  } catch {
-    return DEFAULT_LOCALE;
-  }
+  const language = languageOf(intlLocale);
   return isLocale(language) ? language : DEFAULT_LOCALE;
 }

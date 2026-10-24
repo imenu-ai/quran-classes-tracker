@@ -27,7 +27,7 @@ Node 22 (see `.nvmrc`) and pnpm 10 (pinned in `package.json`; run `corepack enab
 
 - `apps/web`: the web app (package `@qct/web`).
 - `packages/core`: React-free code shared with the coming mobile app (package `@qct/core`, imported as `@qct/core/…`): domain rules, schemas and the sync protocol, the local data layer and sync engine (each app plugs in its own storage), i18n config and the messages. It's TypeScript source, compiled by the app that imports it.
-- `apps/mobile`: the React Native app, to come.
+- `apps/mobile`: the React Native app for iOS and Android (package `@qct/mobile`, Expo). See [Mobile app](#mobile-app); it's being built in Phase 2.
 
 Run every command below from the repo root: `lint`, `typecheck` and `test` run in every package, and the other scripts pass on to the web app. `.npmrc` sets `node-linker=hoisted`, which Amplify needs for a pnpm monorepo.
 
@@ -80,7 +80,7 @@ The service worker is **off in development**. To try offline behaviour on your m
 | `pnpm build` / `pnpm start`         | Production build (with the service worker) / serve it                    |
 | `pnpm lint`                         | ESLint, zero warnings allowed. Includes the logical-direction class rule |
 | `pnpm typecheck`                    | Generates route types, then `tsc --noEmit`                               |
-| `pnpm test` / `pnpm test:watch`     | Vitest unit and integration tests                                        |
+| `pnpm test` / `pnpm test:watch`     | Unit and integration tests (Vitest; Jest in the mobile app)              |
 | `pnpm test:e2e`                     | Playwright end-to-end tests (see below)                                  |
 | `pnpm format` / `pnpm format:check` | Prettier                                                                 |
 | `pnpm db:indexes`                   | Create or update MongoDB indexes                                         |
@@ -226,6 +226,36 @@ On the iPhone:
 - [ ] Share → Save to Files gives a PDF: Arabic joined and right to left, the center, class, student and your name at the top.
 - [ ] From the class statistics, print all students: one page each.
 - [ ] Try it offline too (airplane mode).
+
+## Mobile app
+
+`apps/mobile` is an Expo app (SDK 58, React Native 0.88) with native navigation and controls, in Arabic and right to left from the start. It's being built in Phase 2 (PLAN.md); so far it has the empty tabs. EAS project: `@imenu/quran-classes-tracker`; bundle id and Android package `ai.imenu.quran`.
+
+**Setup (Windows, Android).**
+
+- Android Studio with an emulator (the plan's checks use a Small Phone profile, 360 dp wide), JDK 17 (`JAVA_HOME`), `ANDROID_HOME` set.
+- Windows long paths turned on (`LongPathsEnabled`). The React Native build's paths go past 260 characters.
+- ninja 1.12 or later in the SDK's CMake: the ninja 1.10.2 bundled with CMake 3.22.1 fails on long paths anyway ("Filename longer than 260 characters"). Replace `%LOCALAPPDATA%\Android\Sdk\cmake\3.22.1\bin\ninja.exe` with the official `ninja-win.zip` from the ninja-build GitHub releases (keep the old file). An SDK update can bring the old one back.
+- `pnpm install` from the root, as for the web app.
+
+**Run it on the emulator:**
+
+```sh
+pnpm mobile:android   # builds and installs the development app, then starts Metro
+pnpm mobile           # later: just Metro, for the installed development app
+```
+
+The first build takes 10–20 minutes (Gradle and the Android NDK download once); later ones take about a minute. The app's own code reloads without a rebuild; a new native library or a change to `app.json` needs a new build.
+
+**On an iPhone** (no Mac needed; EAS builds in the cloud):
+
+1. Once: register the iPhone with `npx eas-cli device:create` (from `apps/mobile`) and open the link on the phone.
+2. Build: `npx eas-cli build --profile development --platform ios` (from `apps/mobile`). The first time, it asks for the Apple Developer sign-in to create the certificate and profile.
+3. Install from the link EAS shows, start Metro with `pnpm mobile`, and open the app (same Wi-Fi, or `pnpm mobile -- --tunnel`).
+
+Development builds show an Intl check in Settings (Arabic plurals, dates, direction).
+
+**Tests and checks:** `pnpm lint`, `pnpm typecheck` and `pnpm test` cover the app too (ESLint with the logical-style rule, Jest with `jest-expo`). `npx expo-doctor` (from `apps/mobile`) checks dependency versions.
 
 ## Deployment
 

@@ -10,6 +10,17 @@ describe("getDirection", () => {
     expect(getDirection(locale)).toBe("ltr");
   });
 
+  it("works without Intl.Locale (Hermes has none)", () => {
+    const original = Object.getOwnPropertyDescriptor(Intl, "Locale")!;
+    try {
+      Object.defineProperty(Intl, "Locale", { value: undefined, configurable: true });
+      expect(getDirection("ar-u-ca-gregory-nu-latn")).toBe("rtl");
+      expect(getDirection("EN_us")).toBe("ltr");
+    } finally {
+      Object.defineProperty(Intl, "Locale", original);
+    }
+  });
+
   it("falls back to ltr for an invalid tag", () => {
     expect(getDirection("")).toBe("ltr");
     expect(getDirection("not a locale")).toBe("ltr");
