@@ -3,7 +3,7 @@ import { v7 as uuidv7 } from "uuid";
 import type { Permission, Role } from "@qct/core/shared/access";
 import { meResponseSchema, type MeResponse } from "@qct/core/shared/session";
 import type { Locale } from "@qct/core/i18n/config";
-import type { LocalDb } from "../db/dexie";
+import type { LocalDatabase } from "@qct/core/data/database";
 
 /**
  * What the device remembers about the signed-in user. This is what keeps the
@@ -123,8 +123,7 @@ export const startPathFor = (snapshot: Pick<SessionSnapshot, "mustChangePassword
  * Forgets the teacher on this device: removes the snapshot and deletes their
  * local database. Callers must warn first when changes are still unsynced.
  */
-export async function forgetDevice(db: LocalDb): Promise<void> {
-  // Delete through the open instance so its own connection doesn't block the delete.
-  await db.delete();
+export async function forgetDevice(db: LocalDatabase): Promise<void> {
+  await db.destroy();
   await clearSession();
 }

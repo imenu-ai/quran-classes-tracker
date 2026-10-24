@@ -25,7 +25,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useApp } from "@/client/app-context";
 import { useActiveClasses, useClass } from "@/client/data/classes";
 import { createStudent, updateStudent, type StudentInput } from "@/client/data/students";
-import { LocalValidationError } from "@/client/db/local-store";
+import { LocalValidationError } from "@qct/core/data/local-store";
 import { parseIntegerInput } from "@qct/core/domain/text/digits";
 import { useErrorMessage } from "@/i18n/use-error-message";
 import type { FieldError as FieldErrorData } from "@qct/core/shared/schemas/errors";

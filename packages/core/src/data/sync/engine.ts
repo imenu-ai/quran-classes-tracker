@@ -1,7 +1,7 @@
-import type { PullResponse, PushResponse } from "@qct/core/shared/sync/protocol";
-import { SYNC_TABLES } from "@qct/core/shared/sync/tables";
-import type { LocalDb } from "../db/dexie";
-import { acknowledge, markFailed, readOutboxBatch, reject } from "../db/outbox";
+import type { PullResponse, PushResponse } from "../../shared/sync/protocol";
+import { SYNC_TABLES } from "../../shared/sync/tables";
+import type { LocalDatabase } from "../database";
+import { acknowledge, markFailed, readOutboxBatch, reject } from "../outbox";
 import { applyPulledChanges, CURSOR_KEY, getCursor } from "./apply-pull";
 import { backoffDelay } from "./backoff";
 
@@ -15,11 +15,19 @@ export interface SyncStatus {
 }
 
 export interface SyncEngineOptions {
-  db: LocalDb;
+  db: LocalDatabase;
   fetch?: typeof fetch;
+  /** Prefix for the sync URLs: "" on the web (same origin), the server's URL in the app. */
+  apiBaseUrl?: string;
+  /**
+   * Runs one sync under a lock shared by everything that syncs this database
+   * (on the web, every tab: the Web Locks API). Without one, runs directly;
+   * the engine itself never overlaps its own runs.
+   */
+  lock?: (task: () => Promise<void>) => Promise<void>;
   now?: () => number;
   random?: () => number;
-  /** Whether the browser believes it's online. */
+  /** Whether the platform believes it's online (assumed so without it). */
   isOnline?: () => boolean;
   pushBatchSize?: number;
   pullLimit?: number;
@@ -60,7 +68,7 @@ const PULL_URL = "/api/sync/pull";
 /**
  * Moves changes between the local database and the server: push the outbox,
  * then pull everything newer than the cursor. One run at a time per engine
- * (and per browser, via the Web Locks API). Nothing local is ever dropped on
+ * (and across tabs, through the `lock` option). Nothing local is ever dropped on
  * failure: the outbox only shrinks when the server acknowledges a change.
  */
 export class SyncEngine {
@@ -71,8 +79,10 @@ export class SyncEngine {
   private retryTimer: unknown = null;
   private readonly timers: Timers;
 
-  private readonly db: LocalDb;
+  private readonly db: LocalDatabase;
   private readonly fetchImpl: typeof fetch;
+  private readonly apiBaseUrl: string;
+  private readonly lock: (task: () => Promise<void>) => Promise<void>;
   private readonly now: () => number;
   private readonly random: () => number;
   private readonly isOnline: () => boolean;
@@ -86,9 +96,11 @@ export class SyncEngine {
     this.options = options;
     this.db = options.db;
     this.fetchImpl = options.fetch ?? ((...args) => fetch(...args));
+    this.apiBaseUrl = options.apiBaseUrl ?? "";
+    this.lock = options.lock ?? ((task) => task());
     this.now = options.now ?? Date.now;
     this.random = options.random ?? Math.random;
-    this.isOnline = options.isOnline ?? (() => globalThis.navigator?.onLine !== false);
+    this.isOnline = options.isOnline ?? (() => true);
     this.pushBatchSize = options.pushBatchSize ?? 100;
     this.pullLimit = options.pullLimit ?? 500;
     this.timers = options.timers ?? defaultTimers;
@@ -154,7 +166,7 @@ export class SyncEngine {
     }
     this.setStatus({ state: "syncing" });
     try {
-      await withLock(async () => {
+      await this.lock(async () => {
         await this.pushAll();
         if (this.accessChanged()) await this.rebuildForNewAccess();
         await this.pullAll();
@@ -202,7 +214,7 @@ export class SyncEngine {
 
       let response: Response;
       try {
-        response = await this.fetchImpl(PUSH_URL, {
+        response = await this.fetchImpl(`${this.apiBaseUrl}${PUSH_URL}`, {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -242,7 +254,7 @@ export class SyncEngine {
   private async pullAll(): Promise<void> {
     for (;;) {
       const since = await getCursor(this.db);
-      const url = `${PULL_URL}?since=${since}&limit=${this.pullLimit}`;
+      const url = `${this.apiBaseUrl}${PULL_URL}?since=${since}&limit=${this.pullLimit}`;
       const response = await this.fetchImpl(url, { headers: { accept: "application/json" } });
       if (response.status === 401) throw new NeedsLoginError();
       if (response.status === 403) throw new PasswordChangeRequiredError();
@@ -273,18 +285,19 @@ export class SyncEngine {
    * with a pending or rejected change are kept: nothing unsynced is lost.
    */
   private async rebuildForNewAccess(): Promise<void> {
-    const { db } = this;
-    const tables = SYNC_TABLES.map((table) => db.syncTable(table));
-    await db.transaction("rw", [...tables, db.outbox, db.rejected, db.meta], async () => {
+    await this.db.transaction(async (tx) => {
       const keep = new Set<string>([
-        ...((await db.outbox.toCollection().primaryKeys()) as string[]),
-        ...((await db.rejected.toCollection().primaryKeys()) as string[]),
+        ...(await tx.all("outbox")).map((entry) => entry.recordId),
+        ...(await tx.all("rejected")).map((entry) => entry.recordId),
       ]);
-      for (const table of tables) {
-        const ids = (await table.toCollection().primaryKeys()) as string[];
-        await table.bulkDelete(ids.filter((id) => !keep.has(id)));
+      for (const table of SYNC_TABLES) {
+        const ids = (await tx.all(table)).map((record) => record.id);
+        await tx.bulkDelete(
+          table,
+          ids.filter((id) => !keep.has(id)),
+        );
       }
-      await db.meta.put({ key: CURSOR_KEY, value: 0 });
+      await tx.put("meta", { key: CURSOR_KEY, value: 0 });
     });
     this.rebuilt = true;
   }
@@ -293,11 +306,4 @@ export class SyncEngine {
     this.status = { ...this.status, ...patch };
     for (const listener of this.listeners) listener(this.status);
   }
-}
-
-/** Runs `task` under a cross-tab lock when the Web Locks API exists. */
-async function withLock(task: () => Promise<void>): Promise<void> {
-  const locks = globalThis.navigator?.locks;
-  if (!locks) return task();
-  await locks.request("qct-sync", task);
 }

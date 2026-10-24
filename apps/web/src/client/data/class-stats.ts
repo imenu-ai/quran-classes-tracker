@@ -1,66 +1,18 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { useLocale } from "next-intl";
-import { monthKey } from "@qct/core/domain/dates/local-date";
-import {
-  classStatistics,
-  type ClassStatistics,
-  type StatsPeriod,
-} from "@qct/core/domain/stats/class";
-import type { StudentRecord } from "@qct/core/shared/schemas/student";
+import { loadClassStatistics, type ClassStatisticsView } from "@qct/core/data/entities/class-stats";
+import type { StatsPeriod } from "@qct/core/domain/stats/class";
 import { useApp } from "../app-context";
-import { isActive } from "./classes";
 
-export interface ClassStatisticsView {
-  statistics: ClassStatistics;
-  /** The class's active students, by id (for names). */
-  students: Map<string, StudentRecord>;
-  /** Years that have lessons, newest first (for the year picker). */
-  years: number[];
-  /** Months that have lessons ("YYYY-MM"), newest first (for printing). */
-  months: string[];
-}
+export type { ClassStatisticsView } from "@qct/core/data/entities/class-stats";
 
 /** A class's statistics and student ranking for a period, live from the local database. */
 export function useClassStatistics(classId: string | null, period: StatsPeriod) {
   const { db, session } = useApp();
   const locale = useLocale();
-  return useLiveQuery(async (): Promise<ClassStatisticsView | null> => {
-    if (!classId) return null;
-    const [allStudents, lessons] = await Promise.all([
-      db.students.where("classId").equals(classId).toArray(),
-      db.lessons.where("classId").equals(classId).toArray(),
-    ]);
-    const students = allStudents.filter(isActive);
-    const [attendance, homework] = await Promise.all([
-      db.attendance
-        .where("lessonId")
-        .anyOf(lessons.map((lesson) => lesson.id))
-        .toArray(),
-      db.homework
-        .where("studentId")
-        .anyOf(students.map((student) => student.id))
-        .toArray(),
-    ]);
-    const liveLessons = lessons.filter((lesson) => lesson.deletedAt === null);
-    const years = [...new Set(liveLessons.map((lesson) => Number(lesson.date.slice(0, 4))))].sort(
-      (a, b) => b - a,
-    );
-    const months = [...new Set(liveLessons.map((lesson) => monthKey(lesson.date)))].sort((a, b) =>
-      b.localeCompare(a),
-    );
-    return {
-      statistics: classStatistics({
-        students,
-        lessons,
-        attendance,
-        homework,
-        period,
-        timeZone: session.timezone,
-        locale,
-      }),
-      students: new Map(students.map((student) => [student.id, student])),
-      years,
-      months,
-    };
-  }, [db, classId, period.year, period.month, session.timezone, locale]);
+  return useLiveQuery(
+    async (): Promise<ClassStatisticsView | null> =>
+      classId ? loadClassStatistics(db, classId, period, session.timezone, locale) : null,
+    [db, classId, period.year, period.month, session.timezone, locale],
+  );
 }

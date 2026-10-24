@@ -1,4 +1,4 @@
-import type { LocalStore } from "./db/local-store";
+import type { LocalStore } from "@qct/core/data/local-store";
 
 /**
  * Holds an in-app link click until local writes are saved. Offline, Next.js

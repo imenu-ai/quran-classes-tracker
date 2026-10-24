@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classRecord, studentRecord } from "@qct/core/test/records";
+import { classRecord, studentRecord } from "../../test/records";
 import { searchStudents } from "./search";
 
 const fajr = classRecord({ name: "حلقة الفجر" });

@@ -26,7 +26,7 @@ Node 22 (see `.nvmrc`) and pnpm 10 (pinned in `package.json`; run `corepack enab
 **Repo layout.** A pnpm workspace (PLAN.md, Phase 2):
 
 - `apps/web`: the web app (package `@qct/web`).
-- `packages/core`: React-free code shared with the coming mobile app (package `@qct/core`, imported as `@qct/core/…`): domain rules, schemas and the sync protocol, i18n config and the messages. It's TypeScript source, compiled by the app that imports it.
+- `packages/core`: React-free code shared with the coming mobile app (package `@qct/core`, imported as `@qct/core/…`): domain rules, schemas and the sync protocol, the local data layer and sync engine (each app plugs in its own storage), i18n config and the messages. It's TypeScript source, compiled by the app that imports it.
 - `apps/mobile`: the React Native app, to come.
 
 Run every command below from the repo root: `lint`, `typecheck` and `test` run in every package, and the other scripts pass on to the web app. `.npmrc` sets `node-linker=hoisted`, which Amplify needs for a pnpm monorepo.
@@ -153,9 +153,10 @@ Service worker: cached assets and page shells
 - **Code layout:**
   - `packages/core/src/domain`: pure logic (sura map and validation, homework suggestion, monthly stats, dates).
   - `packages/core/src/shared`: schemas and the sync protocol, used by client and server.
+  - `packages/core/src/data`: the device's data layer over a storage interface: `LocalStore` and the outbox, the sync engine, and the actions and queries per entity, with tests that run on every storage adapter.
   - `packages/core/src/i18n` and `packages/core/messages`: locales, direction, formats, error codes to text, and the message files.
   - `apps/web/src/server`: Mongo, auth, sync services. The other web folders below are under `apps/web` too.
-  - `src/client`: Dexie, sync engine, PWA helpers.
+  - `src/client`: the Dexie storage adapter, live-query hooks, sync triggers, session and PWA helpers.
   - `src/components`, `src/app`: UI and routes.
 
 ## i18n and direction rules

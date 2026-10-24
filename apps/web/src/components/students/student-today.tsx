@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAccess } from "@/client/access";
 import { useApp } from "@/client/app-context";
-import { clearAttendance } from "@/client/data/attendance";
+import { clearAttendance } from "@qct/core/data/entities/attendance";
 import {
   deleteHomework,
   postponeHomework,
@@ -23,7 +23,7 @@ import {
   setStudentAttendance,
   undoEvaluation,
   undoPostpone,
-} from "@/client/data/homework";
+} from "@qct/core/data/entities/homework";
 import { todayLessonId, useStudentToday } from "@/client/data/today";
 import { localDateToUtcDate } from "@qct/core/domain/dates/local-date";
 import { isExam, postponedLessonsOf, type HomeworkRecord } from "@qct/core/shared/schemas/homework";

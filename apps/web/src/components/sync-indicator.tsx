@@ -4,7 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useApp, useSyncStatus } from "@/client/app-context";
-import { getIndicator, type IndicatorTone } from "@/client/sync/indicator";
+import { getIndicator, type IndicatorTone } from "@qct/core/data/sync/indicator";
 import { cn } from "@/lib/utils";
 
 const DOT: Record<IndicatorTone, string> = {
@@ -26,8 +26,8 @@ export function SyncIndicator({ className }: { className?: string }) {
   const t = useTranslations("sync");
   const { db, engine } = useApp();
   const status = useSyncStatus();
-  const pending = useLiveQuery(() => db.outbox.count(), [db]) ?? 0;
-  const rejected = useLiveQuery(() => db.rejected.count(), [db]) ?? 0;
+  const pending = useLiveQuery(() => db.count("outbox"), [db]) ?? 0;
+  const rejected = useLiveQuery(() => db.count("rejected"), [db]) ?? 0;
 
   const indicator = getIndicator({ state: status.state, pending, rejected });
   const text = indicator.messages

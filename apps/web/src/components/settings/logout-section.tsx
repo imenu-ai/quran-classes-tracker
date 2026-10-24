@@ -16,7 +16,7 @@ export function LogoutSection() {
   const t = useTranslations();
   const router = useRouter();
   const { session, db } = useApp();
-  const pending = useLiveQuery(() => db.outbox.count(), [db]) ?? 0;
+  const pending = useLiveQuery(() => db.count("outbox"), [db]) ?? 0;
   const [confirming, setConfirming] = useState(false);
 
   async function logout(force: boolean) {

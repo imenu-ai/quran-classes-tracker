@@ -1,6 +1,6 @@
 import "fake-indexeddb/auto";
 import { describe, expect, it, vi } from "vitest";
-import { openLocalDb } from "../db/dexie";
+import { openLocalDatabase } from "../db/dexie";
 import {
   bootstrapSession,
   clearSession,
@@ -78,13 +78,13 @@ describe("session snapshot", () => {
 
   it("forgetting the device deletes the user's local data and the snapshot", async () => {
     await bootstrapSession((async () => Response.json(me)) as unknown as typeof fetch);
-    const db = openLocalDb("u1");
-    await db.meta.put({ key: "cursor", value: 9 });
+    const db = openLocalDatabase("u1");
+    await db.transaction((tx) => tx.put("meta", { key: "cursor", value: 9 }));
 
     await forgetDevice(db);
     expect(await readSession()).toBeNull();
-    const reopened = openLocalDb("u1");
-    expect(await reopened.meta.count()).toBe(0);
-    await reopened.delete();
+    const reopened = openLocalDatabase("u1");
+    expect(await reopened.count("meta")).toBe(0);
+    await reopened.destroy();
   });
 });

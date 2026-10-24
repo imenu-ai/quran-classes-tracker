@@ -1,16 +1,8 @@
 import { useLiveQuery } from "dexie-react-hooks";
-import type { LocalDb } from "../db/dexie";
+import { loadPrintSheets } from "@qct/core/data/entities/print";
 import { useApp } from "../app-context";
-import {
-  buildMonthSheet,
-  buildStudentProfile,
-  referencedLessonIds,
-  type MonthSheet,
-} from "@qct/core/domain/stats/month-sheet";
-import type { ClassRecord } from "@qct/core/shared/schemas/class";
-import type { LessonRecord } from "@qct/core/shared/schemas/lesson";
-import type { StudentRecord } from "@qct/core/shared/schemas/student";
 
+export { loadPrintSheets, type PrintSheets } from "@qct/core/data/entities/print";
 export {
   buildMonthSheet,
   type MonthSheet,
@@ -21,55 +13,6 @@ export {
 export function printHref(classId: string, month: string, studentIds: readonly string[]) {
   const params = new URLSearchParams({ class: classId, month, students: studentIds.join(",") });
   return `/print?${params.toString()}`;
-}
-
-export interface PrintSheets {
-  cls: ClassRecord;
-  sheets: MonthSheet[];
-}
-
-/**
- * The month sheets of a class's chosen students, in the order asked.
- * Students that aren't (or are no longer) in the class are left out; null
- * when the class doesn't exist.
- */
-export async function loadPrintSheets(
-  db: LocalDb,
-  classId: string,
-  studentIds: readonly string[],
-  month: string,
-): Promise<PrintSheets | null> {
-  const cls = await db.classes.get(classId);
-  if (!cls || cls.deletedAt !== null) return null;
-  const ids = [...new Set(studentIds)];
-  const students = (await db.students.bulkGet(ids)).filter(
-    (s): s is StudentRecord => s !== undefined && s.deletedAt === null && s.classId === classId,
-  );
-  const studentIdList = students.map((s) => s.id);
-  const [homework, attendance] = await Promise.all([
-    db.homework.where("studentId").anyOf(studentIdList).toArray(),
-    db.attendance.where("studentId").anyOf(studentIdList).toArray(),
-  ]);
-  const lessons = (
-    await db.lessons.bulkGet(
-      referencedLessonIds(
-        homework.filter((h) => h.deletedAt === null),
-        attendance.filter((a) => a.deletedAt === null),
-      ),
-    )
-  ).filter((l): l is LessonRecord => l !== undefined);
-  const sheets = students.map((student) =>
-    buildMonthSheet(
-      student,
-      buildStudentProfile(
-        homework.filter((h) => h.studentId === student.id),
-        attendance.filter((a) => a.studentId === student.id),
-        lessons,
-      ),
-      month,
-    ),
-  );
-  return { cls, sheets };
 }
 
 /** The print page's data, live from the local database. */

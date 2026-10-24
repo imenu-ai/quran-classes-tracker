@@ -19,7 +19,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { useApp } from "@/client/app-context";
-import { rateHomework, setStudentAttendance, undoPostpone } from "@/client/data/homework";
+import { rateHomework, setStudentAttendance, undoPostpone } from "@qct/core/data/entities/homework";
 import { printHref } from "@/client/data/print";
 import { buildMonthHistory, type HistoryRow, type StudentProfile } from "@/client/data/profile";
 import { localDateToUtcDate, monthKey, todayInTimeZone } from "@qct/core/domain/dates/local-date";

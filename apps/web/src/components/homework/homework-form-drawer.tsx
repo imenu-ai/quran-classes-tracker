@@ -16,7 +16,7 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useApp } from "@/client/app-context";
-import { addExam, addHomework, updateHomework } from "@/client/data/homework";
+import { addExam, addHomework, updateHomework } from "@qct/core/data/entities/homework";
 import {
   checkAyahRange,
   type AyahRangeDraft,

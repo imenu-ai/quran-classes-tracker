@@ -1,6 +1,6 @@
 # Implementation Plan: Quran Memorization (تحفيظ القرآن)
 
-Status: **Phase 1 done (the PWA, deployed on Amplify). Phase 2 (React Native app) in progress: 2.1–2.3 done.** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-24
+Status: **Phase 1 done (the PWA, deployed on Amplify). Phase 2 (React Native app) in progress: 2.1–2.4 done.** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-24
 
 Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bottom)
 
@@ -239,6 +239,9 @@ A pnpm workspace since 2.2 (`pnpm-workspace.yaml`, `.npmrc` with `node-linker=ho
 │       │                    progress) · stats (monthly, class, month-sheet) · dates · text
 │       ├── shared/          client + server: schemas · sync (protocol, lww, tables) · access ·
 │       │                    ids · session · parent
+│       ├── data/            storage interface · LocalDatabase · memory adapter · LocalStore ·
+│       │                    outbox · sync (engine, apply-pull, rejected, backoff, indicator) ·
+│       │                    entities (actions and queries) · testing (suites for every adapter)
 │       ├── i18n/            config · direction · formats · error messages
 │       └── test/            record builders
 └── apps/web/            the Next.js app, package @qct/web
@@ -255,8 +258,8 @@ A pnpm workspace since 2.2 (`pnpm-workspace.yaml`, `.npmrc` with `node-linker=ho
         ├── i18n/            request (next-intl) · message types · useErrorMessage
         ├── server/          env · db · indexes · auth · repositories · sync · centers · members ·
         │                    parent · email (SES) · rate-limit
-        ├── client/          db (Dexie, LocalStore, outbox) · data (hooks and actions per entity) ·
-        │                    sync (engine, apply-pull, triggers, backoff) · session · auth · pwa
+        ├── client/          db (Dexie schema and adapter) · data (live-query hooks) ·
+        │                    sync (triggers, Web Locks) · session · auth · pwa
         ├── components/      ui (shadcn, rtl) · shell · classes · students · homework · lessons ·
         │                    print · parent · users · settings · auth · quran
         └── test/            setup, fake-indexeddb, mongo-memory helpers
@@ -455,7 +458,7 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
   - Update README, `CLAUDE.md` and the three skills for the new paths.
   - Web behaviour unchanged: unit, integration and E2E tests and `pnpm build` green. **You deploy the stack change with the merge**; Amplify's first build of `main` may start before the stack update finishes and need one re-run.
 - [x] **2.3 `packages/core`.** Move the pure code: `src/domain`, `src/shared`, the platform-free parts of `src/i18n` (config, direction, formats, error codes) and `messages/`. React-free, Vitest, imported as `@qct/core/...`. Web unchanged; tests move with their code.
-- [ ] **2.4 One data layer (#48, §2.14).**
+- [x] **2.4 One data layer (#48, §2.14).**
   - The storage interface in `packages/core`:
     - async;
     - per table: `get`, `bulkGet`, `query` by index (`equals`, `between`, `anyOf`), `put`, `bulkPut`, `delete`, `bulkDelete`;
@@ -574,3 +577,16 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
     The `:` key problem the plan expected is fixed upstream. Renewed cookies should be saved through the plugin's storage helper, not written straight to SecureStore: one session check went out without its cookie after a direct write.
   - The first local Android build took 12 minutes and installed NDK 27.1 by itself. Windows long paths are off on the development machine, so the spike lived in a short folder (see the prerequisites).
 - 2026-10-24 (with the user): the app split was re-confirmed: two separate apps (the web PWA and a native Expo app with native controls) in one repo, sharing `packages/core` including the data layer; phones and tablets; the PWA stays complete (#43–48 unchanged).
+- 2026-10-24 (2.4):
+  - **Dexie's implicit transaction zone doesn't survive deeply nested native async calls.** The first Dexie run of the shared suites failed with `PrematureCommitError`. After two levels of nested `async` functions, a call like `db.table(x).put()` lost the zone and opened a second transaction, which waited for the first while the first committed. The old code never hit this, because each `LocalStore` write opened its own nested Dexie transaction. The adapter now binds every operation inside a transaction to Dexie's transaction object (`trans.table(name)`) and returns Dexie's own promises. That's the explicit handle of §2.14, all the way down. Inside a transaction, only storage work may be awaited.
+  - **Core tests can't use Dexie**, so core has an in-memory adapter: the reference implementation, and a fake for app tests. It copies records in and out, keeps a transaction's writes private until commit, and runs transactions one at a time like SQLite will. An action that wrongly opened a second transaction through `store` instead of `tx` would deadlock there, not pass quietly.
+  - **The moved tests are suites that take an adapter factory** (`packages/core/src/data/testing`): the storage contract, `LocalStore` and the outbox, every entity's actions, apply-pull, discard and the sync engine. `dataLayerSuites` runs them all on the memory adapter in core and on Dexie in the web; 2.7 adds SQLite. Pure tests (search, backoff, indicator) are plain core tests. A web test checks the Dexie schema against `TABLE_SCHEMA`.
+  - **Behaviour changes, all internal:**
+    - `setAttendance`, `setExcuseNote` and `clearAttendance` now read and write in one transaction (they used to read outside one).
+    - apply-pull reads and writes each table in bulk.
+    - `acknowledge` and `markFailed` use bulk operations.
+    - `LocalStore.subscribe` listeners receive the tables a write changed.
+    - The sync engine takes `lock`, `isOnline` and `apiBaseUrl` options. The web passes Web Locks and `navigator.onLine` (`src/client/sync/browser.ts`); without them the engine assumes online and runs unlocked.
+    - The web's `client/data` modules keep their hooks and re-export core's actions. The action-only `lessons`, `attendance` and `homework` modules were removed, and their importers point at core.
+  - **The contract doesn't use an adapter after `destroy`:** Dexie 4 refuses to reopen a deleted database. Each adapter's own test checks that the data is gone.
+  - Tests: core 317 in 22 files (the shared suites on memory, plus the existing core tests), web 286 in 36 files (the shared suites on Dexie, plus the web's own). `next build` compiles; E2E 14 passed, 1 skipped (the offline spec on iPhone WebKit, as always).

@@ -1,8 +1,8 @@
-import { attendanceIdFor } from "@qct/core/shared/ids";
-import type { AttendanceRecord, AttendanceStatus } from "@qct/core/shared/schemas/attendance";
-import type { StudentRecord } from "@qct/core/shared/schemas/student";
-import type { LocalDb } from "../db/dexie";
-import type { LocalStore } from "../db/local-store";
+import { attendanceIdFor } from "../../shared/ids";
+import type { AttendanceRecord, AttendanceStatus } from "../../shared/schemas/attendance";
+import type { StudentRecord } from "../../shared/schemas/student";
+import type { DataWriter } from "../local-store";
+import type { StorageReader } from "../storage";
 import { isActive } from "./classes";
 import { sortByName } from "./students";
 
@@ -54,26 +54,17 @@ export function buildRoster(
   }));
 }
 
-// Lessons are read (attendance takes its lesson's class), never written here.
-const attendanceTables = (db: LocalDb) => [
-  db.attendance,
-  db.lessons,
-  db.outbox,
-  db.rejected,
-  db.meta,
-];
-
 /**
  * The student's attendance record in a lesson: a live one if any (whatever
  * its id: imported or older data may not use the derived id), otherwise the
  * record at the derived id, possibly soft-deleted.
  */
 export async function findAttendance(
-  db: LocalDb,
+  db: StorageReader,
   lessonId: string,
   studentId: string,
 ): Promise<AttendanceRecord | undefined> {
-  const records = (await db.attendance.where("lessonId").equals(lessonId).toArray()).filter(
+  const records = (await db.query("attendance", "lessonId", { equals: lessonId })).filter(
     (record) => record.studentId === studentId,
   );
   return (
@@ -83,51 +74,56 @@ export async function findAttendance(
 }
 
 /** Records (or changes) a student's status in a lesson. The excuse note is kept. */
-export async function setAttendance(
-  store: LocalStore,
+export function setAttendance(
+  store: DataWriter,
   lessonId: string,
   studentId: string,
   status: AttendanceStatus,
 ) {
-  const existing = await findAttendance(store.db, lessonId, studentId);
-  const lesson = await store.db.lessons.get(lessonId);
-  if (!lesson) throw new Error(`No lesson ${lessonId}`);
-  return store.upsert("attendance", existing?.id ?? attendanceIdFor(lessonId, studentId), {
-    lessonId,
-    classId: lesson.classId,
-    studentId,
-    status,
-    excuseNote: existing?.excuseNote ?? "",
+  return store.transaction(async (tx) => {
+    const existing = await findAttendance(tx, lessonId, studentId);
+    const lesson = await tx.get("lessons", lessonId);
+    if (!lesson) throw new Error(`No lesson ${lessonId}`);
+    return tx.upsert("attendance", existing?.id ?? attendanceIdFor(lessonId, studentId), {
+      lessonId,
+      classId: lesson.classId,
+      studentId,
+      status,
+      excuseNote: existing?.excuseNote ?? "",
+    });
   });
 }
 
 export async function setExcuseNote(
-  store: LocalStore,
+  store: DataWriter,
   lessonId: string,
   studentId: string,
   note: string,
 ) {
-  const existing = await findAttendance(store.db, lessonId, studentId);
-  if (existing) await store.update("attendance", existing.id, { excuseNote: note });
+  await store.transaction(async (tx) => {
+    const existing = await findAttendance(tx, lessonId, studentId);
+    if (existing) await tx.update("attendance", existing.id, { excuseNote: note });
+  });
 }
 
 /** Back to "not marked" (soft delete; the same record is revived if marked again). */
-export async function clearAttendance(store: LocalStore, lessonId: string, studentId: string) {
-  const existing = await findAttendance(store.db, lessonId, studentId);
-  if (existing && existing.deletedAt === null) await store.softDelete("attendance", existing.id);
+export async function clearAttendance(store: DataWriter, lessonId: string, studentId: string) {
+  await store.transaction(async (tx) => {
+    const existing = await findAttendance(tx, lessonId, studentId);
+    if (existing && existing.deletedAt === null) await tx.softDelete("attendance", existing.id);
+  });
 }
 
 /**
  * Marks every not-yet-marked student present, in one transaction. Students
  * already marked absent or excused are left as they are.
  */
-export async function markAllPresent(store: LocalStore, lessonId: string, studentIds: string[]) {
-  const { db } = store;
-  await db.transaction("rw", attendanceTables(db), async () => {
+export async function markAllPresent(store: DataWriter, lessonId: string, studentIds: string[]) {
+  await store.transaction(async (tx) => {
     for (const studentId of studentIds) {
-      const existing = await findAttendance(db, lessonId, studentId);
+      const existing = await findAttendance(tx, lessonId, studentId);
       if (!existing || existing.deletedAt !== null) {
-        await setAttendance(store, lessonId, studentId, "present");
+        await setAttendance(tx, lessonId, studentId, "present");
       }
     }
   });

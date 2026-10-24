@@ -6,9 +6,10 @@ import { resetAuthForTests } from "@/server/auth/auth";
 import { ensureIndexes } from "@/server/indexes";
 import { createSignedInTeacher } from "@/test/auth";
 import { startTestMongo } from "@/test/mongo";
-import { openLocalDb, type LocalDb } from "../db/dexie";
-import { LocalStore } from "../db/local-store";
-import { SyncEngine } from "./engine";
+import type { LocalDatabase } from "@qct/core/data/database";
+import { LocalStore } from "@qct/core/data/local-store";
+import { SyncEngine } from "@qct/core/data/sync/engine";
+import { openLocalDatabase } from "../db/dexie";
 
 /** A fetch that sends requests to the real route handlers with a session cookie. */
 function routesFetch(cookie: string): typeof fetch {
@@ -22,7 +23,7 @@ function routesFetch(cookie: string): typeof fetch {
 }
 
 interface Device {
-  db: LocalDb;
+  db: LocalDatabase;
   store: LocalStore;
   engine: SyncEngine;
   setNow(ms: number): void;
@@ -30,7 +31,7 @@ interface Device {
 
 function makeDevice(name: string, tenantId: string, cookie: string): Device {
   let now = 1_000;
-  const db = openLocalDb(`int-${name}-${crypto.randomUUID()}`);
+  const db = openLocalDatabase(`int-${name}-${crypto.randomUUID()}`);
   return {
     db,
     store: new LocalStore(db, { tenantId, deviceId: name, now: () => now }),
@@ -58,7 +59,7 @@ describe("two devices syncing through the real server", () => {
   });
 
   afterAll(async () => {
-    for (const device of [phone, laptop, otherTeacher]) await device.db.delete();
+    for (const device of [phone, laptop, otherTeacher]) await device.db.destroy();
     resetAuthForTests();
     await stop();
   });
@@ -75,15 +76,15 @@ describe("two devices syncing through the real server", () => {
       archivedAt: null,
     });
     await phone.engine.syncNow();
-    expect(await phone.db.outbox.count()).toBe(0);
+    expect(await phone.db.count("outbox")).toBe(0);
 
     await laptop.engine.syncNow();
-    expect(await laptop.db.classes.get(cls.id)).toMatchObject({ name: "حلقة الفجر" });
-    expect(await laptop.db.students.where("classId").equals(cls.id).count()).toBe(1);
+    expect(await laptop.db.get("classes", cls.id)).toMatchObject({ name: "حلقة الفجر" });
+    expect(await laptop.db.query("students", "classId", { equals: cls.id })).toHaveLength(1);
   });
 
   it("concurrent offline edits converge to the later one on both devices", async () => {
-    const [cls] = await phone.db.classes.toArray();
+    const [cls] = await phone.db.all("classes");
     phone.setNow(10_000);
     await phone.store.update("classes", cls!.id, { name: "edited on phone" });
     laptop.setNow(20_000);
@@ -94,24 +95,24 @@ describe("two devices syncing through the real server", () => {
     await phone.engine.syncNow();
 
     for (const device of [phone, laptop]) {
-      expect(await device.db.classes.get(cls!.id)).toMatchObject({
+      expect(await device.db.get("classes", cls!.id)).toMatchObject({
         name: "edited on laptop (later)",
       });
-      expect(await device.db.outbox.count()).toBe(0);
+      expect(await device.db.count("outbox")).toBe(0);
     }
   });
 
   it("a soft delete on one device reaches the other", async () => {
-    const [student] = await laptop.db.students.toArray();
+    const [student] = await laptop.db.all("students");
     laptop.setNow(30_000);
     await laptop.store.softDelete("students", student!.id);
     await laptop.engine.syncNow();
     await phone.engine.syncNow();
-    expect(await phone.db.students.get(student!.id)).toMatchObject({ deletedAt: 30_000 });
+    expect(await phone.db.get("students", student!.id)).toMatchObject({ deletedAt: 30_000 });
   });
 
   it("the server rejects an invalid ayah range even if the client skipped validation", async () => {
-    const [student] = await phone.db.students.toArray();
+    const [student] = await phone.db.all("students");
     const bad = {
       id: "01928c5e-7b3a-7cde-8f00-00000000bad1",
       tenantId: "ignored",
@@ -132,30 +133,32 @@ describe("two devices syncing through the real server", () => {
       postponedLessonIds: [],
       kind: "homework" as const,
     };
-    // Write straight to IndexedDB, bypassing LocalStore validation.
-    await phone.db.homework.put(bad);
-    await phone.db.outbox.put({
-      recordId: bad.id,
-      table: "homework",
-      rev: 1,
-      enqueuedAt: 40_000,
-      attempts: 0,
-      lastError: null,
+    // Write straight to the database, bypassing LocalStore validation.
+    await phone.db.transaction(async (tx) => {
+      await tx.put("homework", bad);
+      await tx.put("outbox", {
+        recordId: bad.id,
+        table: "homework",
+        rev: 1,
+        enqueuedAt: 40_000,
+        attempts: 0,
+        lastError: null,
+      });
     });
 
     await phone.engine.syncNow();
-    expect(await phone.db.outbox.count()).toBe(0);
-    expect(await phone.db.rejected.get(bad.id)).toMatchObject({
+    expect(await phone.db.count("outbox")).toBe(0);
+    expect(await phone.db.get("rejected", bad.id)).toMatchObject({
       code: "AYAH_OUT_OF_RANGE",
       params: { surah: 108, ayahCount: 3, field: "toAyah" },
     });
     await laptop.engine.syncNow();
-    expect(await laptop.db.homework.get(bad.id)).toBeUndefined();
+    expect(await laptop.db.get("homework", bad.id)).toBeUndefined();
   });
 
   it("another teacher's device never receives this tenant's data", async () => {
     await otherTeacher.engine.syncNow();
-    expect(await otherTeacher.db.classes.count()).toBe(0);
-    expect(await otherTeacher.db.students.count()).toBe(0);
+    expect(await otherTeacher.db.count("classes")).toBe(0);
+    expect(await otherTeacher.db.count("students")).toBe(0);
   });
 });

@@ -1,6 +1,7 @@
-import type { ErrorParams } from "@qct/core/shared/schemas/errors";
-import { SYNC_TABLES, type SyncRecord } from "@qct/core/shared/sync/tables";
-import type { LocalDb, OutboxEntry } from "./dexie";
+import type { ErrorParams } from "../shared/schemas/errors";
+import { SYNC_TABLES, type SyncRecord } from "../shared/sync/tables";
+import type { LocalDatabase } from "./database";
+import type { OutboxEntry, StorageReader } from "./storage";
 
 export interface OutboxItem {
   entry: OutboxEntry;
@@ -17,14 +18,14 @@ export interface OutboxItem {
  * yesterday scored in today's lesson, created just now), and the server
  * would refuse it as REFERENCE_NOT_FOUND.
  */
-export async function readOutboxBatch(db: LocalDb, limit: number): Promise<OutboxItem[]> {
+export async function readOutboxBatch(db: StorageReader, limit: number): Promise<OutboxItem[]> {
   const rank = (entry: OutboxEntry) => SYNC_TABLES.indexOf(entry.table);
-  const entries = (await db.outbox.orderBy("enqueuedAt").toArray())
+  const entries = (await db.all("outbox"))
     .sort((a, b) => rank(a) - rank(b) || a.enqueuedAt - b.enqueuedAt)
     .slice(0, limit);
   const items: OutboxItem[] = [];
   for (const entry of entries) {
-    const record = await db.syncTable(entry.table).get(entry.recordId);
+    const record = await db.get(entry.table, entry.recordId);
     if (record) items.push({ entry, record });
     // A record can't vanish locally (deletes are soft), so a missing one is
     // simply skipped; its entry stays for inspection rather than being dropped.
@@ -36,12 +37,18 @@ export async function readOutboxBatch(db: LocalDb, limit: number): Promise<Outbo
  * Clears entries the server accepted (applied or already newer there), but
  * only if the record wasn't edited again while the push was in flight.
  */
-export async function acknowledge(db: LocalDb, sent: readonly OutboxEntry[]): Promise<void> {
-  await db.transaction("rw", db.outbox, async () => {
-    for (const { recordId, rev } of sent) {
-      const current = await db.outbox.get(recordId);
-      if (current && current.rev === rev) await db.outbox.delete(recordId);
-    }
+export async function acknowledge(db: LocalDatabase, sent: readonly OutboxEntry[]): Promise<void> {
+  if (sent.length === 0) return;
+  await db.transaction(async (tx) => {
+    const current = await tx.bulkGet(
+      "outbox",
+      sent.map((entry) => entry.recordId),
+    );
+    const done = sent.filter((entry, i) => current[i]?.rev === entry.rev);
+    await tx.bulkDelete(
+      "outbox",
+      done.map((entry) => entry.recordId),
+    );
   });
 }
 
@@ -50,17 +57,17 @@ export async function acknowledge(db: LocalDb, sent: readonly OutboxEntry[]): Pr
  * after it was sent, the newer revision stays queued and is tried instead.
  */
 export async function reject(
-  db: LocalDb,
+  db: LocalDatabase,
   sent: OutboxEntry,
   code: string,
   params: ErrorParams,
   now: number,
 ): Promise<void> {
-  await db.transaction("rw", [db.outbox, db.rejected], async () => {
-    const current = await db.outbox.get(sent.recordId);
+  await db.transaction(async (tx) => {
+    const current = await tx.get("outbox", sent.recordId);
     if (!current || current.rev !== sent.rev) return;
-    await db.outbox.delete(sent.recordId);
-    await db.rejected.put({
+    await tx.delete("outbox", sent.recordId);
+    await tx.put("rejected", {
       recordId: sent.recordId,
       table: sent.table,
       code,
@@ -72,29 +79,38 @@ export async function reject(
 
 /** Records a failed attempt (network or server error). The entry is kept. */
 export async function markFailed(
-  db: LocalDb,
+  db: LocalDatabase,
   sent: readonly OutboxEntry[],
   error: string,
 ): Promise<void> {
-  await db.transaction("rw", db.outbox, async () => {
-    for (const { recordId } of sent) {
-      const current = await db.outbox.get(recordId);
-      if (current) {
-        await db.outbox.put({ ...current, attempts: current.attempts + 1, lastError: error });
-      }
-    }
+  if (sent.length === 0) return;
+  await db.transaction(async (tx) => {
+    const current = await tx.bulkGet(
+      "outbox",
+      sent.map((entry) => entry.recordId),
+    );
+    await tx.bulkPut(
+      "outbox",
+      current
+        .filter((entry): entry is OutboxEntry => entry !== undefined)
+        .map((entry) => ({ ...entry, attempts: entry.attempts + 1, lastError: error })),
+    );
   });
 }
 
 /** Puts a rejected change back in the outbox to try again. */
-export async function retryRejected(db: LocalDb, recordId: string, now: number): Promise<void> {
-  await db.transaction("rw", [db.outbox, db.rejected], async () => {
-    const rejected = await db.rejected.get(recordId);
+export async function retryRejected(
+  db: LocalDatabase,
+  recordId: string,
+  now: number,
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    const rejected = await tx.get("rejected", recordId);
     if (!rejected) return;
-    await db.rejected.delete(recordId);
-    const existing = await db.outbox.get(recordId);
+    await tx.delete("rejected", recordId);
+    const existing = await tx.get("outbox", recordId);
     if (!existing) {
-      await db.outbox.put({
+      await tx.put("outbox", {
         recordId,
         table: rejected.table,
         rev: 1,
@@ -106,6 +122,6 @@ export async function retryRejected(db: LocalDb, recordId: string, now: number):
   });
 }
 
-export function pendingCount(db: LocalDb): Promise<number> {
-  return db.outbox.count();
+export function pendingCount(db: StorageReader): Promise<number> {
+  return db.count("outbox");
 }

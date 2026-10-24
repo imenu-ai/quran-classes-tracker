@@ -17,8 +17,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useApp, useSyncStatus } from "@/client/app-context";
-import { retryRejected } from "@/client/db/outbox";
-import { discardRejected } from "@/client/sync/rejected";
+import { retryRejected } from "@qct/core/data/outbox";
+import { discardRejected } from "@qct/core/data/sync/rejected";
 import { useErrorMessage } from "@/i18n/use-error-message";
 import type { ErrorCode } from "@qct/core/shared/schemas/errors";
 import { SYNC_REJECTION_CODES } from "@qct/core/shared/sync/protocol";
@@ -30,8 +30,8 @@ export function SyncSection() {
   const errorMessage = useErrorMessage();
   const { db, engine } = useApp();
   const status = useSyncStatus();
-  const pending = useLiveQuery(() => db.outbox.count(), [db]) ?? 0;
-  const rejected = useLiveQuery(() => db.rejected.orderBy("recordId").toArray(), [db]) ?? [];
+  const pending = useLiveQuery(() => db.count("outbox"), [db]) ?? 0;
+  const rejected = useLiveQuery(() => db.all("rejected"), [db]) ?? [];
   const [discarding, setDiscarding] = useState<string | null>(null);
 
   const reason = (code: string, params: Record<string, string | number>) =>

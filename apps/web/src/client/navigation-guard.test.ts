@@ -1,18 +1,19 @@
 // @vitest-environment jsdom
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { openLocalDb, type LocalDb } from "./db/dexie";
-import { LocalStore } from "./db/local-store";
+import type { LocalDatabase } from "@qct/core/data/database";
+import { LocalStore } from "@qct/core/data/local-store";
+import { openLocalDatabase } from "./db/dexie";
 import { attachNavigationGuard } from "./navigation-guard";
 
 describe("navigation guard", () => {
-  let db: LocalDb;
+  let db: LocalDatabase;
   let store: LocalStore;
   let detach: () => void;
   const navigate = vi.fn();
 
   beforeEach(() => {
-    db = openLocalDb(`guard-${crypto.randomUUID()}`);
+    db = openLocalDatabase(`guard-${crypto.randomUUID()}`);
     store = new LocalStore(db, { tenantId: "t1", deviceId: "d1" });
     detach = attachNavigationGuard(store, navigate);
     document.body.innerHTML = `<a id="in" href="/class?id=1">back</a><a id="out" href="https://example.com/">out</a>`;
@@ -21,7 +22,7 @@ describe("navigation guard", () => {
   afterEach(async () => {
     detach();
     navigate.mockReset();
-    await db.delete();
+    await db.destroy();
   });
 
   const click = (id: string) => {
@@ -43,7 +44,7 @@ describe("navigation guard", () => {
     expect(navigate).not.toHaveBeenCalled();
     await writing;
     await vi.waitFor(() => expect(navigate).toHaveBeenCalledWith("/class?id=1"));
-    expect(await db.classes.count()).toBe(1);
+    expect(await db.count("classes")).toBe(1);
   });
 
   it("never holds links to other sites", async () => {

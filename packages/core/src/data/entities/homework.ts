@@ -1,25 +1,14 @@
-import type { Portion } from "@qct/core/domain/homework/suggestion";
-import { postponedLessonsOf, type HomeworkRecord } from "@qct/core/shared/schemas/homework";
-import type { LocalDb } from "../db/dexie";
-import type { LocalStore } from "../db/local-store";
-import type { AttendanceStatus } from "@qct/core/shared/schemas/attendance";
+import type { Portion } from "../../domain/homework/suggestion";
+import type { AttendanceStatus } from "../../shared/schemas/attendance";
+import { postponedLessonsOf, type HomeworkRecord } from "../../shared/schemas/homework";
+import type { DataWriter } from "../local-store";
 import { findAttendance, setAttendance } from "./attendance";
 
-const homeworkTables = (db: LocalDb) => [
-  db.homework,
-  db.attendance,
-  // Read when evaluating marks the student present (attendance takes the lesson's class).
-  db.lessons,
-  db.outbox,
-  db.rejected,
-  db.meta,
-];
-
 /** Evaluating a student who isn't marked yet marks them present. */
-async function ensurePresent(store: LocalStore, lessonId: string, studentId: string) {
-  const record = await findAttendance(store.db, lessonId, studentId);
+async function ensurePresent(tx: DataWriter, lessonId: string, studentId: string) {
+  const record = await findAttendance(tx, lessonId, studentId);
   if (!record || record.deletedAt !== null) {
-    await setAttendance(store, lessonId, studentId, "present");
+    await setAttendance(tx, lessonId, studentId, "present");
   }
 }
 
@@ -30,18 +19,17 @@ export type RateField = "memorizationRate" | "behaviorRate";
  * lesson. Scoring after a postponement in the same lesson replaces it.
  */
 export async function rateHomework(
-  store: LocalStore,
+  store: DataWriter,
   item: Pick<HomeworkRecord, "id" | "studentId">,
   lessonId: string,
   field: RateField,
   score: number | null,
 ) {
-  const { db } = store;
-  await db.transaction("rw", homeworkTables(db), async () => {
-    await ensurePresent(store, lessonId, item.studentId);
-    const current = await db.homework.get(item.id);
+  await store.transaction(async (tx) => {
+    await ensurePresent(tx, lessonId, item.studentId);
+    const current = await tx.get("homework", item.id);
     const postponed = current ? postponedLessonsOf(current) : [];
-    await store.update("homework", item.id, {
+    await tx.update("homework", item.id, {
       evaluatedLessonId: lessonId,
       [field]: score,
       ...(postponed.includes(lessonId)
@@ -57,18 +45,17 @@ export async function rateHomework(
  * nothing is scored. Only for items not evaluated yet.
  */
 export async function postponeHomework(
-  store: LocalStore,
+  store: DataWriter,
   item: Pick<HomeworkRecord, "id" | "studentId">,
   lessonId: string,
 ) {
-  const { db } = store;
-  await db.transaction("rw", homeworkTables(db), async () => {
-    const current = await db.homework.get(item.id);
+  await store.transaction(async (tx) => {
+    const current = await tx.get("homework", item.id);
     if (!current || current.deletedAt !== null || current.evaluatedLessonId !== null) return;
     const postponed = postponedLessonsOf(current);
     if (postponed.includes(lessonId)) return;
-    await ensurePresent(store, lessonId, item.studentId);
-    await store.update("homework", item.id, { postponedLessonIds: [...postponed, lessonId] });
+    await ensurePresent(tx, lessonId, item.studentId);
+    await tx.update("homework", item.id, { postponedLessonIds: [...postponed, lessonId] });
   });
 }
 
@@ -78,20 +65,19 @@ export async function postponeHomework(
  * postponements in that lesson.
  */
 export async function setStudentAttendance(
-  store: LocalStore,
+  store: DataWriter,
   lessonId: string,
   studentId: string,
   status: AttendanceStatus,
 ) {
-  const { db } = store;
-  await db.transaction("rw", homeworkTables(db), async () => {
-    await setAttendance(store, lessonId, studentId, status);
+  await store.transaction(async (tx) => {
+    await setAttendance(tx, lessonId, studentId, status);
     if (status === "present") return;
-    const items = await db.homework.where("studentId").equals(studentId).toArray();
+    const items = await tx.query("homework", "studentId", { equals: studentId });
     for (const item of items) {
       const postponed = postponedLessonsOf(item);
       if (item.deletedAt !== null || !postponed.includes(lessonId)) continue;
-      await store.update("homework", item.id, {
+      await tx.update("homework", item.id, {
         postponedLessonIds: postponed.filter((id) => id !== lessonId),
       });
     }
@@ -100,17 +86,16 @@ export async function setStudentAttendance(
 
 /** Undoes a postponement made in this lesson. */
 export async function undoPostpone(
-  store: LocalStore,
+  store: DataWriter,
   item: Pick<HomeworkRecord, "id">,
   lessonId: string,
 ) {
-  const { db } = store;
-  await db.transaction("rw", homeworkTables(db), async () => {
-    const current = await db.homework.get(item.id);
+  await store.transaction(async (tx) => {
+    const current = await tx.get("homework", item.id);
     if (!current) return;
     const postponed = postponedLessonsOf(current);
     if (!postponed.includes(lessonId)) return;
-    await store.update("homework", item.id, {
+    await tx.update("homework", item.id, {
       postponedLessonIds: postponed.filter((id) => id !== lessonId),
     });
   });
@@ -120,7 +105,7 @@ export async function undoPostpone(
  * Undoes an evaluation made in this lesson. An item created here to be
  * recited on the spot ("تسميع الآن") is removed; any other goes back to pending.
  */
-export async function undoEvaluation(store: LocalStore, item: HomeworkRecord, lessonId: string) {
+export async function undoEvaluation(store: DataWriter, item: HomeworkRecord, lessonId: string) {
   if (item.assignedLessonId === lessonId) {
     await store.softDelete("homework", item.id);
   } else {
@@ -136,8 +121,8 @@ export async function undoEvaluation(store: LocalStore, item: HomeworkRecord, le
  * Adds homework in this lesson: for the next lesson, or (evaluateNow) to be
  * recited and scored right away.
  */
-export async function addHomework(
-  store: LocalStore,
+export function addHomework(
+  store: DataWriter,
   input: {
     studentId: string;
     lessonId: string;
@@ -146,10 +131,9 @@ export async function addHomework(
     evaluateNow: boolean;
   },
 ) {
-  const { db } = store;
-  return db.transaction("rw", homeworkTables(db), async () => {
-    if (input.evaluateNow) await ensurePresent(store, input.lessonId, input.studentId);
-    return store.create("homework", {
+  return store.transaction(async (tx) => {
+    if (input.evaluateNow) await ensurePresent(tx, input.lessonId, input.studentId);
+    return tx.create("homework", {
       studentId: input.studentId,
       ...input.portion,
       note: input.note,
@@ -168,14 +152,13 @@ export async function addHomework(
  * set afterwards), never assigned beforehand. Marks the student present.
  * Undo (undoEvaluation) removes it, since it was assigned in this lesson.
  */
-export async function addExam(
-  store: LocalStore,
+export function addExam(
+  store: DataWriter,
   input: { studentId: string; lessonId: string; portion: Portion; note: string },
 ) {
-  const { db } = store;
-  return db.transaction("rw", homeworkTables(db), async () => {
-    await ensurePresent(store, input.lessonId, input.studentId);
-    return store.create("homework", {
+  return store.transaction(async (tx) => {
+    await ensurePresent(tx, input.lessonId, input.studentId);
+    return tx.create("homework", {
       studentId: input.studentId,
       ...input.portion,
       note: input.note,
@@ -190,10 +173,10 @@ export async function addExam(
 }
 
 /** Edits the portion (e.g. the student recited only part of it). */
-export function updateHomework(store: LocalStore, id: string, portion: Portion, note: string) {
+export function updateHomework(store: DataWriter, id: string, portion: Portion, note: string) {
   return store.update("homework", id, { ...portion, note });
 }
 
-export function deleteHomework(store: LocalStore, id: string) {
+export function deleteHomework(store: DataWriter, id: string) {
   return store.softDelete("homework", id);
 }
