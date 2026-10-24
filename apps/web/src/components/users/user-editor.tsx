@@ -41,7 +41,7 @@ import {
   type UsersErrorCode,
 } from "@/client/data/users";
 import { bootstrapSession } from "@/client/session/session";
-import { toWesternDigits } from "@/domain/text/digits";
+import { toWesternDigits } from "@qct/core/domain/text/digits";
 import { useErrorMessage } from "@/i18n/use-error-message";
 import {
   createMemberSchema,
@@ -52,8 +52,8 @@ import {
   USERNAME_MAX,
   type Permission,
   type Role,
-} from "@/shared/access";
-import { parseWithCodes, type FieldError as CodedError } from "@/shared/schemas/errors";
+} from "@qct/core/shared/access";
+import { parseWithCodes, type FieldError as CodedError } from "@qct/core/shared/schemas/errors";
 
 const PERMISSION_KEY: Record<
   Permission,

@@ -25,10 +25,10 @@ import {
   undoPostpone,
 } from "@/client/data/homework";
 import { todayLessonId, useStudentToday } from "@/client/data/today";
-import { localDateToUtcDate } from "@/domain/dates/local-date";
-import { isExam, postponedLessonsOf, type HomeworkRecord } from "@/shared/schemas/homework";
+import { localDateToUtcDate } from "@qct/core/domain/dates/local-date";
+import { isExam, postponedLessonsOf, type HomeworkRecord } from "@qct/core/shared/schemas/homework";
 import { cn } from "@/lib/utils";
-import type { StudentRecord } from "@/shared/schemas/student";
+import type { StudentRecord } from "@qct/core/shared/schemas/student";
 import { AttendanceToggle, ExcuseNoteInput } from "./attendance-controls";
 
 /**

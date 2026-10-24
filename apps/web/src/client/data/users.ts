@@ -1,7 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { CreateMemberInput, Permission, Role, UpdateMemberInput } from "@/shared/access";
+import type {
+  CreateMemberInput,
+  Permission,
+  Role,
+  UpdateMemberInput,
+} from "@qct/core/shared/access";
 import { apiCall, type ApiErrorCode } from "../api";
 
 /** A user of the center as the admin sees it (GET /api/center/users). */

@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { PullResponse, PushMutation, PushResult } from "@/shared/sync/protocol";
-import { classRecord } from "@/test/records";
+import type { PullResponse, PushMutation, PushResult } from "@qct/core/shared/sync/protocol";
+import { classRecord } from "@qct/core/test/records";
 import { openLocalDb, type LocalDb } from "../db/dexie";
 import { LocalStore } from "../db/local-store";
 import { applyPulledChanges, getCursor } from "./apply-pull";

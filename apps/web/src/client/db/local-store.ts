@@ -1,7 +1,7 @@
 import { v7 as uuidv7 } from "uuid";
-import { parseWithCodes, type FieldError } from "@/shared/schemas/errors";
-import type { SyncableBase } from "@/shared/schemas/base";
-import { RECORD_SCHEMAS, type SyncRecordMap, type SyncTable } from "@/shared/sync/tables";
+import { parseWithCodes, type FieldError } from "@qct/core/shared/schemas/errors";
+import type { SyncableBase } from "@qct/core/shared/schemas/base";
+import { RECORD_SCHEMAS, type SyncRecordMap, type SyncTable } from "@qct/core/shared/sync/tables";
 import type { LocalDb, OutboxEntry } from "./dexie";
 
 /** Fields the store manages itself; callers never set them directly. */

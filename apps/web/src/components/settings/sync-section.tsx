@@ -20,8 +20,8 @@ import { useApp, useSyncStatus } from "@/client/app-context";
 import { retryRejected } from "@/client/db/outbox";
 import { discardRejected } from "@/client/sync/rejected";
 import { useErrorMessage } from "@/i18n/use-error-message";
-import type { ErrorCode } from "@/shared/schemas/errors";
-import { SYNC_REJECTION_CODES } from "@/shared/sync/protocol";
+import type { ErrorCode } from "@qct/core/shared/schemas/errors";
+import { SYNC_REJECTION_CODES } from "@qct/core/shared/sync/protocol";
 
 /** Sync status, a manual sync, and the changes the server refused. */
 export function SyncSection() {

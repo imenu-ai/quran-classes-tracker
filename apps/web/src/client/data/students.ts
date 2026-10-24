@@ -1,6 +1,6 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { useLocale } from "next-intl";
-import type { MemorizationDirection, StudentRecord } from "@/shared/schemas/student";
+import type { MemorizationDirection, StudentRecord } from "@qct/core/shared/schemas/student";
 import { useApp } from "../app-context";
 import type { LocalStore } from "../db/local-store";
 import { isActive, isArchived } from "./classes";

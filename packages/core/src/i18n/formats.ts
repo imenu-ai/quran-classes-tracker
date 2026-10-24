@@ -1,4 +1,8 @@
-import type { Formats } from "next-intl";
+/** The shape of next-intl's and use-intl's `Formats`, without depending on either. */
+interface Formats {
+  dateTime: Record<string, Intl.DateTimeFormatOptions>;
+  number: Record<string, Intl.NumberFormatOptions>;
+}
 
 /**
  * Named formats used with next-intl's `format.dateTime(date, name)` and

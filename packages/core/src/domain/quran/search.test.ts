@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { normalizeForSearch, searchSurahs } from "@/domain/quran/search";
-import { SURAHS } from "@/domain/quran/surahs";
+import { normalizeForSearch, searchSurahs } from "./search";
+import { SURAHS } from "./surahs";
 
 const numbers = (query: string, locale = "ar") => searchSurahs(query, locale).map((s) => s.number);
 

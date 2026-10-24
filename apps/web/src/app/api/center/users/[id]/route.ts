@@ -1,7 +1,7 @@
 import { updateMember } from "@/server/centers";
 import { centerResponse, withAdmin } from "@/server/center-http";
 import { readJsonBody } from "@/server/sync/http";
-import type { UpdateMemberInput } from "@/shared/access";
+import type { UpdateMemberInput } from "@qct/core/shared/access";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

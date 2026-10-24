@@ -1,7 +1,7 @@
 import type { Db, Filter } from "mongodb";
-import { isAdmin } from "@/shared/access";
-import type { PullChanges, PullResponse } from "@/shared/sync/protocol";
-import { SYNC_TABLES, type SyncRecord, type SyncTable } from "@/shared/sync/tables";
+import { isAdmin } from "@qct/core/shared/access";
+import type { PullChanges, PullResponse } from "@qct/core/shared/sync/protocol";
+import { SYNC_TABLES, type SyncRecord, type SyncTable } from "@qct/core/shared/sync/tables";
 import { actorOf, tenantIdOf, type Actor, type SyncScope } from "../actor";
 import {
   createTenantRepositories,

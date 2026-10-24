@@ -6,7 +6,7 @@ import {
   homeworkRecord,
   lessonRecord,
   studentRecord,
-} from "@/test/records";
+} from "@qct/core/test/records";
 import { openLocalDb, type LocalDb } from "../db/dexie";
 import { buildMonthSheet, loadPrintSheets } from "./print";
 import { buildStudentProfile } from "./profile";

@@ -1,11 +1,14 @@
 import { useLiveQuery } from "dexie-react-hooks";
-import { todayInTimeZone, type LocalDate } from "@/domain/dates/local-date";
-import { splitLessonHomework, type StudentLessonHomework } from "@/domain/homework/progress";
-import { lessonIdFor } from "@/shared/ids";
-import type { AttendanceRecord } from "@/shared/schemas/attendance";
-import type { HomeworkRecord } from "@/shared/schemas/homework";
-import type { LessonRecord } from "@/shared/schemas/lesson";
-import type { StudentRecord } from "@/shared/schemas/student";
+import { todayInTimeZone, type LocalDate } from "@qct/core/domain/dates/local-date";
+import {
+  splitLessonHomework,
+  type StudentLessonHomework,
+} from "@qct/core/domain/homework/progress";
+import { lessonIdFor } from "@qct/core/shared/ids";
+import type { AttendanceRecord } from "@qct/core/shared/schemas/attendance";
+import type { HomeworkRecord } from "@qct/core/shared/schemas/homework";
+import type { LessonRecord } from "@qct/core/shared/schemas/lesson";
+import type { StudentRecord } from "@qct/core/shared/schemas/student";
 import { useApp } from "../app-context";
 import type { LocalStore } from "../db/local-store";
 import { findAttendance } from "./attendance";

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { getAccountErrorKey } from "@/client/auth/account-errors";
 import { authClient } from "@/client/auth/auth-client";
 import { cn } from "@/lib/utils";
-import { PASSWORD_MAX, PASSWORD_MIN } from "@/shared/access";
+import { PASSWORD_MAX, PASSWORD_MIN } from "@qct/core/shared/access";
 
 type PasswordField = "current" | "next" | "confirm";
 

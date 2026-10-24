@@ -1,5 +1,5 @@
 import type { Db } from "mongodb";
-import type { Access, Permission, Role } from "@/shared/access";
+import type { Access, Permission, Role } from "@qct/core/shared/access";
 import { COLLECTIONS } from "./collections";
 
 /**

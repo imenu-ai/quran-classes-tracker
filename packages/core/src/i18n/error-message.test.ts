@@ -1,8 +1,8 @@
-import { createTranslator } from "next-intl";
+import { createTranslator } from "use-intl/core";
 import { describe, expect, it } from "vitest";
 import ar from "../../messages/ar.json";
 import en from "../../messages/en.json";
-import { VALIDATION_CODES } from "@/shared/schemas/errors";
+import { VALIDATION_CODES } from "../shared/schemas/errors";
 import { getIntlLocale, type Locale } from "./config";
 import { translateError, type ErrorsTranslator } from "./error-message";
 

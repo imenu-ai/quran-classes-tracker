@@ -6,7 +6,7 @@ An offline-first PWA for Quran memorization centers. It's Arabic-first and RTL (
 - `PLAN.md`: decisions, architecture, data model, phases with checkboxes, and a dated change log. It's the source of truth for what's done.
 - `README.md`: setup, scripts, testing, deployment.
 
-The repo is a pnpm workspace: the web app is `apps/web` (package `@qct/web`); `apps/mobile` and `packages/*` arrive in Phase 2. Run `pnpm` scripts from the root (they pass through to the packages); `pnpm --filter @qct/web exec …` runs a tool inside the web app.
+The repo is a pnpm workspace: the web app is `apps/web` (package `@qct/web`); the React-free shared code (domain, shared schemas and sync rules, i18n config, messages) is `packages/core` (package `@qct/core`, imported as `@qct/core/…`); `apps/mobile` arrives later in Phase 2. Run `pnpm` scripts from the root (they pass through to the packages); `pnpm --filter @qct/web exec …` runs a tool inside the web app.
 
 ## Always
 

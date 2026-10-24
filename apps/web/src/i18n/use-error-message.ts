@@ -2,9 +2,9 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback } from "react";
-import type { FieldError } from "@/shared/schemas/errors";
-import { toAppLocale } from "./config";
-import { translateError, type ErrorsTranslator } from "./error-message";
+import type { FieldError } from "@qct/core/shared/schemas/errors";
+import { toAppLocale } from "@qct/core/i18n/config";
+import { translateError, type ErrorsTranslator } from "@qct/core/i18n/error-message";
 
 /** Returns a function that turns a {@link FieldError} into localized text. */
 export function useErrorMessage() {

@@ -27,6 +27,8 @@ const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR || ".next",
   // The floating dev badge sits on top of the mobile bottom navigation.
   devIndicators: false,
+  // Shared workspace code, published as TypeScript source.
+  transpilePackages: ["@qct/core"],
   // Native argon2 binding: load it from node_modules at runtime, don't bundle it.
   serverExternalPackages: ["@node-rs/argon2"],
 };

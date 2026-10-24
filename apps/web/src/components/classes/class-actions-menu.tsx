@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useApp } from "@/client/app-context";
 import { unarchiveClass } from "@/client/data/classes";
-import type { ClassRecord } from "@/shared/schemas/class";
+import type { ClassRecord } from "@qct/core/shared/schemas/class";
 import { ArchiveClassDialog } from "./archive-class-dialog";
 import { ClassFormDrawer } from "./class-form-drawer";
 

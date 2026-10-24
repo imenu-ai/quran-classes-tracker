@@ -3,7 +3,7 @@
 import { ThemeProvider } from "next-themes";
 import { DirectionProvider } from "@/components/ui/direction";
 import { Toaster } from "@/components/ui/sonner";
-import type { Direction } from "@/i18n/direction";
+import type { Direction } from "@qct/core/i18n/direction";
 
 /**
  * App-wide client providers. `direction` comes from getDirection(locale) in the

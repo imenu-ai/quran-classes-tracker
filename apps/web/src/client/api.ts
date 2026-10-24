@@ -1,6 +1,6 @@
 "use client";
 
-import type { FieldError } from "@/shared/schemas/errors";
+import type { FieldError } from "@qct/core/shared/schemas/errors";
 
 /**
  * Why an account or center call failed: a server code, "OFFLINE" (no

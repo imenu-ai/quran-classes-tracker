@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ParentError, ParentReport as ParentReportData } from "@/shared/parent";
+import type { ParentError, ParentReport as ParentReportData } from "@qct/core/shared/parent";
 import { ParentReport } from "./parent-report";
 
 type Ask = "WRONG_PARENT_ID" | "TOO_MANY_ATTEMPTS" | "RATE_LIMITED" | null;

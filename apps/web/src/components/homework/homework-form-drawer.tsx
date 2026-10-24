@@ -22,10 +22,10 @@ import {
   type AyahRangeDraft,
   type AyahRangeField,
 } from "@/client/forms/ayah-range";
-import { latestPortion, suggestNextHomework } from "@/domain/homework/suggestion";
-import { NOTE_MAX } from "@/shared/schemas/base";
-import { isExam, type HomeworkRecord } from "@/shared/schemas/homework";
-import type { StudentRecord } from "@/shared/schemas/student";
+import { latestPortion, suggestNextHomework } from "@qct/core/domain/homework/suggestion";
+import { NOTE_MAX } from "@qct/core/shared/schemas/base";
+import { isExam, type HomeworkRecord } from "@qct/core/shared/schemas/homework";
+import type { StudentRecord } from "@qct/core/shared/schemas/student";
 
 export type HomeworkFormMode =
   { kind: "next" } | { kind: "recite" } | { kind: "exam" } | { kind: "edit"; item: HomeworkRecord };

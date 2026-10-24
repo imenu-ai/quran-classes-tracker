@@ -9,7 +9,7 @@ import {
   homeworkRecord,
   lessonRecord,
   studentRecord,
-} from "@/test/records";
+} from "@qct/core/test/records";
 import { installDomPolyfills, renderArabic } from "@/test/dom";
 import { MonthSheet } from "./month-sheet";
 

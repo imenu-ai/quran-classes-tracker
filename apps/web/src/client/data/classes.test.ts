@@ -1,6 +1,6 @@
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { classRecord, studentRecord } from "@/test/records";
+import { classRecord, studentRecord } from "@qct/core/test/records";
 import { openLocalDb, type LocalDb } from "../db/dexie";
 import { LocalStore } from "../db/local-store";
 import {

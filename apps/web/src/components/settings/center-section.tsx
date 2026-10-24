@@ -12,9 +12,9 @@ import { updateCenterSettings } from "@/client/data/account";
 import { bootstrapSession } from "@/client/session/session";
 import { timeZoneOptions, type TimeZoneOption } from "@/client/time-zones";
 import { useErrorMessage } from "@/i18n/use-error-message";
-import { updateCenterSchema } from "@/shared/access";
-import { NAME_MAX } from "@/shared/schemas/base";
-import { parseWithCodes } from "@/shared/schemas/errors";
+import { updateCenterSchema } from "@qct/core/shared/access";
+import { NAME_MAX } from "@qct/core/shared/schemas/base";
+import { parseWithCodes } from "@qct/core/shared/schemas/errors";
 
 /**
  * The center: its code (everyone may need to share it), and for admins its

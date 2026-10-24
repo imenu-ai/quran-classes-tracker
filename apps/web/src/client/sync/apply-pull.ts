@@ -1,6 +1,6 @@
-import { shouldApplyIncoming } from "@/shared/sync/lww";
-import type { PullResponse } from "@/shared/sync/protocol";
-import { SYNC_TABLES, type SyncRecord } from "@/shared/sync/tables";
+import { shouldApplyIncoming } from "@qct/core/shared/sync/lww";
+import type { PullResponse } from "@qct/core/shared/sync/protocol";
+import { SYNC_TABLES, type SyncRecord } from "@qct/core/shared/sync/tables";
 import type { LocalDb } from "../db/dexie";
 
 export const CURSOR_KEY = "cursor";

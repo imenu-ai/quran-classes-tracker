@@ -3,8 +3,8 @@ import {
   buildStudentProfile,
   referencedLessonIds,
   type StudentProfile,
-} from "@/domain/stats/month-sheet";
-import type { LessonRecord } from "@/shared/schemas/lesson";
+} from "@qct/core/domain/stats/month-sheet";
+import type { LessonRecord } from "@qct/core/shared/schemas/lesson";
 import { useApp } from "../app-context";
 
 export {
@@ -13,7 +13,7 @@ export {
   referencedLessonIds,
   type HistoryRow,
   type StudentProfile,
-} from "@/domain/stats/month-sheet";
+} from "@qct/core/domain/stats/month-sheet";
 
 /** Everything the student profile shows, live from the local database. */
 export function useStudentProfile(studentId: string | null) {

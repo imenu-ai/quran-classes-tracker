@@ -1,8 +1,8 @@
 import type { Db } from "mongodb";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import type { Permission } from "@/shared/access";
-import type { PushMutation } from "@/shared/sync/protocol";
-import type { SyncRecord, SyncTable } from "@/shared/sync/tables";
+import type { Permission } from "@qct/core/shared/access";
+import type { PushMutation } from "@qct/core/shared/sync/protocol";
+import type { SyncRecord, SyncTable } from "@qct/core/shared/sync/tables";
 import { TEST_PASSWORD } from "@/test/auth";
 import { startTestMongo } from "@/test/mongo";
 import {
@@ -11,7 +11,7 @@ import {
   homeworkRecord,
   lessonRecord,
   studentRecord,
-} from "@/test/records";
+} from "@qct/core/test/records";
 import type { Actor } from "../actor";
 import { resetAuthForTests } from "../auth/auth";
 import { createCenter, createMember } from "../centers";

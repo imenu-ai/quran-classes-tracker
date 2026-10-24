@@ -24,7 +24,7 @@ import {
 import { useApp } from "@/client/app-context";
 import { useActiveClasses } from "@/client/data/classes";
 import { moveStudent } from "@/client/data/students";
-import type { StudentRecord } from "@/shared/schemas/student";
+import type { StudentRecord } from "@qct/core/shared/schemas/student";
 
 /** Moves a student to another active class; their history goes with them. */
 export function MoveStudentDialog({

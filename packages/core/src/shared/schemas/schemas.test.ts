@@ -9,7 +9,7 @@ import {
   normalizeParentId,
   studentRecordSchema,
   type FieldError,
-} from "@/shared/schemas";
+} from ".";
 
 const ID = "01928c5e-7b3a-7cde-8f00-0123456789ab";
 const ID2 = "01928c5e-7b3a-7cde-8f00-0123456789ac";

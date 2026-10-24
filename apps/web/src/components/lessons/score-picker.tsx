@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
 import { cn } from "@/lib/utils";
-import { RATE_MAX, RATE_MIN } from "@/shared/schemas/homework";
+import { RATE_MAX, RATE_MIN } from "@qct/core/shared/schemas/homework";
 
 const SCORES = Array.from({ length: RATE_MAX - RATE_MIN + 1 }, (_, i) => RATE_MIN + i);
 

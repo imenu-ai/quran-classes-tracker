@@ -1,5 +1,5 @@
 import { v7 as uuidv7 } from "uuid";
-import type { SyncRecordMap } from "@/shared/sync/tables";
+import type { SyncRecordMap } from "../shared/sync/tables";
 
 /** Builders for valid test records. Override any field. */
 

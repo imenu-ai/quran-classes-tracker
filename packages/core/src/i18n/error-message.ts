@@ -1,6 +1,6 @@
-import { AYAH_RANGE_ERROR_CODES, type AyahRangeErrorCode } from "@/domain/quran/validation";
-import { getSurahName } from "@/domain/quran/surahs";
-import type { ErrorParams, FieldError } from "@/shared/schemas/errors";
+import { AYAH_RANGE_ERROR_CODES, type AyahRangeErrorCode } from "../domain/quran/validation";
+import { getSurahName } from "../domain/quran/surahs";
+import type { ErrorParams, FieldError } from "../shared/schemas/errors";
 import type { Locale } from "./config";
 
 /** The subset of a next-intl translator scoped to the `errors` namespace. */

@@ -2,7 +2,7 @@ import type { Db } from "mongodb";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createSignedInTeacher, signIn, TEST_PASSWORD } from "@/test/auth";
 import { startTestMongo } from "@/test/mongo";
-import { classRecord } from "@/test/records";
+import { classRecord } from "@qct/core/test/records";
 import { getAuth, resetAuthForTests } from "./auth/auth";
 import {
   CenterError,

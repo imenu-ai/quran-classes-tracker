@@ -1,6 +1,6 @@
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { lessonIdFor } from "@/shared/ids";
+import { lessonIdFor } from "@qct/core/shared/ids";
 import { openLocalDb, type LocalDb } from "../db/dexie";
 import { LocalStore } from "../db/local-store";
 import { setAttendance } from "./attendance";

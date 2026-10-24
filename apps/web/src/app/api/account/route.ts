@@ -2,7 +2,7 @@ import { withTenant } from "@/server/auth/tenant-context";
 import { updateOwnProfile } from "@/server/centers";
 import { centerResponse } from "@/server/center-http";
 import { readJsonBody } from "@/server/sync/http";
-import type { UpdateProfileInput } from "@/shared/access";
+import type { UpdateProfileInput } from "@qct/core/shared/access";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

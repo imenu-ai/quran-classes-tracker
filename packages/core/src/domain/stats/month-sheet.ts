@@ -1,9 +1,9 @@
-import { monthKey } from "@/domain/dates/local-date";
-import { monthlyStats, type MonthStats } from "@/domain/stats/monthly";
-import type { AttendanceRecord } from "@/shared/schemas/attendance";
-import { isExam, postponedLessonsOf, type HomeworkRecord } from "@/shared/schemas/homework";
-import type { LessonRecord } from "@/shared/schemas/lesson";
-import type { StudentRecord } from "@/shared/schemas/student";
+import { monthKey } from "../dates/local-date";
+import { monthlyStats, type MonthStats } from "./monthly";
+import type { AttendanceRecord } from "../../shared/schemas/attendance";
+import { isExam, postponedLessonsOf, type HomeworkRecord } from "../../shared/schemas/homework";
+import type { LessonRecord } from "../../shared/schemas/lesson";
+import type { StudentRecord } from "../../shared/schemas/student";
 
 /*
  * A student's month, built from plain records: the month table on his page,

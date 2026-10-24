@@ -6,16 +6,16 @@ import {
   buildStudentProfile,
   referencedLessonIds,
   type MonthSheet,
-} from "@/domain/stats/month-sheet";
-import type { ClassRecord } from "@/shared/schemas/class";
-import type { LessonRecord } from "@/shared/schemas/lesson";
-import type { StudentRecord } from "@/shared/schemas/student";
+} from "@qct/core/domain/stats/month-sheet";
+import type { ClassRecord } from "@qct/core/shared/schemas/class";
+import type { LessonRecord } from "@qct/core/shared/schemas/lesson";
+import type { StudentRecord } from "@qct/core/shared/schemas/student";
 
 export {
   buildMonthSheet,
   type MonthSheet,
   type MonthSheetCounts,
-} from "@/domain/stats/month-sheet";
+} from "@qct/core/domain/stats/month-sheet";
 
 /** The print page for some of a class's students and a month ("YYYY-MM"). */
 export function printHref(classId: string, month: string, studentIds: readonly string[]) {

@@ -2,9 +2,9 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback } from "react";
-import { getSurahName } from "@/domain/quran/surahs";
-import { toAppLocale } from "@/i18n/config";
-import type { HomeworkRecord } from "@/shared/schemas/homework";
+import { getSurahName } from "@qct/core/domain/quran/surahs";
+import { toAppLocale } from "@qct/core/i18n/config";
+import type { HomeworkRecord } from "@qct/core/shared/schemas/homework";
 
 /** "النبأ 31–35": sura name from the sura map in the active locale, plus the range. */
 export function usePortionLabel() {

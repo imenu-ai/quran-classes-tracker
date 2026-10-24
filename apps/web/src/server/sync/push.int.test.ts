@@ -1,10 +1,10 @@
 import type { Db } from "mongodb";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { MAX_CLOCK_SKEW_MS } from "@/shared/sync/lww";
-import type { PushMutation } from "@/shared/sync/protocol";
-import type { SyncTable } from "@/shared/sync/tables";
+import { MAX_CLOCK_SKEW_MS } from "@qct/core/shared/sync/lww";
+import type { PushMutation } from "@qct/core/shared/sync/protocol";
+import type { SyncTable } from "@qct/core/shared/sync/tables";
 import { startTestMongo } from "@/test/mongo";
-import { classRecord, homeworkRecord, lessonRecord, studentRecord } from "@/test/records";
+import { classRecord, homeworkRecord, lessonRecord, studentRecord } from "@qct/core/test/records";
 import { ensureIndexes } from "../indexes";
 import { pushChanges } from "./push";
 

@@ -1,6 +1,6 @@
-import { attendanceIdFor } from "@/shared/ids";
-import type { AttendanceRecord, AttendanceStatus } from "@/shared/schemas/attendance";
-import type { StudentRecord } from "@/shared/schemas/student";
+import { attendanceIdFor } from "@qct/core/shared/ids";
+import type { AttendanceRecord, AttendanceStatus } from "@qct/core/shared/schemas/attendance";
+import type { StudentRecord } from "@qct/core/shared/schemas/student";
 import type { LocalDb } from "../db/dexie";
 import type { LocalStore } from "../db/local-store";
 import { isActive } from "./classes";

@@ -1,4 +1,4 @@
-import { toWesternDigits } from "@/domain/text/digits";
+import { toWesternDigits } from "@qct/core/domain/text/digits";
 
 const KEY = "qct:center-code";
 

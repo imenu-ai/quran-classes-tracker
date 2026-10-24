@@ -1,5 +1,5 @@
 import { IBM_Plex_Sans, IBM_Plex_Sans_Arabic } from "next/font/google";
-import type { Locale } from "@/i18n/config";
+import type { Locale } from "@qct/core/i18n/config";
 
 // IBM Plex Sans Arabic also contains Latin glyphs, so mixed Arabic/English
 // text (names, notes) renders in one family.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateAyahRange } from "@/domain/quran/validation";
+import { validateAyahRange } from "./validation";
 
 describe("validateAyahRange", () => {
   describe("valid ranges", () => {

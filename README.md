@@ -23,7 +23,13 @@ The product brief is in [BRIEF.md](BRIEF.md). The full design (decisions, sync p
 
 Node 22 (see `.nvmrc`) and pnpm 10 (pinned in `package.json`; run `corepack enable` once).
 
-**Repo layout.** A pnpm workspace: the web app (package `@qct/web`) lives in `apps/web`; the React Native app will join it as `apps/mobile`, with shared code in `packages/` (PLAN.md, Phase 2). Run every command below from the repo root: the root scripts pass them on to the web app. `.npmrc` sets `node-linker=hoisted`, which Amplify needs for a pnpm monorepo.
+**Repo layout.** A pnpm workspace (PLAN.md, Phase 2):
+
+- `apps/web`: the web app (package `@qct/web`).
+- `packages/core`: React-free code shared with the coming mobile app (package `@qct/core`, imported as `@qct/core/…`): domain rules, schemas and the sync protocol, i18n config and the messages. It's TypeScript source, compiled by the app that imports it.
+- `apps/mobile`: the React Native app, to come.
+
+Run every command below from the repo root: `lint`, `typecheck` and `test` run in every package, and the other scripts pass on to the web app. `.npmrc` sets `node-linker=hoisted`, which Amplify needs for a pnpm monorepo.
 
 ## Local setup
 
@@ -144,16 +150,17 @@ Service worker: cached assets and page shells
 - **Deterministic IDs** for lessons (class + date) and attendance (lesson + student), so two devices offline create the same record instead of duplicates.
 - **Pushes go parents first** (classes, students, lessons, attendance, homework), so a change never reaches the server before a record it refers to.
 - **Routes use query parameters** (`/class?id=…`, `/student?id=…`), so one cached page shell serves every class and student offline. Pages hold no data; only the API checks the session.
-- **Code layout** (under `apps/web`):
-  - `src/domain`: pure logic (sura map and validation, homework suggestion, monthly stats, dates).
-  - `src/shared`: schemas and the sync protocol, used by client and server.
-  - `src/server`: Mongo, auth, sync services.
+- **Code layout:**
+  - `packages/core/src/domain`: pure logic (sura map and validation, homework suggestion, monthly stats, dates).
+  - `packages/core/src/shared`: schemas and the sync protocol, used by client and server.
+  - `packages/core/src/i18n` and `packages/core/messages`: locales, direction, formats, error codes to text, and the message files.
+  - `apps/web/src/server`: Mongo, auth, sync services. The other web folders below are under `apps/web` too.
   - `src/client`: Dexie, sync engine, PWA helpers.
   - `src/components`, `src/app`: UI and routes.
 
 ## i18n and direction rules
 
-- All text lives in `apps/web/messages/ar.json` (and `en.json`). Domain and server code return error **codes**, never text.
+- All text lives in `packages/core/messages/ar.json` (and `en.json`). Domain and server code return error **codes**, never text.
 - Use **logical** Tailwind classes only (`ms-`, `pe-`, `start-`, `text-start`, …). `pnpm lint` fails on physical ones (`ml-`, `right-`, `text-left`, …) and on literal `dir="rtl"` / `dir="ltr"`.
 - Icons that point a direction (back, next) go through `DirectionalIcon`, which mirrors them in RTL.
 - Numbers use Latin digits and dates the Gregorian calendar, via the locale tag `ar-u-ca-gregory-nu-latn`. Inputs accept Arabic-Indic digits too.

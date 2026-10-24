@@ -1,4 +1,4 @@
-import type { Access } from "@/shared/access";
+import type { Access } from "@qct/core/shared/access";
 import type { Actor } from "../actor";
 import { getDb } from "../db";
 import { accessOf, getMember, type MemberDoc } from "../members";

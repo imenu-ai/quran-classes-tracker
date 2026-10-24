@@ -18,8 +18,8 @@ import {
   type UpdateCenterInput,
   type UpdateMemberInput,
   type UpdateProfileInput,
-} from "@/shared/access";
-import { parseWithCodes, type FieldError } from "@/shared/schemas/errors";
+} from "@qct/core/shared/access";
+import { parseWithCodes, type FieldError } from "@qct/core/shared/schemas/errors";
 import { getAuth } from "./auth/auth";
 import { hashPassword } from "./auth/password";
 import { COLLECTIONS } from "./collections";

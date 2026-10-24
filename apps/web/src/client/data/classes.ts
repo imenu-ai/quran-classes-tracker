@@ -1,7 +1,7 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { useLocale } from "next-intl";
-import type { ClassRecord } from "@/shared/schemas/class";
-import type { StudentRecord } from "@/shared/schemas/student";
+import type { ClassRecord } from "@qct/core/shared/schemas/class";
+import type { StudentRecord } from "@qct/core/shared/schemas/student";
 import { useApp } from "../app-context";
 import type { LocalDb } from "../db/dexie";
 import type { LocalStore } from "../db/local-store";

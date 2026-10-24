@@ -3,7 +3,7 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { nextCookies } from "better-auth/next-js";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { username } from "better-auth/plugins/username";
-import { DEFAULT_LOCALE, isLocale, LOCALE_COOKIE } from "@/i18n/config";
+import { DEFAULT_LOCALE, isLocale, LOCALE_COOKIE } from "@qct/core/i18n/config";
 import {
   CENTER_CODE_LENGTH,
   isCompositeUsername,
@@ -12,7 +12,7 @@ import {
   PASSWORD_MIN,
   USERNAME_MAX,
   USERNAME_MIN,
-} from "@/shared/access";
+} from "@qct/core/shared/access";
 import { COLLECTIONS } from "../collections";
 import { getDb } from "../db";
 import { getServerEnv } from "../env";

@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable, type Table } from "dexie";
-import type { ErrorParams } from "@/shared/schemas/errors";
-import type { SyncRecordMap, SyncTable } from "@/shared/sync/tables";
+import type { ErrorParams } from "@qct/core/shared/schemas/errors";
+import type { SyncRecordMap, SyncTable } from "@qct/core/shared/sync/tables";
 
 /** A pending local change waiting to be pushed (one entry per record). */
 export interface OutboxEntry {

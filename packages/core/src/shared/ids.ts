@@ -1,5 +1,5 @@
 import { v5 as uuidv5 } from "uuid";
-import type { LocalDate } from "@/domain/dates/local-date";
+import type { LocalDate } from "../domain/dates/local-date";
 
 /** Fixed namespace for this app's deterministic (UUIDv5) ids. Never change it. */
 const ID_NAMESPACE = "6f1c2a8e-3d4b-5c6d-9e7f-0a1b2c3d4e5f";

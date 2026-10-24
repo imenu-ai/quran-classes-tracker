@@ -1,6 +1,6 @@
 import "fake-indexeddb/auto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { classRecord } from "@/test/records";
+import { classRecord } from "@qct/core/test/records";
 import { openLocalDb, type LocalDb } from "../db/dexie";
 import { CURSOR_KEY, getCursor } from "./apply-pull";
 import { discardRejected } from "./rejected";

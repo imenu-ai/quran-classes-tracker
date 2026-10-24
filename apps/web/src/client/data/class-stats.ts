@@ -1,8 +1,12 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { useLocale } from "next-intl";
-import { monthKey } from "@/domain/dates/local-date";
-import { classStatistics, type ClassStatistics, type StatsPeriod } from "@/domain/stats/class";
-import type { StudentRecord } from "@/shared/schemas/student";
+import { monthKey } from "@qct/core/domain/dates/local-date";
+import {
+  classStatistics,
+  type ClassStatistics,
+  type StatsPeriod,
+} from "@qct/core/domain/stats/class";
+import type { StudentRecord } from "@qct/core/shared/schemas/student";
 import { useApp } from "../app-context";
 import { isActive } from "./classes";
 

@@ -3,7 +3,7 @@ name: plan-step-workflow
 description: How work is planned, verified, committed and reported in the quran-classes-tracker repo (PLAN.md phases and steps, lint/type-check/tests, Conventional Commits on dev, never pushing). Use it whenever you implement a feature, fix a bug, start or finish a phase or step, change PLAN.md, commit, or run the app or its tests to check a change, even if the user only says "implement phase N", "fix this", "commit it" or "check it works".
 ---
 
-> Paths in this skill (`src/…`, `e2e/…`, `scripts/…`, `messages/…`) are relative to the web app, `apps/web/`. Run `pnpm` scripts from the repo root.
+> Paths in this skill that start with `src/…`, `e2e/…` or `scripts/…` are relative to the web app, `apps/web/`. The React-free shared code (domain, shared schemas and sync rules, i18n config, messages) lives in `packages/core/` and is imported as `@qct/core/…`. Run `pnpm` scripts from the repo root.
 
 # Working on a plan step
 
@@ -27,7 +27,7 @@ Work one step at a time. After each step:
    ```
    - `pnpm typecheck` runs `next typegen` then a non-incremental `tsc`. Don't trust an incremental tsc cache: it once let a missing import get committed.
    - Run `pnpm format:check` when you touch Markdown, YAML or JSON. Prettier formats those too.
-   - Run `pnpm build` before work goes to `main`, and whenever you add or change a route file (`page.tsx`, `route.ts`, `layout.tsx`). Some errors only `next build` reports. For example, a route file may export only its handlers and route settings (`runtime`, `dynamic`…); any other export fails the Amplify build, but `pnpm typecheck` doesn't see it. Put shared constants in a module under `src/server` or `src/shared` instead.
+   - Run `pnpm build` before work goes to `main`, and whenever you add or change a route file (`page.tsx`, `route.ts`, `layout.tsx`). Some errors only `next build` reports. For example, a route file may export only its handlers and route settings (`runtime`, `dynamic`…); any other export fails the Amplify build, but `pnpm typecheck` doesn't see it. Put shared constants in a module under `src/server` or `packages/core/src/shared` instead.
    - For UI changes, also look at the real app (see "Checking in a browser" below). Tests alone have missed real bugs here, such as overflow at 360 px and blocked pointer events.
 2. **Update `PLAN.md`:**
    - Tick the step: `- [ ]` → `- [x]`. Mark a step whose plan changed as `[~]`.
@@ -75,7 +75,7 @@ Notes:
 - **`E2E_PORT`** moves the server off 3100, which another project on this machine may hold (Playwright then refuses to start).
 - **Projects:** iPhone 15 (WebKit), Pixel 7 and Desktop Chrome. The offline spec runs on Chromium only.
 - **Accounts:** one per spec and project (`e2e/accounts.ts`). Each browser context gets its own `x-forwarded-for`, so sign-ins don't share a rate-limit bucket.
-- **Arabic text in specs** comes from `messages/ar.json` via the `ar` export in `e2e/fixtures.ts`. Never hard-code UI strings.
+- **Arabic text in specs** comes from `packages/core/messages/ar.json` via the `ar` export in `e2e/fixtures.ts`. Never hard-code UI strings.
 
 ## Windows shell quirks
 

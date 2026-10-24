@@ -1,4 +1,4 @@
-import { pushRequestSchema } from "@/shared/sync/protocol";
+import { pushRequestSchema } from "@qct/core/shared/sync/protocol";
 import { withTenant } from "@/server/auth/tenant-context";
 import { getDb } from "@/server/db";
 import { badRequest, jsonResponse, MAX_PUSH_BODY_BYTES, readJsonBody } from "@/server/sync/http";

@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { openLocalDb, type LocalDb } from "@/client/db/dexie";
 import { LocalStore } from "@/client/db/local-store";
-import { classRecord, studentRecord } from "@/test/records";
+import { classRecord, studentRecord } from "@qct/core/test/records";
 import { installDomPolyfills, renderArabic } from "@/test/dom";
 import { StudentFormDrawer } from "./student-form-drawer";
 

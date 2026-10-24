@@ -22,11 +22,11 @@ import { useApp } from "@/client/app-context";
 import { rateHomework, setStudentAttendance, undoPostpone } from "@/client/data/homework";
 import { printHref } from "@/client/data/print";
 import { buildMonthHistory, type HistoryRow, type StudentProfile } from "@/client/data/profile";
-import { localDateToUtcDate, monthKey, todayInTimeZone } from "@/domain/dates/local-date";
+import { localDateToUtcDate, monthKey, todayInTimeZone } from "@qct/core/domain/dates/local-date";
 import { cn } from "@/lib/utils";
-import type { AttendanceStatus } from "@/shared/schemas/attendance";
-import { isExam } from "@/shared/schemas/homework";
-import type { StudentRecord } from "@/shared/schemas/student";
+import type { AttendanceStatus } from "@qct/core/shared/schemas/attendance";
+import { isExam } from "@qct/core/shared/schemas/homework";
+import type { StudentRecord } from "@qct/core/shared/schemas/student";
 import { AttendanceToggle, ExcuseNoteInput } from "./attendance-controls";
 
 const rowKey = (row: HistoryRow) =>

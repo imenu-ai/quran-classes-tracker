@@ -1,6 +1,6 @@
 "use client";
 
-import type { UpdateCenterInput, UpdateProfileInput } from "@/shared/access";
+import type { UpdateCenterInput, UpdateProfileInput } from "@qct/core/shared/access";
 import { apiCall } from "../api";
 
 /** The signed-in user's own name, username, phone (and email for admins). */

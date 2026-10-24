@@ -7,7 +7,7 @@ import {
   SURAH_COUNT,
   SURAH_MAP,
   SURAHS,
-} from "@/domain/quran/surahs";
+} from "./surahs";
 
 describe("SURAHS", () => {
   it("has exactly 114 entries", () => {

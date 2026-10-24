@@ -3,38 +3,38 @@ name: rtl-i18n-ui
 description: How to build UI in quran-classes-tracker so it stays Arabic-first, RTL and LTR at once, translated, mobile-first (iPhone) and offline-safe — next-intl messages (ar/en parity, glossary, error codes), logical Tailwind classes, DirectionalIcon, Intl date/number formats, shadcn/ui direction fixes, 360 px layouts. Use it whenever you create or change a component, page, dialog, sheet, form, toast, chart, label or any user-facing text, or fix a layout/overflow/direction bug, even for a "small" button or wording change.
 ---
 
-> Paths in this skill (`src/…`, `e2e/…`, `scripts/…`, `messages/…`) are relative to the web app, `apps/web/`. Run `pnpm` scripts from the repo root.
+> Paths in this skill that start with `src/…`, `e2e/…` or `scripts/…` are relative to the web app, `apps/web/`. The React-free shared code (domain, shared schemas and sync rules, i18n config, messages) lives in `packages/core/` and is imported as `@qct/core/…`. Run `pnpm` scripts from the repo root.
 
 # UI in this app: Arabic-first, RTL and LTR, phone-first
 
-Users see Arabic, written right to left. English (`messages/en.json`) is built, hidden and tested, so every screen must work in both directions without code changes. The main user is a teacher on an iPhone in the middle of a lesson: large tap targets, nothing that scrolls sideways, and it must keep working offline. The binding rules are in `BRIEF.md` §2 (i18n and direction) and §3 (the Arabic glossary).
+Users see Arabic, written right to left. English (`packages/core/messages/en.json`) is built, hidden and tested, so every screen must work in both directions without code changes. The main user is a teacher on an iPhone in the middle of a lesson: large tap targets, nothing that scrolls sideways, and it must keep working offline. The binding rules are in `BRIEF.md` §2 (i18n and direction) and §3 (the Arabic glossary).
 
 ## Text
 
-- **Every user-facing string comes from `messages/ar.json`** and its English twin `messages/en.json`, with the same keys. That covers labels, buttons, empty states, toasts, aria-labels, `title`s and chart labels.
-  - The test `src/i18n/messages.test.ts` fails if the key sets differ or a message is empty.
+- **Every user-facing string comes from `packages/core/messages/ar.json`** and its English twin `packages/core/messages/en.json`, with the same keys. That covers labels, buttons, empty states, toasts, aria-labels, `title`s and chart labels.
+  - The test `packages/core/src/i18n/messages.test.ts` fails if the key sets differ or a message is empty.
   - Add the key to both files in the same change.
 - **Use the glossary for domain terms.** `glossary.*` holds the brief's fixed vocabulary, for example `glossary.class` = الحلقة, `glossary.lesson` = الدرس, `glossary.memorizationRate` = تقييم الحفظ. Reuse those keys rather than writing a synonym, so wording stays consistent across screens.
 - **Messages are ICU.** Use `{name}` placeholders and `plural`/`select`. Arabic plurals have six forms (`zero one two few many other`); write all the ones the sentence needs.
 - **Rich text** (bold parts, inline icons) uses `t.rich("key", { b: (chunks) => <strong>{chunks}</strong> })` with tags in the message. Don't split a sentence across several keys, because word order differs between Arabic and English.
-- **Errors are codes until the last moment.** Domain and schema code return codes (`src/shared/schemas/errors.ts`, `src/domain/quran/validation.ts`). Components turn them into text with `useErrorMessage()` (`src/i18n/use-error-message.ts`). Never put translated text in domain, server or schema code.
+- **Errors are codes until the last moment.** Domain and schema code return codes (`packages/core/src/shared/schemas/errors.ts`, `packages/core/src/domain/quran/validation.ts`). Components turn them into text with `useErrorMessage()` (`src/i18n/use-error-message.ts`). Never put translated text in domain, server or schema code.
 - **Wording:** neutral where possible, masculine when Arabic forces a choice (PLAN.md §0 #11). The tone is short and plain, as for a busy teacher.
 - **shadcn/ui components** were generated with hardcoded English, such as "Close", "Loading" and the CommandDialog defaults. When you add or regenerate one, replace every English string with a translation or a required prop.
 
 ## Direction
 
 - **Use logical Tailwind classes only:** `ms-/me-`, `ps-/pe-`, `start-/end-`, `text-start/text-end`, `border-s/border-e`, `rounded-s/rounded-e`, `inset-x-*`. `pnpm lint` fails on physical ones (`ml-`, `pr-`, `left-`, `text-right`, …). Vertical classes (`mt-`, `pb-`, `top-`) are fine.
-- **Never write `dir="rtl"` or `dir="ltr"`.** Lint blocks it. `<html dir>` comes from `getDirection(locale)` (`src/i18n/direction.ts`). Put `dir="auto"` on user-entered text (student names, notes, search input) so mixed Arabic and English displays correctly.
+- **Never write `dir="rtl"` or `dir="ltr"`.** Lint blocks it. `<html dir>` comes from `getDirection(locale)` (`packages/core/src/i18n/direction.ts`). Put `dir="auto"` on user-entered text (student names, notes, search input) so mixed Arabic and English displays correctly.
 - **Icons that point somewhere** (back, next, chevrons, arrows) go through `<DirectionalIcon icon={ChevronLeft} />` (`src/components/directional-icon.tsx`). It mirrors them in RTL. Pick the icon as if for LTR: back = `ChevronLeft`/`ArrowLeft`, next = `ChevronRight`.
 - **Sheets, drawers and popovers** use logical sides (`side="start"`/`"end"`). The shadcn `Sheet` here was changed from left/right to start/end; keep it that way.
 - **Tables at 360 px** (see `month-table.tsx`): `table-fixed` with fixed widths for the date and number columns, so the text column wraps instead of widening the page. If you ever hide a table for screen readers only, put `sr-only` on a wrapping `div`: a `<table>` ignores the 1 px width.
 
 ## Numbers and dates
 
-- **Format through next-intl** (`useFormatter()`, `format.dateTime`, `format.number`, `format.relativeTime`) with the named formats in `src/i18n/formats.ts` (`lessonDate`, `weekday`, `month`, `average`, …). Add a named format rather than inline options. Never hardcode day or month names.
-- **The Arabic locale tag is `ar-u-ca-gregory-nu-latn`** (`getIntlLocale` in `src/i18n/config.ts`): Western digits and the Gregorian calendar, per the brief.
+- **Format through next-intl** (`useFormatter()`, `format.dateTime`, `format.number`, `format.relativeTime`) with the named formats in `packages/core/src/i18n/formats.ts` (`lessonDate`, `weekday`, `month`, `average`, …). Add a named format rather than inline options. Never hardcode day or month names.
+- **The Arabic locale tag is `ar-u-ca-gregory-nu-latn`** (`getIntlLocale` in `packages/core/src/i18n/config.ts`): Western digits and the Gregorian calendar, per the brief.
 - **Lesson dates are calendar dates** (`LocalDate`, `YYYY-MM-DD`), not instants. Format them via `localDateToUtcDate` with formats that set `timeZone: "UTC"` (see `use-lesson-date.ts`), or the day shifts with the device time zone. "Today" comes from the tenant's time zone: `todayInTimeZone(session.timezone)`.
-- **Numeric inputs accept Arabic-Indic digits.** Parse with `parseIntegerInput` / `toWesternDigits` (`src/domain/text/digits.ts`). Use `inputMode="numeric"` for the phone keypad.
+- **Numeric inputs accept Arabic-Indic digits.** Parse with `parseIntegerInput` / `toWesternDigits` (`packages/core/src/domain/text/digits.ts`). Use `inputMode="numeric"` for the phone keypad.
 - **Sort names** with `Intl.Collator(locale)`.
 
 ## Layout for an iPhone mid-lesson

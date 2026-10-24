@@ -1,5 +1,5 @@
-import type { PullResponse, PushResponse } from "@/shared/sync/protocol";
-import { SYNC_TABLES } from "@/shared/sync/tables";
+import type { PullResponse, PushResponse } from "@qct/core/shared/sync/protocol";
+import { SYNC_TABLES } from "@qct/core/shared/sync/tables";
 import type { LocalDb } from "../db/dexie";
 import { acknowledge, markFailed, readOutboxBatch, reject } from "../db/outbox";
 import { applyPulledChanges, CURSOR_KEY, getCursor } from "./apply-pull";

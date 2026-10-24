@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/client/auth/auth-client";
-import { PASSWORD_MAX, PASSWORD_MIN } from "@/shared/access";
+import { PASSWORD_MAX, PASSWORD_MIN } from "@qct/core/shared/access";
 
 /** /reset-password?token=…: the page the emailed link lands on (via Better Auth). */
 export function ResetPasswordForm() {

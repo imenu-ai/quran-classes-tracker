@@ -1,8 +1,8 @@
-import type { Portion } from "@/domain/homework/suggestion";
-import { postponedLessonsOf, type HomeworkRecord } from "@/shared/schemas/homework";
+import type { Portion } from "@qct/core/domain/homework/suggestion";
+import { postponedLessonsOf, type HomeworkRecord } from "@qct/core/shared/schemas/homework";
 import type { LocalDb } from "../db/dexie";
 import type { LocalStore } from "../db/local-store";
-import type { AttendanceStatus } from "@/shared/schemas/attendance";
+import type { AttendanceStatus } from "@qct/core/shared/schemas/attendance";
 import { findAttendance, setAttendance } from "./attendance";
 
 const homeworkTables = (db: LocalDb) => [

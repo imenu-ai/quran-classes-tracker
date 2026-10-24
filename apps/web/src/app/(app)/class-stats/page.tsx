@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { ClassStatsView } from "@/components/classes/class-stats-view";
-import type { StatsPeriod } from "@/domain/stats/class";
+import type { StatsPeriod } from "@qct/core/domain/stats/class";
 
 /** A whole number in a range from a query parameter, or null. */
 function intParam(value: string | null, min: number, max: number): number | null {

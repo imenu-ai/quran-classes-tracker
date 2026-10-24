@@ -12,8 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAccess } from "@/client/access";
 import { useApp } from "@/client/app-context";
 import { usePrintSheets } from "@/client/data/print";
-import { todayInTimeZone } from "@/domain/dates/local-date";
-import { parentLink } from "@/shared/parent";
+import { todayInTimeZone } from "@qct/core/domain/dates/local-date";
+import { parentLink } from "@qct/core/shared/parent";
 import { MonthSheet } from "./month-sheet";
 
 /** An A4 sheet's width in CSS pixels (210 mm at 96 dpi). */

@@ -1,6 +1,6 @@
 import "fake-indexeddb/auto";
 import { afterEach, describe, expect, it } from "vitest";
-import { SYNC_TABLES } from "@/shared/sync/tables";
+import { SYNC_TABLES } from "@qct/core/shared/sync/tables";
 import { localDbName, openLocalDb, type LocalDb } from "./dexie";
 
 const base = {

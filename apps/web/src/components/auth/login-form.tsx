@@ -16,7 +16,7 @@ import {
 } from "@/client/auth/center-code";
 import { getLoginErrorKey, type LoginErrorKey } from "@/client/auth/login-error";
 import { bootstrapSession, startPathFor } from "@/client/session/session";
-import { composeUsername, isCenterCode } from "@/shared/access";
+import { composeUsername, isCenterCode } from "@qct/core/shared/access";
 
 type FieldName = "code" | "username" | "password";
 type FieldErrors = Partial<Record<FieldName, "REQUIRED" | "invalidCenterCode">>;

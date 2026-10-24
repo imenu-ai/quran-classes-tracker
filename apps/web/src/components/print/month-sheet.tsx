@@ -4,9 +4,9 @@ import { useFormatter, useTranslations } from "next-intl";
 import { usePortionLabel } from "@/components/homework/use-portion-label";
 import { QrCode } from "@/components/qr-code";
 import type { MonthSheet as MonthSheetData } from "@/client/data/print";
-import { localDateToUtcDate } from "@/domain/dates/local-date";
+import { localDateToUtcDate } from "@qct/core/domain/dates/local-date";
 import { cn } from "@/lib/utils";
-import { isExam } from "@/shared/schemas/homework";
+import { isExam } from "@qct/core/shared/schemas/homework";
 
 /**
  * Smaller text and tighter rows for longer months, so a month stays on one

@@ -1,9 +1,9 @@
-import { createTranslator } from "next-intl";
+import { createTranslator } from "use-intl/core";
 import { describe, expect, it } from "vitest";
 import ar from "../../messages/ar.json";
 import en from "../../messages/en.json";
-import { AYAH_RANGE_ERROR_CODES } from "@/domain/quran/validation";
-import { getSurahName } from "@/domain/quran/surahs";
+import { AYAH_RANGE_ERROR_CODES } from "../domain/quran/validation";
+import { getSurahName } from "../domain/quran/surahs";
 import { getIntlLocale } from "./config";
 
 type MessageTree = { [key: string]: string | MessageTree };

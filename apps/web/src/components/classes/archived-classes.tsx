@@ -10,7 +10,7 @@ import { useAccess } from "@/client/access";
 import { useApp } from "@/client/app-context";
 import { unarchiveClass } from "@/client/data/classes";
 import { cn } from "@/lib/utils";
-import type { ClassRecord } from "@/shared/schemas/class";
+import type { ClassRecord } from "@qct/core/shared/schemas/class";
 
 /** Collapsed list of archived classes with a restore button each. */
 export function ArchivedClasses({ classes }: { classes: readonly ClassRecord[] }) {

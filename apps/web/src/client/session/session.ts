@@ -1,8 +1,8 @@
 import Dexie, { type EntityTable } from "dexie";
 import { v7 as uuidv7 } from "uuid";
-import type { Permission, Role } from "@/shared/access";
-import { meResponseSchema, type MeResponse } from "@/shared/session";
-import type { Locale } from "@/i18n/config";
+import type { Permission, Role } from "@qct/core/shared/access";
+import { meResponseSchema, type MeResponse } from "@qct/core/shared/session";
+import type { Locale } from "@qct/core/i18n/config";
 import type { LocalDb } from "../db/dexie";
 
 /**

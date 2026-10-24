@@ -17,7 +17,7 @@ import { useApp } from "@/client/app-context";
 import { createClass, renameClass } from "@/client/data/classes";
 import { LocalValidationError } from "@/client/db/local-store";
 import { useErrorMessage } from "@/i18n/use-error-message";
-import { CLASS_NAME_MAX, type ClassRecord } from "@/shared/schemas/class";
+import { CLASS_NAME_MAX, type ClassRecord } from "@qct/core/shared/schemas/class";
 
 /** Bottom sheet to create a class, or rename one when `existing` is given. */
 export function ClassFormDrawer({

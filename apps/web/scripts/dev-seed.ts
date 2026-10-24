@@ -7,14 +7,14 @@
  */
 import { parseArgs } from "node:util";
 import { v7 as uuidv7 } from "uuid";
-import { getAyahCount } from "@/domain/quran/surahs";
+import { getAyahCount } from "@qct/core/domain/quran/surahs";
 import { COLLECTIONS } from "@/server/collections";
 import { closeMongoClient, getDb } from "@/server/db";
 import { ensureIndexes } from "@/server/indexes";
 import { pushChanges } from "@/server/sync/push";
 import { tenantsCollection } from "@/server/tenants";
-import { attendanceIdFor, lessonIdFor } from "@/shared/ids";
-import type { PushMutation } from "@/shared/sync/protocol";
+import { attendanceIdFor, lessonIdFor } from "@qct/core/shared/ids";
+import type { PushMutation } from "@qct/core/shared/sync/protocol";
 import { loadEnv } from "./load-env";
 
 const DEVICE = "dev-seed";

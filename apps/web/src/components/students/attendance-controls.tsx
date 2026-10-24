@@ -11,7 +11,7 @@ import {
   ATTENDANCE_STATUSES,
   EXCUSE_NOTE_MAX,
   type AttendanceStatus,
-} from "@/shared/schemas/attendance";
+} from "@qct/core/shared/schemas/attendance";
 
 /** Each status has its own color when selected: green, red, amber. */
 const SELECTED: Record<AttendanceStatus, string> = {

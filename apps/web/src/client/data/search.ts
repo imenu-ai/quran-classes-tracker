@@ -1,8 +1,8 @@
 import { useLiveQuery } from "dexie-react-hooks";
 import { useLocale } from "next-intl";
-import { normalizeForSearch } from "@/domain/quran/search";
-import type { ClassRecord } from "@/shared/schemas/class";
-import type { StudentRecord } from "@/shared/schemas/student";
+import { normalizeForSearch } from "@qct/core/domain/quran/search";
+import type { ClassRecord } from "@qct/core/shared/schemas/class";
+import type { StudentRecord } from "@qct/core/shared/schemas/student";
 import { useApp } from "../app-context";
 
 export interface StudentSearchResult {

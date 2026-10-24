@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import type { AyahRangeErrorCode } from "@/domain/quran/validation";
+import type { AyahRangeErrorCode } from "../../domain/quran/validation";
 
 /**
  * Generic validation codes. Schemas never carry display text: every issue's

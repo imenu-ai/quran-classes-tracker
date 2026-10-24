@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { validateAyahRange } from "@/domain/quran/validation";
+import { validateAyahRange } from "../../domain/quran/validation";
 import { idSchema, noteSchema, NOTE_MAX, syncableBaseSchema } from "./base";
 
 export const RATE_MIN = 1;

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isLocalDate } from "@/domain/dates/local-date";
+import { isLocalDate } from "../../domain/dates/local-date";
 
 /** Client-generated UUID (v7 for most records, v5 for lessons/attendance). */
 export const idSchema = z.uuid();

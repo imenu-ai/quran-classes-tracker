@@ -1,5 +1,5 @@
-import type { ErrorParams } from "@/shared/schemas/errors";
-import { SYNC_TABLES, type SyncRecord } from "@/shared/sync/tables";
+import type { ErrorParams } from "@qct/core/shared/schemas/errors";
+import { SYNC_TABLES, type SyncRecord } from "@qct/core/shared/sync/tables";
 import type { LocalDb, OutboxEntry } from "./dexie";
 
 export interface OutboxItem {

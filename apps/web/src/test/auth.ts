@@ -1,6 +1,6 @@
 import { createCenter, createMember } from "@/server/centers";
 import { getAuth } from "@/server/auth/auth";
-import { composeUsername, type CreateMemberInput } from "@/shared/access";
+import { composeUsername, type CreateMemberInput } from "@qct/core/shared/access";
 
 export const TEST_PASSWORD = "test-password-123";
 

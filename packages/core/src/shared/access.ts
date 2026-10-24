@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { LOCALES } from "@/i18n/config";
+import { LOCALES } from "../i18n/config";
 import { idSchema, NAME_MAX } from "./schemas/base";
 
 /**

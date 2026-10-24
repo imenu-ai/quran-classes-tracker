@@ -14,8 +14,8 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { parentLink } from "@/shared/parent";
-import type { StudentRecord } from "@/shared/schemas/student";
+import { parentLink } from "@qct/core/shared/parent";
+import type { StudentRecord } from "@qct/core/shared/schemas/student";
 
 /**
  * The student's parent link to hand out: the link (copy / share) and its QR

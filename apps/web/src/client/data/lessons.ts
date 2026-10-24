@@ -1,7 +1,7 @@
 import { v7 as uuidv7 } from "uuid";
-import type { LocalDate } from "@/domain/dates/local-date";
-import { lessonIdFor } from "@/shared/ids";
-import type { LessonRecord } from "@/shared/schemas/lesson";
+import type { LocalDate } from "@qct/core/domain/dates/local-date";
+import { lessonIdFor } from "@qct/core/shared/ids";
+import type { LessonRecord } from "@qct/core/shared/schemas/lesson";
 import type { LocalDb } from "../db/dexie";
 import type { LocalStore } from "../db/local-store";
 

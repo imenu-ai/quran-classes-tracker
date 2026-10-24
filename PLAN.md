@@ -1,6 +1,6 @@
 # Implementation Plan: Quran Memorization (تحفيظ القرآن)
 
-Status: **Phase 1 done (the PWA, deployed on Amplify). Phase 2 (React Native app) planned, waiting for the go-ahead.** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-22
+Status: **Phase 1 done (the PWA, deployed on Amplify). Phase 2 (React Native app) in progress: 2.1–2.3 done.** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-24
 
 Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bottom)
 
@@ -202,8 +202,17 @@ A pnpm workspace since 2.2 (`pnpm-workspace.yaml`, `.npmrc` with `node-linker=ho
 ├── package.json         root scripts (pass-through) · Prettier
 ├── infra/               amplify-stack.yml · github-deploy-role.yml
 ├── .github/workflows/   ci.yml (lint + typecheck on PRs) · deploy-stack.yml
+├── packages/core/       React-free shared code, package @qct/core (TypeScript source; the
+│   │                    importing app compiles it: Next's transpilePackages)
+│   ├── messages/            ar.json · en.json
+│   └── src/
+│       ├── domain/          PURE: quran (sura map, validation, search) · homework (suggestion,
+│       │                    progress) · stats (monthly, class, month-sheet) · dates · text
+│       ├── shared/          client + server: schemas · sync (protocol, lww, tables) · access ·
+│       │                    ids · session · parent
+│       ├── i18n/            config · direction · formats · error messages
+│       └── test/            record builders
 └── apps/web/            the Next.js app, package @qct/web
-    ├── messages/            ar.json · en.json
     ├── scripts/             center-create.ts · db-indexes.ts · dev-seed.ts
     ├── e2e/                 main-flow · offline · roles · parent · ltr-smoke specs; server.mts
     └── src/
@@ -214,11 +223,7 @@ A pnpm workspace since 2.2 (`pnpm-workspace.yaml`, `.npmrc` with `node-linker=ho
         │   ├── (print)/     print
         │   ├── parent/      the parent page
         │   └── api/         auth · sync/push · sync/pull · me · account · centers · center · parent
-        ├── domain/          PURE: quran (sura map, validation, search) · homework (suggestion,
-        │                    progress) · stats (monthly, class, month-sheet) · dates · text
-        ├── shared/          client + server: schemas · sync (protocol, lww, tables) · access ·
-        │                    ids · session · parent
-        ├── i18n/            config · direction · request · formats · error messages
+        ├── i18n/            request (next-intl) · message types · useErrorMessage
         ├── server/          env · db · indexes · auth · repositories · sync · centers · members ·
         │                    parent · email (SES) · rate-limit
         ├── client/          db (Dexie, LocalStore, outbox) · data (hooks and actions per entity) ·
@@ -228,7 +233,7 @@ A pnpm workspace since 2.2 (`pnpm-workspace.yaml`, `.npmrc` with `node-linker=ho
         └── test/            setup, fake-indexeddb, mongo-memory helpers
 ```
 
-Tests sit next to the code as `*.test.ts(x)`. Server integration tests are `*.int.test.ts` and use `mongodb-memory-server`.
+Tests sit next to the code as `*.test.ts(x)`; each package runs its own with Vitest. Server integration tests are `*.int.test.ts` and use `mongodb-memory-server`.
 
 ---
 
@@ -378,7 +383,7 @@ Fonts: IBM Plex Sans Arabic (`ar`) and IBM Plex Sans (`en`) via `next/font/googl
 | Phase | Status |
 |---|---|
 | 1. The PWA: offline-first web app for centers, teachers and parents | [x] Done |
-| 2. React Native app: iOS and Android, phones and tablets | [ ] Planned, waiting for the go-ahead |
+| 2. React Native app: iOS and Android, phones and tablets | [ ] In progress |
 
 Every step ends with `pnpm lint && pnpm typecheck && pnpm test`, then one Conventional Commit on `dev`, then a tick in this file. Stop at the end of each phase for the go-ahead.
 
@@ -415,7 +420,7 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
   - Amplify build spec: `appRoot: apps/web` and `AMPLIFY_MONOREPO_APP_ROOT`; install only the web app's dependencies (`--filter`), still with the hoisted `node-linker`. CI runs lint and typecheck across the workspace.
   - Update README, `CLAUDE.md` and the three skills for the new paths.
   - Web behaviour unchanged: unit, integration and E2E tests and `pnpm build` green. **You deploy the stack change with the merge**; Amplify's first build of `main` may start before the stack update finishes and need one re-run.
-- [ ] **2.3 `packages/core`.** Move the pure code: `src/domain`, `src/shared`, the platform-free parts of `src/i18n` (config, direction, formats, error codes) and `messages/`. React-free, Vitest, imported as `@qct/core/...`. Web unchanged; tests move with their code.
+- [x] **2.3 `packages/core`.** Move the pure code: `src/domain`, `src/shared`, the platform-free parts of `src/i18n` (config, direction, formats, error codes) and `messages/`. React-free, Vitest, imported as `@qct/core/...`. Web unchanged; tests move with their code.
 - [ ] **2.4 One data layer (#48).**
   - A small storage interface in `packages/core`: tables with get / bulk get / query by index / put / delete, a transaction over several tables, plus outbox, rejected and meta.
   - Move `LocalStore`, the outbox, apply-pull, the sync engine (with injected lock, triggers, `fetch` and clock), backoff, the indicator state and the per-entity actions (`src/client/data`) onto it.
@@ -502,3 +507,8 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
   - Amplify's docs require a root `.npmrc` with `node-linker=hoisted` for a pnpm monorepo, so local installs are hoisted now too (before, only the Amplify build passed the flag). The build spec runs from the workspace root (`buildPath: /`) with `appRoot: apps/web`, the matching `AMPLIFY_MONOREPO_APP_ROOT` app variable, a `--filter "@qct/web..."` install, the secret written to `apps/web/.env`, and artifacts in `apps/web/.next`. The filtered, frozen-lockfile install and the build were rehearsed on a clean export of the commit.
   - Root scripts pass through (`pnpm --filter @qct/web …` or `pnpm -r …`), so every documented command still runs from the root; CI needed no change. Prettier stays at the root for the whole workspace. Root-anchored ignore patterns moved to `apps/web/.gitignore`.
   - `E2E_PORT` overrides the E2E port: another project's `next start` held 3100 on this machine.
+- 2026-10-24 (2.3):
+  - `@qct/core` ships TypeScript source with no build step. `exports` maps `./*` to `./src/*.ts`, plus the two folder entry points and `./messages/*`. The web app compiles it through `transpilePackages`, which also bundles it into the server chunks. That matters on Amplify, whose SSR packaging misses symlinked packages: the build output never `require`s it. Metro reads the same `exports` later.
+  - Inside core, imports are relative. Its ESLint config (typescript-eslint, no Next rules) blocks React, Next, Dexie, Expo and `@/` imports. Its tsconfig has no DOM types, so code that only works in browsers fails the typecheck.
+  - The test record builders (`src/test/records.ts`) moved too, because a domain test uses them; web tests import them from `@qct/core/test/records`. Core's i18n tests use `createTranslator` from `use-intl/core` (the library inside next-intl, and the one the app will use). `formats.ts` declares its own `Formats` shape instead of importing next-intl's. `request.ts` loads the messages through a fixed map, since a template-string import can't cross into a package.
+  - Same totals as before: 487 tests in 67 files (core 202 in 18, web 285 in 49). `next build` and the E2E suite pass.
