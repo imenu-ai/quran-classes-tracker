@@ -6,7 +6,7 @@ export default function HomeStack() {
   const t = useTranslations();
   return (
     <Stack screenOptions={useStackOptions()}>
-      <Stack.Screen name="index" options={{ title: t("classes.title"), headerLargeTitle: true }} />
+      <Stack.Screen name="index" options={{ title: t("classes.title") }} />
     </Stack>
   );
 }

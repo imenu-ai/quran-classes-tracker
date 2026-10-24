@@ -11,8 +11,11 @@ interface SessionApi {
    * we are from GET /api/me and remember it on the device. Needs a connection.
    */
   enter(): Promise<SessionSnapshot>;
-  /** Signs out on the server when possible, and forgets the session here. */
-  signOut(): Promise<void>;
+  /**
+   * Signs out on the server when possible, runs `wipe` (deleting the user's
+   * local data), then forgets the session here.
+   */
+  signOut(wipe?: () => Promise<void>): Promise<void>;
 }
 
 const SessionContext = createContext<SessionApi | null>(null);
@@ -44,10 +47,13 @@ export function SessionProvider({ children }: Readonly<{ children: ReactNode }>)
     return next;
   }, []);
 
-  // Local data and the unsynced-changes warning arrive with sync (2.7).
-  const signOut = useCallback(async () => {
+  const signOut = useCallback(async (wipe?: () => Promise<void>) => {
+    // Offline: the device still forgets the session below.
     await authClient.signOut().catch(() => {});
     await clearStoredCookie();
+    await wipe?.().catch((error: unknown) => {
+      console.error("Couldn't delete the local database", error);
+    });
     clearSession();
     setSnapshot(null);
   }, []);

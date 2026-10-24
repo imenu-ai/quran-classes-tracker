@@ -21,7 +21,7 @@ The product brief is in [BRIEF.md](BRIEF.md). The full design (decisions, sync p
 | Offline     | Serwist service worker                                                                |
 | Tests       | Vitest (unit, jsdom, mongodb-memory-server), Playwright (E2E)                         |
 
-Node 22 (see `.nvmrc`) and pnpm 10 (pinned in `package.json`; run `corepack enable` once).
+Node 22.13 or later (see `.nvmrc`; the SQLite tests use `node:sqlite`) and pnpm 10 (pinned in `package.json`; run `corepack enable` once).
 
 **Repo layout.** A pnpm workspace (PLAN.md, Phase 2):
 
@@ -253,16 +253,16 @@ The first build takes 10–20 minutes (Gradle and the Android NDK download once)
 2. Build: `npx eas-cli build --profile development --platform ios` (from `apps/mobile`). The first time, it asks for the Apple Developer sign-in to create the certificate and profile.
 3. Install from the link EAS shows, start Metro with `pnpm mobile`, and open the app (same Wi-Fi, or `pnpm mobile -- --tunnel`).
 
-Development builds show an Intl check in Settings (Arabic plurals, dates, direction).
+Development builds show two checks in Settings: the local classes with a button that adds one (to see writes sync to the server and the web), and an Intl check (Arabic plurals, dates, direction).
 
-**The server it talks to.** The app uses the web app's `/api` routes (sign-in, `/api/me`, and sync from 2.7), at `EXPO_PUBLIC_API_URL`:
+**The server it talks to.** The app uses the web app's `/api` routes (sign-in, `/api/me` and sync), at `EXPO_PUBLIC_API_URL`:
 
 - Copy `apps/mobile/.env.example` to `apps/mobile/.env.local` and set it, then restart Metro (the value is built into the bundle).
 - Emulator against a web server on this PC: `http://localhost:<port>` after `adb reverse tcp:<port> tcp:<port>`.
 - iPhone on the same Wi-Fi: `http://<this PC's LAN IP>:<port>`.
 - Against production, the server must already have the mobile sign-in support (Better Auth's Expo plugin, merged in step 2.6).
 
-Sign-in, registration, "forgot password" (it opens the web page) and the forced password change need that server. A signed-in user's saved session opens the app without it.
+Sign-in, registration, "forgot password" (it opens the web page) and the forced password change need that server. A signed-in user's saved session opens the app without it: their data lives on the phone (`qct-<userId>.db`), and changes made offline sync once the server is reachable.
 
 **Tests and checks:** `pnpm lint`, `pnpm typecheck` and `pnpm test` cover the app too (ESLint with the logical-style rule, Jest with `jest-expo`). `npx expo-doctor` (from `apps/mobile`) checks dependency versions.
 

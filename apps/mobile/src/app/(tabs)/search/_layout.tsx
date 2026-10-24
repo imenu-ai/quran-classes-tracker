@@ -6,7 +6,7 @@ export default function SearchStack() {
   const t = useTranslations("search");
   return (
     <Stack screenOptions={useStackOptions()}>
-      <Stack.Screen name="index" options={{ title: t("title"), headerLargeTitle: true }} />
+      <Stack.Screen name="index" options={{ title: t("title") }} />
     </Stack>
   );
 }

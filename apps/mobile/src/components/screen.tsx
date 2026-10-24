@@ -6,7 +6,7 @@ import { useTheme } from "@/theme/theme";
 
 /**
  * A scrolling screen body under the native header. On iOS the system insets
- * it (notch, home indicator, large titles, the tab bar). Android draws edge to
+ * it (notch, home indicator, the tab bar). Android draws edge to
  * edge, so the bottom inset keeps the last control clear of the gesture bar.
  * On both, the field being typed in scrolls above the keyboard (Android's
  * edge-to-edge mode no longer resizes the window for it).

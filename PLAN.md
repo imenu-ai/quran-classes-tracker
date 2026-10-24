@@ -397,7 +397,7 @@ Records pulled from the server aren't re-validated on the device, so newer field
 | @playwright/test | 1.63.x | E2E: iPhone 15 (WebKit), Pixel 7, Desktop Chrome. |
 | tsx | latest | Runs the TS CLI scripts. |
 
-Fonts: IBM Plex Sans Arabic (`ar`) and IBM Plex Sans (`en`) via `next/font/google`, self-hosted. Node 22 LTS (`.nvmrc`, `engines`).
+Fonts: IBM Plex Sans Arabic (`ar`) and IBM Plex Sans (`en`) via `next/font/google`, self-hosted. Node 22 LTS, at least 22.13 for `node:sqlite` (`.nvmrc`, `engines`).
 
 **Mobile (Phase 2; versions pinned in `apps/mobile/package.json` since 2.5: Expo 58.0.19, Expo Router 58.0.26, React Native 0.88.0, React 19.3.0, use-intl 4.14.9, jest-expo 58.0.12)**
 
@@ -405,10 +405,10 @@ Fonts: IBM Plex Sans Arabic (`ar`) and IBM Plex Sans (`en`) via `next/font/googl
 |---|---|
 | expo **SDK 58** (React Native 0.88, React 19.3; current on 2026-10-24) + dev client | New Architecture, config plugins, dev builds (Expo Go can't load our native modules). |
 | expo-router | File routes, native stack, native tabs, form sheets, header search. |
-| expo-sqlite | The local database (#48, §2.13 SQLite rules); since 2.6 also `qct-app.db` (session, device id, center code). |
+| expo-sqlite | The local database (#48, §2.13 SQLite rules): one `qct-<userId>.db` per user since 2.7, and `qct-app.db` (session, device id, center code) since 2.6. |
 | react-native-keyboard-controller (+ react-native-reanimated, react-native-worklets) | The field being typed in stays above the keyboard on edge-to-edge Android (2.6). |
 | expo-clipboard, expo-web-browser | Copying the center code; the web's forgot-password page (the picker below also gives registration its time zone list). |
-| better-auth + @better-auth/expo (same version as the server), expo-secure-store, expo-network, expo-linking, expo-constants, expo-web-browser | Sign-in and the stored session (#49). The plugin replaces `:` in SecureStore keys and splits large values itself. The last four are its required peers. |
+| better-auth + @better-auth/expo (same version as the server), expo-secure-store, expo-network, expo-linking, expo-constants, expo-web-browser | Sign-in and the stored session (#49). The plugin replaces `:` in SecureStore keys and splits large values itself. The last four are its required peers. Since 2.7, expo-network also tells the sync engine when the phone goes offline or comes back. |
 | @formatjs/intl-getcanonicallocales, -locale, -pluralrules, -relativetimeformat, -enumerator; expo-crypto | Hermes's missing `Intl` APIs and `crypto.getRandomValues` (§2.13). |
 | use-intl | The core of next-intl: same ICU messages and `useTranslations` API. |
 | @react-native-picker/picker, @react-native-community/datetimepicker | The mark wheel (#32) and the system date picker. |
@@ -495,7 +495,7 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
 - [x] **2.6 Sign-in on mobile.**
   - Server: the Better Auth Expo plugin and the app scheme in `trustedOrigins`; integration tests that the cookie-header client works with `withTenant` (including the renewed cookie) and sync.
   - App: SecureStore storage adapter; sign-in with center code + username + password (code remembered); center registration; forgot password (the email's link opens the web reset page); the forced first password change; the session snapshot from `/api/me`; the signed-out gate.
-- [ ] **2.7 SQLite storage and sync on mobile.**
+- [x] **2.7 SQLite storage and sync on mobile.**
   - The SQLite adapter (§2.13, §2.14):
     - per-user and device databases, and schema migrations;
     - the write queue with exclusive transactions and `busy_timeout`;
@@ -652,3 +652,29 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
   - **More Windows install friction:** `pnpm add` failed twice with ENOENT on a temporary folder (likely files held open, e.g. by a running Metro). Writing the dependency into `package.json` and running `pnpm install` worked; the versions come from Expo's `bundledNativeModules.json`. A running Metro also wrote stale typed routes (`.expo/types`, gitignored) that listed `packages/core` files as routes; deleting the file fixes the typecheck, and CI never has it.
   - **New native modules,** so the iPhone needs a new development build.
   - Tests: core 326 in 24 files (the error-mapping tests moved here from the web), web 282 in 35 (4 new Expo client tests), mobile 9 in 3.
+
+- 2026-10-25 (2.7):
+  - **The SQLite adapter lives in core** (`packages/core/src/data/sql-storage.ts`), written against a small `SqlDriver` (`all`, `run`, `exec`, `exclusiveTransaction`, `destroy`), so the same SQL runs on expo-sqlite in the app and on `node:sqlite` in Vitest (`testing/node-sqlite-driver.ts`). It passes the shared suites, 99 tests on SQLite.
+    - Each table stores the record as JSON plus one untyped column per indexed field, with SQL indexes for every entry of `TABLE_SCHEMA`. Untyped columns keep numbers as numbers and order them before strings, like IndexedDB. Compound indexes query with row values (`(f_classId, f_date) BETWEEN (?, ?) AND (?, ?)`).
+    - Transactions run one at a time through a queue, each as an exclusive SQLite transaction; `destroy` waits for the queue. `bulkPut`, `bulkGet` and `bulkDelete` work in chunks of 100. Migrations are a list, and `PRAGMA user_version` records how many ran.
+    - Core's tsconfig gets Node's types only through the test driver's `/// <reference types="node" />`. A lint rule blocks Node globals (`process`, `Buffer`, …) in core's non-test code, since it also runs in React Native.
+    - `engines` is now `>=22.13.0`. `.nvmrc` stays `22`, which resolves to the latest 22.x (above 22.13) locally, in CI and on Amplify.
+  - **The app:**
+    - `openUserDatabaseFile` opens `qct-<userId>.db` with WAL and `busy_timeout`, and runs transactions through `withExclusiveTransactionAsync` (its own connection, so nothing outside can join).
+    - `AppDataProvider` wires the `LocalDatabase`, `LocalStore` and `SyncEngine` for the signed-in user, like the web's `AppProvider`. Nothing opens while an admin-set password waits to be replaced.
+    - The engine gets the server URL and `sessionFetch`, which sends the stored cookie and saves a renewed one (`apiFetch` now wraps it). It also gets expo-network's connectivity, which was already in the build as a Better Auth peer, so no new native module was needed.
+    - There's no lock: one JavaScript runtime, and the engine never overlaps its own runs.
+    - `attachSyncTriggers` (`src/sync/triggers.ts`) syncs at start, when the app returns to the foreground, when the connection comes back (and shows offline when it goes), 1.5 s after local writes, and every 60 s in the foreground.
+    - `useLocalQuery` replaces `useLiveQuery`: it re-runs after a committed write to the tables it lists, and drops results from superseded runs.
+    - `SyncIndicator` sits at the top of each tab's first screen. A tap syncs now.
+    - On a 401 the indicator asks to sign in again and opens `sign-in-again`, a modal that asks only for the password of the user already on the device. Local changes wait, and `resumeAfterLogin` sends them.
+    - Sign-out warns with a native alert when changes are unsynced (cancel, sync now, sign out anyway). It then deletes the user's database before forgetting the session. Development builds show the local classes in Settings, with a button that adds one.
+  - **The mirrored header on iOS (2.5, seen again after the localization fix):** the large title still showed on the left with mirrored glyphs. react-native-screens forces right-to-left on the navigation bar's subviews (`semanticContentAttribute`, through the appearance proxy), and the large-title view, which iOS already mirrors for an RTL app, came out flipped twice. The app no longer uses large titles; standard titles are centred, so their side doesn't matter. This is JavaScript only, so no new build is needed.
+  - **Checked on the emulator** against the E2E server on port 3105:
+    - The stale session from an earlier server got a 401: the banner appeared, the local data stayed, and the sign-in-again screen opened.
+    - Sign-out with nothing pending deleted `qct-<userId>.db` at once. Signing in created a new one, in WAL mode.
+    - With Wi-Fi and data off, two classes were created: the indicator read "offline · two changes waiting" (the Arabic dual), and sign-out showed the warning.
+    - Back online, they synced by themselves, and Playwright found both on the web home page. A class created on the web reached the phone on a tap of the indicator.
+    - After the phone's session was revoked from the web, a new class waited behind the banner, and signing in again sent it.
+  - **Android clipping, again:** a label sized to its own measured width (`Button`'s, centred with `alignItems`) sometimes lost its last word ("تسجيل الخروج" showed as "تسجيل"), even with `textBreakStrategy="simple"`. Button labels now take the button's full width with centred text. The indicator puts "sign in again" on its own line, for the same reason and to fit 360 dp.
+  - Tests: core 425 in 25 files (the shared suites on SQLite, plus migration and chunking tests), web 282 in 35, mobile 20 in 5. The mobile tests use real services over the memory adapter (`src/test/app-services.tsx`), and `jest.setup.ts` mocks the auth client, the database file and the device sources.

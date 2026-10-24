@@ -18,34 +18,36 @@ Sync engine ── push outbox ─▶ POST /api/sync/push ─▶ validate, force
 Sync engine ◀─ pull changes ─ GET /api/sync/pull?since=N ◀─ records with serverVersion > N
 ```
 
-The data layer is shared with the mobile app (PLAN.md §2.14): `LocalStore`, the outbox, apply-pull, the sync engine and the per-entity actions and queries live in `packages/core/src/data` and talk only to the storage interface (`storage.ts`). Each app supplies an adapter: Dexie on the web (`src/client/db/dexie.ts`), SQLite on mobile (step 2.7). On the web, hooks in `src/client/data` wrap the shared queries in `useLiveQuery`.
+The data layer is shared with the mobile app (PLAN.md §2.14): `LocalStore`, the outbox, apply-pull, the sync engine and the per-entity actions and queries live in `packages/core/src/data` and talk only to the storage interface (`storage.ts`). Each app supplies an adapter: Dexie on the web (`src/client/db/dexie.ts`), and SQLite on mobile (`packages/core/src/data/sql-storage.ts` over a `SqlDriver`: expo-sqlite in `apps/mobile/src/data/expo-sqlite-driver.ts`, `node:sqlite` in core's tests). On the web, hooks in `src/client/data` wrap the shared queries in `useLiveQuery`. On mobile, screens use `useLocalQuery` (`apps/mobile/src/data/use-local-query.ts`), which re-runs after committed writes to the tables it lists, and `useApp()` (`apps/mobile/src/data/app-data.tsx`) for the store and engine.
 
 - **The UI never calls the API for data.** It reads the local database and writes through `LocalStore` (`packages/core/src/data/local-store.ts`), so online and offline behave the same.
-- **Sync** (`packages/core/src/data/sync/engine.ts`) runs on app start, on `online`, when the app becomes visible, 1.5 s after a local write, and every 60 s. The web's triggers are in `src/client/sync/triggers.ts`, its lock and online check in `src/client/sync/browser.ts`.
+- **Sync** (`packages/core/src/data/sync/engine.ts`) runs on app start, on `online`, when the app becomes visible, 1.5 s after a local write, and every 60 s. The web's triggers are in `src/client/sync/triggers.ts`, its lock and online check in `src/client/sync/browser.ts`. The app's are in `apps/mobile/src/sync/` (the foreground instead of visibility, expo-network instead of `online`, no lock). On a 401 both keep everything local; the app's indicator opens `sign-in-again`, which calls `resumeAfterLogin`.
 - **Conflicts** resolve by last write wins on `updatedAt`, with ties broken by `updatedBy` (`packages/core/src/shared/sync/lww.ts`). Each device's clock only moves forward; `LocalStore` stores it in `meta`.
 - **A pulled record never overwrites a local record that has a pending outbox entry and is newer.** See `applyPulledChanges` in `packages/core/src/data/sync/apply-pull.ts`.
 
 ## Where each piece lives
 
-| Concern                                               | File                                                                                                          |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Record schema (shared by client and server)           | `packages/core/src/shared/schemas/<entity>.ts`, built on `syncableBaseSchema` in `base.ts`                    |
-| The list of synced tables, schemas, foreign keys      | `packages/core/src/shared/sync/tables.ts` (`SYNC_TABLES`, `RECORD_SCHEMAS`, `REFERENCES`)                     |
-| Deterministic IDs                                     | `packages/core/src/shared/ids.ts` (`lessonIdFor`, `attendanceIdFor`)                                          |
-| Local tables, keys and indexes; the storage interface | `packages/core/src/data/storage.ts` (`TABLE_SCHEMA`, `StorageAdapter`)                                        |
-| The web's Dexie schema and adapter                    | `src/client/db/dexie.ts` (`LocalDb`, `createDexieStorage`, `openLocalDatabase`)                               |
-| Change notifications after commit                     | `packages/core/src/data/database.ts` (`LocalDatabase`)                                                        |
-| Local writes                                          | `packages/core/src/data/local-store.ts`: `create`, `update`, `upsert`, `softDelete`, `restore`, `transaction` |
-| Actions and queries per entity                        | `packages/core/src/data/entities/<entity>.ts` (taking a `DataWriter` or a `StorageReader`)                    |
-| The web's live-query hooks                            | `src/client/data/<entity>.ts` (`useLiveQuery` around the shared queries)                                      |
-| Shared data-layer tests                               | `packages/core/src/data/testing/*.suite.ts`, run on every adapter (`dataLayerSuites`)                         |
-| Mongo collection names                                | `src/server/collections.ts` (`COLLECTIONS`, `SYNCABLE_COLLECTIONS`)                                           |
-| Tenant-scoped data access                             | `src/server/repositories/tenant-repository.ts` (`createTenantRepositories`)                                   |
-| Push and pull services                                | `src/server/sync/push.ts`, `pull.ts`, `versions.ts`                                                           |
-| Mongo indexes                                         | `src/server/indexes.ts` (`INDEXES`; apply with `pnpm db:indexes`)                                             |
-| Pure domain rules (no React, DB or text)              | `packages/core/src/domain/**`                                                                                 |
-| Test record builders, in-memory Mongo                 | `packages/core/src/test/records.ts`, `src/test/mongo.ts`                                                      |
-| Sample data                                           | `scripts/dev-seed.ts` (writes through the real `pushChanges`)                                                 |
+| Concern                                               | File                                                                                                                   |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Record schema (shared by client and server)           | `packages/core/src/shared/schemas/<entity>.ts`, built on `syncableBaseSchema` in `base.ts`                             |
+| The list of synced tables, schemas, foreign keys      | `packages/core/src/shared/sync/tables.ts` (`SYNC_TABLES`, `RECORD_SCHEMAS`, `REFERENCES`)                              |
+| Deterministic IDs                                     | `packages/core/src/shared/ids.ts` (`lessonIdFor`, `attendanceIdFor`)                                                   |
+| Local tables, keys and indexes; the storage interface | `packages/core/src/data/storage.ts` (`TABLE_SCHEMA`, `StorageAdapter`)                                                 |
+| The web's Dexie schema and adapter                    | `src/client/db/dexie.ts` (`LocalDb`, `createDexieStorage`, `openLocalDatabase`)                                        |
+| Change notifications after commit                     | `packages/core/src/data/database.ts` (`LocalDatabase`)                                                                 |
+| Local writes                                          | `packages/core/src/data/local-store.ts`: `create`, `update`, `upsert`, `softDelete`, `restore`, `transaction`          |
+| Actions and queries per entity                        | `packages/core/src/data/entities/<entity>.ts` (taking a `DataWriter` or a `StorageReader`)                             |
+| The web's live-query hooks                            | `src/client/data/<entity>.ts` (`useLiveQuery` around the shared queries)                                               |
+| The SQLite adapter and its drivers                    | `packages/core/src/data/sql-storage.ts`; `apps/mobile/src/data/expo-sqlite-driver.ts`; `testing/node-sqlite-driver.ts` |
+| The app's services and screen hook                    | `apps/mobile/src/data/app-data.tsx` (`AppDataProvider`, `useApp`), `use-local-query.ts`                                |
+| Shared data-layer tests                               | `packages/core/src/data/testing/*.suite.ts`, run on every adapter (`dataLayerSuites`)                                  |
+| Mongo collection names                                | `src/server/collections.ts` (`COLLECTIONS`, `SYNCABLE_COLLECTIONS`)                                                    |
+| Tenant-scoped data access                             | `src/server/repositories/tenant-repository.ts` (`createTenantRepositories`)                                            |
+| Push and pull services                                | `src/server/sync/push.ts`, `pull.ts`, `versions.ts`                                                                    |
+| Mongo indexes                                         | `src/server/indexes.ts` (`INDEXES`; apply with `pnpm db:indexes`)                                                      |
+| Pure domain rules (no React, DB or text)              | `packages/core/src/domain/**`                                                                                          |
+| Test record builders, in-memory Mongo                 | `packages/core/src/test/records.ts`, `src/test/mongo.ts`                                                               |
+| Sample data                                           | `scripts/dev-seed.ts` (writes through the real `pushChanges`)                                                          |
 
 ## Centers and access
 
@@ -87,7 +89,7 @@ Existing devices and the database already hold records **without** the new field
 2. **Code that reads it** must cope with it missing on records pulled from the server, since pulled records aren't re-validated. Alternatively, backfill:
    - on the device, a Dexie `version(n+1)` with `.upgrade()`;
    - in Mongo, a one-off script, bumping `serverVersion` through the normal version allocation so devices pull the change.
-3. **Local index.** Only needed if you query by the field. Add it to `TABLE_SCHEMA` (`packages/core/src/data/storage.ts`). On the web, add `this.version(n+1).stores({...})` to `LocalDb` (never edit an existing version's schema; a test checks Dexie against `TABLE_SCHEMA`); on mobile, a SQLite migration.
+3. **Local index.** Only needed if you query by the field. Add it to `TABLE_SCHEMA` (`packages/core/src/data/storage.ts`). On the web, add `this.version(n+1).stores({...})` to `LocalDb` (never edit an existing version's schema; a test checks Dexie against `TABLE_SCHEMA`); on mobile, append a migration to `MIGRATIONS` in `packages/core/src/data/sql-storage.ts` (never edit one that shipped). It must add the `f_<field>` column and its index; `PRAGMA user_version` counts the migrations that ran, and the SQLite suites show whether queries on the new index work.
 4. **Mongo index.** If the server queries by the field, add it to `INDEXES` in `src/server/indexes.ts`, scoped by `tenantId` first.
 5. **Test data.** Update the builders in `packages/core/src/test/records.ts` and `scripts/dev-seed.ts`.
 6. **UI and messages.** Follow the `rtl-i18n-ui` skill.

@@ -27,6 +27,20 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // Node globals are typed for the node:sqlite test driver only.
+    files: ["src/**/*.ts"],
+    ignores: ["src/**/*.test.ts", "src/**/testing/**", "src/test/**"],
+    rules: {
+      "no-restricted-globals": [
+        "error",
+        ...["process", "Buffer", "global", "__dirname", "require"].map((name) => ({
+          name,
+          message: "@qct/core also runs in React Native: no Node globals.",
+        })),
+      ],
+    },
+  },
   eslintConfigPrettier,
   { ignores: ["node_modules/**"] },
 );

@@ -6,7 +6,7 @@ export default function SettingsStack() {
   const t = useTranslations("settings");
   return (
     <Stack screenOptions={useStackOptions()}>
-      <Stack.Screen name="index" options={{ title: t("title"), headerLargeTitle: true }} />
+      <Stack.Screen name="index" options={{ title: t("title") }} />
     </Stack>
   );
 }

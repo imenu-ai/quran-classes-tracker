@@ -38,15 +38,15 @@ export const authClient = createAuthClient({
 });
 
 /**
- * fetch for our own routes (/api/me, sync, …): sends the stored session
- * cookie and keeps a renewed one (withTenant forwards Better Auth's daily
- * renewal), so a user who only syncs stays signed in.
+ * fetch with the session: sends the stored session cookie and keeps a
+ * renewed one (withTenant forwards Better Auth's daily renewal), so a user
+ * who only syncs stays signed in. The sync engine uses it as its fetch.
  */
-export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
+export async function sessionFetch(url: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers);
   const cookie = await authClient.getCookie();
   if (cookie) headers.set("cookie", cookie);
-  const response = await fetch(`${API_URL}${path}`, { ...init, headers, credentials: "omit" });
+  const response = await fetch(url, { ...init, headers, credentials: "omit" });
   const setCookie = response.headers.get("set-cookie");
   if (setCookie && hasBetterAuthCookies(setCookie, COOKIE_PREFIX)) {
     const previous = await cookieStorage.getItemAsync(COOKIE_KEY);
@@ -54,6 +54,10 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
   }
   return response;
 }
+
+/** sessionFetch for one of our own routes (/api/me, …). */
+export const apiFetch = (path: string, init?: RequestInit) =>
+  sessionFetch(`${API_URL}${path}`, init);
 
 /** Forgets the stored session cookie (signing out, or a session the server ended). */
 export async function clearStoredCookie(): Promise<void> {

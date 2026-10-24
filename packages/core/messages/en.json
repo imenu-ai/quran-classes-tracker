@@ -156,7 +156,8 @@
     "pending": "{count, plural, one {# change waiting to sync} other {# changes waiting to sync}}",
     "rejected": "{count, plural, one {# change rejected} other {# changes rejected}}",
     "syncNow": "Sync now",
-    "signInAgain": "Sign in again"
+    "signInAgain": "Sign in again",
+    "signInAgainHint": "Your session on this device has ended. Enter your password to keep syncing. Your changes are saved here and won't be lost."
   },
   "nav": {
     "home": "Classes",

@@ -35,7 +35,7 @@ export function Button({
       ) : (
         <Text
           weight="semibold"
-          style={{ color: primary ? colors.primaryForeground : colors.foreground }}
+          style={[styles.label, { color: primary ? colors.primaryForeground : colors.foreground }]}
         >
           {label}
         </Text>
@@ -52,5 +52,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 16,
   },
+  // The button's full width, not the label's own: Android sometimes draws
+  // Arabic a little wider than it measured, and a label sized to its
+  // measurement then lost its last word ("تسجيل الخروج" showed as "تسجيل").
+  label: { alignSelf: "stretch", textAlign: "center" },
   dimmed: { opacity: 0.7 },
 });
