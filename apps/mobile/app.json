@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "تحفيظ القرآن",
+    "name": "Quran Memorization",
     "slug": "quran-classes-tracker",
     "owner": "imenu",
     "version": "1.0.0",
@@ -13,7 +13,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "ai.imenu.quran"
+      "bundleIdentifier": "ai.imenu.quran",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "ai.imenu.quran",
@@ -44,6 +47,12 @@
             "backgroundColor": "#0a110f"
           }
         }
+      ],
+      [
+        "./plugins/with-display-name",
+        {
+          "name": "تحفيظ القرآن"
+        }
       ]
     ],
     "experiments": {
@@ -53,6 +62,9 @@
       "eas": {
         "projectId": "6a4b2856-cade-4860-8934-52b11f910f83"
       }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/6a4b2856-cade-4860-8934-52b11f910f83"
     }
   }
 }
