@@ -15,7 +15,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "ai.imenu.quran",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDevelopmentRegion": "ar"
       }
     },
     "android": {
@@ -33,7 +34,8 @@
       [
         "expo-localization",
         {
-          "forcesRTL": true
+          "forcesRTL": true,
+          "supportedLocales": ["ar"]
         }
       ],
       "expo-font",
