@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { toWesternDigits } from "../domain/text/digits";
 import { LOCALES } from "../i18n/config";
 import { idSchema, NAME_MAX } from "./schemas/base";
 
@@ -39,6 +40,12 @@ export function canSeeClass(access: Pick<Access, "role" | "classIds">, classId: 
   return isAdmin(access) || access.classIds.includes(classId);
 }
 
+/**
+ * The mobile app's URL scheme (apps/mobile/app.json `scheme`). Its Better Auth
+ * client sends `expo-origin: <scheme>://`, which the server trusts.
+ */
+export const MOBILE_APP_SCHEME = "ai.imenu.quran";
+
 // ---------------------------------------------------------------------------
 // Usernames: unique inside a center. Better Auth stores "<code>:<local>".
 
@@ -54,6 +61,11 @@ const LOCAL_USERNAME_PATTERN = /^[a-z0-9_.]+$/;
 const COMPOSITE_USERNAME_PATTERN = /^\d{6}:[a-z0-9_.]{3,30}$/;
 
 export const isCenterCode = (value: string) => CENTER_CODE_PATTERN.test(value);
+
+/** The center code as typed: Arabic-Indic digits accepted, spaces removed. */
+export function normalizeCenterCode(raw: string): string {
+  return toWesternDigits(raw).replace(/\s+/g, "");
+}
 export const isLocalUsername = (value: string) =>
   value.length >= USERNAME_MIN &&
   value.length <= USERNAME_MAX &&

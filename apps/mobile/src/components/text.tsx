@@ -24,6 +24,10 @@ export function Text({
         : colors.foreground;
   return (
     <NativeText
+      // Android's default ("highQuality") line breaking measured Arabic in the
+      // custom font narrower than it then laid it out, so the last word wrapped
+      // onto a clipped second line ("تسجيل الخروج" showed as "تسجيل").
+      textBreakStrategy="simple"
       {...props}
       style={[{ fontFamily: fonts[weight], color, fontSize: size, lineHeight: size * 1.5 }, style]}
     />

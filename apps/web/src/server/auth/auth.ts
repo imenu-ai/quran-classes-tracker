@@ -3,11 +3,13 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { nextCookies } from "better-auth/next-js";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { username } from "better-auth/plugins/username";
+import { expo } from "@better-auth/expo";
 import { DEFAULT_LOCALE, isLocale, LOCALE_COOKIE } from "@qct/core/i18n/config";
 import {
   CENTER_CODE_LENGTH,
   isCompositeUsername,
   isLocalUsername,
+  MOBILE_APP_SCHEME,
   PASSWORD_MAX,
   PASSWORD_MIN,
   USERNAME_MAX,
@@ -40,6 +42,8 @@ function createAuth() {
     secret: env.BETTER_AUTH_SECRET,
     database: mongodbAdapter(getDb()),
     telemetry: { enabled: false },
+    // The mobile app (its Expo client sends this origin; see expo() below).
+    trustedOrigins: [`${MOBILE_APP_SCHEME}://`],
 
     user: {
       modelName: COLLECTIONS.users,
@@ -169,6 +173,10 @@ function createAuth() {
         displayUsernameNormalization: (value) => value.trim().toLowerCase(),
         displayUsernameValidator: isLocalUsername,
       }),
+      // The mobile app has no browser origin: its client sends `expo-origin`,
+      // which this plugin checks against trustedOrigins. It sends the session
+      // cookie in a header and keeps it in the phone's secure storage.
+      expo(),
       // Lets server actions set auth cookies; must stay last.
       nextCookies(),
     ],

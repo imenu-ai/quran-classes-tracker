@@ -1,34 +1,14 @@
 import Dexie, { type EntityTable } from "dexie";
 import { v7 as uuidv7 } from "uuid";
-import type { Permission, Role } from "@qct/core/shared/access";
-import { meResponseSchema, type MeResponse } from "@qct/core/shared/session";
-import type { Locale } from "@qct/core/i18n/config";
+import {
+  asSessionSnapshot,
+  meResponseSchema,
+  snapshotFromMe,
+  type SessionSnapshot,
+} from "@qct/core/shared/session";
 import type { LocalDatabase } from "@qct/core/data/database";
 
-/**
- * What the device remembers about the signed-in user. This is what keeps the
- * app usable offline: the client gate checks it, not the server. Access here
- * only shapes the UI; the server enforces it on every sync.
- */
-export interface SessionSnapshot {
-  userId: string;
-  tenantId: string;
-  name: string;
-  username: string;
-  phone: string;
-  /** Admins only. */
-  email: string | null;
-  locale: Locale;
-  role: Role;
-  permissions: Permission[];
-  classIds: string[];
-  mustChangePassword: boolean;
-  accessVersion: number;
-  tenantName: string;
-  centerCode: string;
-  timezone: string;
-  savedAt: number;
-}
+export { snapshotFromMe, type SessionSnapshot } from "@qct/core/shared/session";
 
 interface KeyValue {
   key: string;
@@ -56,10 +36,7 @@ const DEVICE_ID_KEY = "deviceId";
  * snapshot saved before centers and roles existed counts as signed out.
  */
 export async function readSession(): Promise<SessionSnapshot | null> {
-  const row = await getAppDb().device.get(SESSION_KEY);
-  const snapshot = row?.value as Partial<SessionSnapshot> | undefined;
-  if (!snapshot?.role || !snapshot.centerCode) return null;
-  return snapshot as SessionSnapshot;
+  return asSessionSnapshot((await getAppDb().device.get(SESSION_KEY))?.value);
 }
 
 export async function saveSession(snapshot: SessionSnapshot): Promise<void> {
@@ -80,27 +57,6 @@ export async function getDeviceId(): Promise<string> {
     await db.device.put({ key: DEVICE_ID_KEY, value: id });
     return id;
   });
-}
-
-export function snapshotFromMe(me: MeResponse, now: number): SessionSnapshot {
-  return {
-    userId: me.user.id,
-    tenantId: me.tenant.id,
-    name: me.user.name,
-    username: me.user.username,
-    phone: me.user.phone,
-    email: me.user.email,
-    locale: me.user.locale,
-    role: me.user.role,
-    permissions: me.user.permissions,
-    classIds: me.user.classIds,
-    mustChangePassword: me.user.mustChangePassword,
-    accessVersion: me.user.accessVersion,
-    tenantName: me.tenant.name,
-    centerCode: me.tenant.code,
-    timezone: me.tenant.timezone,
-    savedAt: now,
-  };
 }
 
 /**

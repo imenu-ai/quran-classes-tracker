@@ -5,7 +5,7 @@ import { useId, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { getAccountErrorKey } from "@/client/auth/account-errors";
+import { getAccountErrorKey } from "@qct/core/shared/account-errors";
 import { authClient } from "@/client/auth/auth-client";
 import { cn } from "@/lib/utils";
 import { PASSWORD_MAX, PASSWORD_MIN } from "@qct/core/shared/access";

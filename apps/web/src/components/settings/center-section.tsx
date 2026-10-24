@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { useApp } from "@/client/app-context";
 import { updateCenterSettings } from "@/client/data/account";
 import { bootstrapSession } from "@/client/session/session";
-import { timeZoneOptions, type TimeZoneOption } from "@/client/time-zones";
+import { timeZoneOptions, type TimeZoneOption } from "@qct/core/i18n/time-zones";
 import { useErrorMessage } from "@/i18n/use-error-message";
 import { updateCenterSchema } from "@qct/core/shared/access";
 import { NAME_MAX } from "@qct/core/shared/schemas/base";

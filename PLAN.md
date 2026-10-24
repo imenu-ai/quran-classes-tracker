@@ -1,6 +1,6 @@
 # Implementation Plan: Quran Memorization (تحفيظ القرآن)
 
-Status: **Phase 1 done (the PWA, deployed on Amplify). Phase 2 (React Native app) in progress: 2.1–2.5 done.** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-24
+Status: **Phase 1 done (the PWA, deployed on Amplify). Phase 2 (React Native app) in progress: 2.1–2.6 done.** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-24
 
 Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bottom)
 
@@ -405,7 +405,9 @@ Fonts: IBM Plex Sans Arabic (`ar`) and IBM Plex Sans (`en`) via `next/font/googl
 |---|---|
 | expo **SDK 58** (React Native 0.88, React 19.3; current on 2026-10-24) + dev client | New Architecture, config plugins, dev builds (Expo Go can't load our native modules). |
 | expo-router | File routes, native stack, native tabs, form sheets, header search. |
-| expo-sqlite | The local database (#48, §2.13 SQLite rules). |
+| expo-sqlite | The local database (#48, §2.13 SQLite rules); since 2.6 also `qct-app.db` (session, device id, center code). |
+| react-native-keyboard-controller (+ react-native-reanimated, react-native-worklets) | The field being typed in stays above the keyboard on edge-to-edge Android (2.6). |
+| expo-clipboard, expo-web-browser | Copying the center code; the web's forgot-password page (the picker below also gives registration its time zone list). |
 | better-auth + @better-auth/expo (same version as the server), expo-secure-store, expo-network, expo-linking, expo-constants, expo-web-browser | Sign-in and the stored session (#49). The plugin replaces `:` in SecureStore keys and splits large values itself. The last four are its required peers. |
 | @formatjs/intl-getcanonicallocales, -locale, -pluralrules, -relativetimeformat, -enumerator; expo-crypto | Hermes's missing `Intl` APIs and `crypto.getRandomValues` (§2.13). |
 | use-intl | The core of next-intl: same ICU messages and `useTranslations` API. |
@@ -490,7 +492,7 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
   - Jest (jest-expo) with Testing Library. Expo Router skeleton with native tabs and stacks and empty screens.
   - Add the mobile UI rules (logical styles, native controls, RTL, tablet widths) to the `rtl-i18n-ui` skill.
   - Checked on the Android emulator and on your iPhone dev build.
-- [ ] **2.6 Sign-in on mobile.**
+- [x] **2.6 Sign-in on mobile.**
   - Server: the Better Auth Expo plugin and the app scheme in `trustedOrigins`; integration tests that the cookie-header client works with `withTenant` (including the renewed cookie) and sync.
   - App: SecureStore storage adapter; sign-in with center code + username + password (code remembered); center registration; forgot password (the email's link opens the web reset page); the forced first password change; the session snapshot from `/api/me`; the signed-out gate.
 - [ ] **2.7 SQLite storage and sync on mobile.**
@@ -630,3 +632,23 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
   - **The fix:** `expo.name` is now the English name, "Quran Memorization" (Xcode target `QuranMemorization`). A small config plugin (`apps/mobile/plugins/with-display-name.js`) sets the name under the icon to "تحفيظ القرآن": `CFBundleDisplayName` on iOS, `app_name` on Android (#46 unchanged). A clean Android prebuild and build ran on the emulator with the new names.
   - **EAS's first iOS build set up EAS Update:** it added `expo-updates` and `updates.url`, since the profiles use channels. The encryption answer is stored as `ITSAppUsesNonExemptEncryption: false`: HTTPS, the Keychain and system random numbers only, which are exempt.
 - 2026-10-24 (2.5, on the user's iPhone): the development build ran on the iPhone, but the large header title sat on the left. `forcesRTL` sets React Native's direction; UIKit's native views (the navigation bar and its large title) follow the app's iOS localization, which defaulted to English. The app now declares Arabic as its only localization (`supportedLocales: ["ar"]`, `CFBundleDevelopmentRegion: "ar"`). This needs a new iOS build.
+
+- 2026-10-24 (2.6):
+  - **Shared with the web, moved to core:** `SessionSnapshot` and `snapshotFromMe`, the sign-in and account error mapping, `normalizeCenterCode`, and the time-zone list. `MOBILE_APP_SCHEME` (`ai.imenu.quran`) is the one source for the app scheme Better Auth trusts.
+  - **Server:** `expo()` and `trustedOrigins: ["ai.imenu.quran://"]`. Integration tests act like the app through the real handlers: sign-in with `expo-origin` and no browser origin, `/api/me` and sync with the cookie in a header, the daily renewal forwarded by `withTenant` (and the renewed cookie working), and sign-out.
+  - **A finding about Better Auth's origin check:** it doesn't stop cookie-carrying requests from a foreign origin, not even a browser `Origin`; they reach the handler. That was already true before this step. The web's protection against cross-site requests is `SameSite=Lax` cookies plus JSON-only requests (no CORS preflight is granted). The native app isn't a browser, so CSRF doesn't apply to it. The trusted origin matters for Better Auth's callback and redirect checks.
+  - **The app:**
+    - Better Auth's Expo client keeps the cookie in SecureStore. One `storageAdapter` is shared with `apiFetch`, which sends the cookie on our own routes and saves a renewed one.
+    - `qct-app.db` (expo-sqlite, synchronous API) holds the session snapshot, the device id and the remembered center code.
+    - The gate uses Expo Router's `Stack.Protected`: signed out shows sign-in and registration, an admin-set password shows its change, otherwise the tabs.
+    - Sign-in and registration are plain screens in the root stack, not a group: a protected route falls back to the first available *screen*, and a group isn't one (it showed "Unmatched Route").
+    - Forgot password opens the web page in the in-app browser. Sign-out in Settings is plain for now; 2.7 adds the unsynced warning and the local data wipe.
+  - **Checked on the emulator against a local server** (the E2E world on port 3105, through `adb reverse`): registering a center through the app (the code card, copy, into the tabs through the cookie the registration set), sign-out, sign-in with the remembered code, a teacher's forced password change, and the session surviving an app restart.
+  - **Android fixes found that way, all in shared components:**
+    - **Clipped text:** Android's default `highQuality` line breaking measured Arabic in the custom font narrower than it laid it out, so the last word wrapped onto a clipped line ("تسجيل الخروج" showed as "تسجيل"). `Text` sets `textBreakStrategy="simple"`.
+    - **The keyboard covering fields:** edge-to-edge Android doesn't resize the window for the keyboard. `Screen` uses `react-native-keyboard-controller`'s `KeyboardAwareScrollView`, which needs Reanimated 4 and Worklets, all in SDK 58's set.
+    - **The gesture bar over the last control:** `Screen` pads Android's bottom inset.
+  - **Testing Library 14's `fireEvent` is async** like `render`: without `await`, a tap ran before the typed text reached state. The shared `renderArabic` test helper adds the safe area.
+  - **More Windows install friction:** `pnpm add` failed twice with ENOENT on a temporary folder (likely files held open, e.g. by a running Metro). Writing the dependency into `package.json` and running `pnpm install` worked; the versions come from Expo's `bundledNativeModules.json`. A running Metro also wrote stale typed routes (`.expo/types`, gitignored) that listed `packages/core` files as routes; deleting the file fixes the typecheck, and CI never has it.
+  - **New native modules,** so the iPhone needs a new development build.
+  - Tests: core 326 in 24 files (the error-mapping tests moved here from the web), web 282 in 35 (4 new Expo client tests), mobile 9 in 3.

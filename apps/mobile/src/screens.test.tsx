@@ -1,11 +1,8 @@
-import { render, screen } from "@testing-library/react-native";
-import type { ReactNode } from "react";
+import { screen } from "@testing-library/react-native";
 import ar from "@qct/core/messages/ar.json";
 import { IntlCheck } from "@/components/intl-check";
-import { AppIntlProvider } from "@/i18n/intl-provider";
+import { renderArabic } from "@/test/render";
 import HomeScreen from "./app/(tabs)/(home)/index";
-
-const renderArabic = (ui: ReactNode) => render(<AppIntlProvider locale="ar">{ui}</AppIntlProvider>);
 
 describe("screens in Arabic", () => {
   it("home shows the classes' empty state", async () => {

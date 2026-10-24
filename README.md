@@ -255,6 +255,15 @@ The first build takes 10–20 minutes (Gradle and the Android NDK download once)
 
 Development builds show an Intl check in Settings (Arabic plurals, dates, direction).
 
+**The server it talks to.** The app uses the web app's `/api` routes (sign-in, `/api/me`, and sync from 2.7), at `EXPO_PUBLIC_API_URL`:
+
+- Copy `apps/mobile/.env.example` to `apps/mobile/.env.local` and set it, then restart Metro (the value is built into the bundle).
+- Emulator against a web server on this PC: `http://localhost:<port>` after `adb reverse tcp:<port> tcp:<port>`.
+- iPhone on the same Wi-Fi: `http://<this PC's LAN IP>:<port>`.
+- Against production, the server must already have the mobile sign-in support (Better Auth's Expo plugin, merged in step 2.6).
+
+Sign-in, registration, "forgot password" (it opens the web page) and the forced password change need that server. A signed-in user's saved session opens the app without it.
+
 **Tests and checks:** `pnpm lint`, `pnpm typecheck` and `pnpm test` cover the app too (ESLint with the logical-style rule, Jest with `jest-expo`). `npx expo-doctor` (from `apps/mobile`) checks dependency versions.
 
 ## Deployment
