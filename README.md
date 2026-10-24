@@ -174,12 +174,13 @@ pnpm test:e2e    # end-to-end
 
 To reuse the last build: `SKIP_E2E_BUILD=1 pnpm test:e2e`.
 
-| Spec        | Covers                                                                                                                                                   | Projects                                                                 |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `main-flow` | class → students → student page: recite and mark, next-day homework, absence; next day: postpone, undo, mark                                             | iPhone 15 (WebKit), Pixel 7, Desktop Chrome                              |
-| `offline`   | offline: mark one student and mark another absent, reload, reconnect; a second fresh login sees both                                                     | Chromium only (Playwright can't drive service workers offline in WebKit) |
-| `roles`     | an admin registers, creates classes and a teacher with limited access; the teacher's forced password change, restricted view, reassignment and disabling | all three                                                                |
-| `ltr-smoke` | every main screen in English: `dir="ltr"` and no horizontal overflow at 360 px                                                                           | all three                                                                |
+| Spec        | Covers                                                                                                                                                                                                                     | Projects                                                                 |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `main-flow` | class → students → student page: recite and mark, next-day homework, absence; next day: postpone, undo, mark                                                                                                               | iPhone 15 (WebKit), Pixel 7, Desktop Chrome                              |
+| `offline`   | offline: mark one student and mark another absent, reload, reconnect; a second fresh login sees both                                                                                                                       | Chromium only (Playwright can't drive service workers offline in WebKit) |
+| `roles`     | an admin registers, creates classes and a teacher with limited access; the teacher's forced password change, restricted view, reassignment and disabling                                                                   | all three                                                                |
+| `parent`    | the teacher sets a parent ID and marks the student; a signed-out phone opens the parent link with the ID, sees the month and is remembered; a student without a parent ID has an invalid link; the printed sheet's QR code | all three                                                                |
+| `ltr-smoke` | every main screen in English: `dir="ltr"` and no horizontal overflow at 360 px                                                                                                                                             | all three                                                                |
 
 The first time, install the browsers with `pnpm --filter @qct/web exec playwright install`. Playwright's WebKit on Windows is close to iOS Safari but not identical, so check on a real iPhone before a release (next section).
 
@@ -242,7 +243,7 @@ To change the build, edit `BuildSpec` in `infra/amplify-stack.yml` and merge it 
 
 ### First deployment
 
-Not deployed yet. Do these in order.
+Production was set up with these steps during Phase 1. Follow them in order to set it up again, for example in a new AWS account.
 
 **1. MongoDB Atlas**
 
