@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Pressable, Text, TextInput } from "react-native";
 
 /**
@@ -11,6 +11,11 @@ import { Pressable, Text, TextInput } from "react-native";
 export const router = { push: jest.fn(), back: jest.fn(), dismissTo: jest.fn() };
 
 export const useLocalSearchParams = jest.fn(() => ({}));
+
+/** Runs when the screen mounts (a test screen is always in focus). */
+export const useFocusEffect = (effect: () => void | (() => void)) => {
+  useEffect(effect, [effect]);
+};
 
 interface ItemProps {
   children?: ReactNode;

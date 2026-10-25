@@ -11,10 +11,13 @@ import { AppDataProvider } from "@/data/app-data";
 import { AppIntlProvider } from "@/i18n/intl-provider";
 import { SessionProvider, useSession } from "@/session/session";
 import { FONT_FILES } from "@/theme/fonts";
+import { applySavedThemePreference } from "@/theme/preference";
 import { navigationTheme, useTheme } from "@/theme/theme";
 
 // Keep the splash screen up until the fonts are ready (they're bundled, so it's brief).
 void SplashScreen.preventAutoHideAsync();
+// Light, dark or the phone's setting, chosen in Settings.
+applySavedThemePreference();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(FONT_FILES);
@@ -91,6 +94,7 @@ function GatedStack() {
             options={{ ...withHeader(tStudents("addTitle")), presentation: "modal" }}
           />
           <Stack.Screen name="edit-day" options={formSheet} />
+          <Stack.Screen name="reset-password" options={formSheet} />
           <Stack.Screen
             name="homework-form"
             options={{ ...withHeader(tHomework("addTitle")), presentation: "modal" }}

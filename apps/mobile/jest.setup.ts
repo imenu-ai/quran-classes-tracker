@@ -21,3 +21,17 @@ jest.mock("@/sync/device", () => ({
     onConnectivity: () => () => {},
   },
 }));
+// qct-app.db (expo-sqlite): an in-memory stand-in. The sign-in test mocks its own.
+jest.mock("@/device/device-store", () => {
+  const values = new Map<string, unknown>();
+  return {
+    readSession: () => null,
+    saveSession: jest.fn(),
+    clearSession: jest.fn(),
+    getDeviceId: () => "device-1",
+    readRememberedCenterCode: () => "",
+    rememberCenterCode: jest.fn(),
+    readThemePreference: () => values.get("theme") ?? "system",
+    saveThemePreference: (preference: string) => values.set("theme", preference),
+  };
+});

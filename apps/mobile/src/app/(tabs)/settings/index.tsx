@@ -1,20 +1,34 @@
 import { useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
+import { router } from "expo-router";
 import { useTranslations } from "use-intl";
 import { Button } from "@/components/button";
+import { ChoiceList } from "@/components/choice-list";
 import { DevSyncCheck } from "@/components/dev-sync-check";
 import { IntlCheck } from "@/components/intl-check";
+import { ListRow } from "@/components/list-row";
 import { Screen } from "@/components/screen";
-import { SyncIndicator } from "@/components/sync-indicator";
+import { Section } from "@/components/section";
+import { SyncSection } from "@/components/sync-section";
 import { Text } from "@/components/text";
 import { useApp } from "@/data/app-data";
-import { useTheme } from "@/theme/theme";
+import type { ThemePreference } from "@/device/device-store";
+import { useThemePreference } from "@/theme/preference";
 
-/** The signed-in account, sync and sign-out (profile and center settings: 2.11). */
+const THEMES: { value: ThemePreference; label: "themeSystem" | "themeLight" | "themeDark" }[] = [
+  { value: "system", label: "themeSystem" },
+  { value: "light", label: "themeLight" },
+  { value: "dark", label: "themeDark" },
+];
+
+/**
+ * Settings, like the web's: sync details, then the profile, password and
+ * center (each its own screen), the theme, the account and sign-out.
+ */
 export default function SettingsScreen() {
   const t = useTranslations();
   const { session, db, engine, signOut } = useApp();
-  const { colors } = useTheme();
+  const [theme, setTheme] = useThemePreference();
   const [busy, setBusy] = useState(false);
 
   const leave = () => {
@@ -36,25 +50,44 @@ export default function SettingsScreen() {
 
   return (
     <Screen>
-      <SyncIndicator />
-      <View style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }]}>
-        <Text weight="semibold" size={18}>
-          {session.name}
-        </Text>
-        <Text tone="muted" style={styles.ltr}>
-          {session.username}
-        </Text>
-        <Text>{session.tenantName}</Text>
-        <Text tone="muted">
-          {t("settings.centerCode")}: <Text style={styles.ltr}>{session.centerCode}</Text>
-        </Text>
-      </View>
-      <Button
-        variant="plain"
-        label={t("auth.logout")}
-        busy={busy}
-        onPress={() => void confirmSignOut()}
+      <SyncSection />
+      <ListRow
+        title={t("settings.profileTitle")}
+        subtitle={session.name}
+        onPress={() => router.push("/settings/profile")}
       />
+      <ListRow
+        title={t("settings.passwordTitle")}
+        onPress={() => router.push("/settings/password")}
+      />
+      <ListRow
+        title={t("settings.centerTitle")}
+        subtitle={session.tenantName}
+        onPress={() => router.push("/settings/center")}
+      />
+      <Section title={t("settings.themeTitle")}>
+        <ChoiceList
+          label={t("settings.themeTitle")}
+          hideLabel
+          value={theme}
+          onChange={setTheme}
+          options={THEMES.map(({ value, label }) => ({ value, label: t(`settings.${label}`) }))}
+        />
+      </Section>
+      <Section title={t("settings.account")}>
+        <View style={styles.account}>
+          <Text weight="semibold">{session.name}</Text>
+          <Text tone="muted" style={styles.ltr}>
+            {session.username}
+          </Text>
+        </View>
+        <Button
+          variant="plain"
+          label={t("auth.logout")}
+          busy={busy}
+          onPress={() => void confirmSignOut()}
+        />
+      </Section>
       {__DEV__ ? <DevSyncCheck /> : null}
       {__DEV__ ? <IntlCheck /> : null}
     </Screen>
@@ -62,7 +95,7 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  card: { borderWidth: 1, borderRadius: 12, padding: 16, gap: 4 },
-  // Latin user names and codes keep their own order inside Arabic text.
+  account: { gap: 2 },
+  // Latin user names keep their own order inside Arabic text.
   ltr: { writingDirection: "ltr" },
 });

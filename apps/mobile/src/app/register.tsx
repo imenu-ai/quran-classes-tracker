@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import * as Clipboard from "expo-clipboard";
 import { useTranslations } from "use-intl";
 import { DEFAULT_TIME_ZONE, getIntlLocale } from "@qct/core/i18n/config";
 import { timeZoneOptions } from "@qct/core/i18n/time-zones";
@@ -9,6 +8,7 @@ import { PASSWORD_MAX, registerCenterSchema, USERNAME_MAX } from "@qct/core/shar
 import { parseWithCodes, type FieldError } from "@qct/core/shared/schemas/errors";
 import { apiFetch } from "@/auth/client";
 import { Button } from "@/components/button";
+import { CodeCard } from "@/components/code-card";
 import { FormError } from "@/components/form-error";
 import { Screen } from "@/components/screen";
 import { Text } from "@/components/text";
@@ -194,8 +194,6 @@ function CenterCode({ code }: Readonly<{ code: string }>) {
   const t = useTranslations("auth.register.done");
   const tErrors = useTranslations("auth.register.errors");
   const { enter } = useSession();
-  const { colors } = useTheme();
-  const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   return (
@@ -203,27 +201,12 @@ function CenterCode({ code }: Readonly<{ code: string }>) {
       <Text weight="semibold" size={20}>
         {t("title")}
       </Text>
-      <View style={[styles.codeBox, { borderColor: colors.primary }]}>
-        <Text tone="muted" style={styles.centered}>
-          {t("codeLabel")}
-        </Text>
-        <Text
-          weight="bold"
-          size={36}
-          tone="primary"
-          selectable
-          style={[styles.centered, styles.code]}
-        >
-          {code}
-        </Text>
-      </View>
-      <Text tone="muted">{t("codeHint")}</Text>
-      <Button
-        variant="plain"
-        label={copied ? t("copied") : t("copy")}
-        onPress={() => {
-          void Clipboard.setStringAsync(code).then(() => setCopied(true));
-        }}
+      <CodeCard
+        label={t("codeLabel")}
+        code={code}
+        hint={t("codeHint")}
+        copyLabel={t("copy")}
+        copiedLabel={t("copied")}
       />
       <FormError message={failed ? tErrors("offline") : null} />
       <Button
@@ -244,9 +227,4 @@ function CenterCode({ code }: Readonly<{ code: string }>) {
 const styles = StyleSheet.create({
   field: { gap: 6 },
   picker: { borderWidth: 1, borderRadius: 10, overflow: "hidden" },
-  // Centered with textAlign over the full width: text that shrinks to fit
-  // (alignItems: "center") gets measured too narrow in RTL on Android.
-  codeBox: { borderWidth: 2, borderRadius: 12, padding: 16, gap: 4 },
-  centered: { textAlign: "center" },
-  code: { letterSpacing: 4, writingDirection: "ltr" },
 });

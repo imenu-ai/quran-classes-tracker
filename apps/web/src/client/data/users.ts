@@ -1,26 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type {
-  CreateMemberInput,
-  Permission,
-  Role,
-  UpdateMemberInput,
-} from "@qct/core/shared/access";
+import type { CreateMemberInput, UpdateMemberInput } from "@qct/core/shared/access";
+import type { CenterUser } from "@qct/core/shared/center-users";
 import { apiCall, type ApiErrorCode } from "../api";
 
-/** A user of the center as the admin sees it (GET /api/center/users). */
-export interface CenterUser {
-  id: string;
-  name: string;
-  username: string;
-  phone: string;
-  role: Role;
-  permissions: Permission[];
-  classIds: string[];
-  disabled: boolean;
-  mustChangePassword: boolean;
-}
+export type { CenterUser } from "@qct/core/shared/center-users";
 
 /** Why an admin action failed (see ApiErrorCode). */
 export type UsersErrorCode = ApiErrorCode;

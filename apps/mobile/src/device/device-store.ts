@@ -62,3 +62,15 @@ export function readRememberedCenterCode(): string {
 }
 
 export const rememberCenterCode = (code: string) => write(CENTER_CODE_KEY, code);
+
+const THEME_KEY = "theme";
+
+export type ThemePreference = "system" | "light" | "dark";
+
+/** Light, dark, or follow the phone (the default). */
+export function readThemePreference(): ThemePreference {
+  const value = read(THEME_KEY);
+  return value === "light" || value === "dark" ? value : "system";
+}
+
+export const saveThemePreference = (preference: ThemePreference) => write(THEME_KEY, preference);

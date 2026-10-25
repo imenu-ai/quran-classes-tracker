@@ -513,7 +513,7 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
   - The searchable sura sheet and ayah fields with live errors; exams with the violet rows.
   - The month table with month navigation and the edit sheet for past days; view-only mode.
 - [x] **2.10 Class statistics.** Year and month filter (native menus), attendance rate and average marks, the ranked students (§0 #34–36).
-- [ ] **2.11 Settings and administration.** Profile, password, theme, sync details with retry/discard, center settings (name, time zone); user management for admins: create, edit classes and permissions, reset password, disable.
+- [x] **2.11 Settings and administration.** Profile, password, theme, sync details with retry/discard, center settings (name, time zone); user management for admins: create, edit classes and permissions, reset password, disable.
 - [ ] **2.12 Printing and the parent link.**
   - HTML month sheets from the shared builders (font embedded, QR as SVG) through `expo-print`: print, or save and share a PDF.
   - Both entry points: "طباعة الشهر" and the class's "طباعة كشوف الطلاب" (month, "تحديد الكل").
@@ -746,3 +746,32 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
 
     The year submenu's arrow is drawn by Expo UI's Compose menu and points right in Arabic too; it isn't ours to mirror. iOS is the user's check.
   - Tests: mobile 47 in 8 (core and web unchanged).
+
+- 2026-10-25 (2.11):
+  - **Settings** keeps the web's parts in a native layout:
+    - The sync card: state, changes waiting, last sync (refreshed every 30 s), sync now, and refused changes with retry and discard (discard asks first).
+    - Rows to the profile, password and center screens. The theme as three radio rows. The account card with sign-out.
+  - **Profile** (name, username, phone, and email for admins) sends only what changed, then refreshes the session. **Password** reuses the forced-change form, now `PasswordForm`. **Center** shows the code card (shared with registration, now `CodeCard`); admins edit the name and time zone (native picker).
+  - **The theme** is saved on the device and applied with React Native's colour-scheme override (`Appearance.setColorScheme`). Screens, native headers, tabs and alerts all follow it, from the next start too.
+  - **Users (admins):**
+    - The list loads each time the tab comes into view, with you first, then admins, then by name.
+    - The editor covers details, role (with each role's explanation), permissions and classes. Assigned classes sync first so the server knows them.
+    - Reset password is a form sheet; disabling asks with a native alert; enabling is one tap. Server codes (taken username, last admin, offline…) show as on the web.
+  - **Shared with the web:**
+    - `packages/core/src/shared/api.ts`: the result type and `apiResult`, which turns a response into a result. Each app keeps its own fetch.
+    - `shared/center-users.ts`: `CenterUser`, `sortCenterUsers` and the permissions' message keys.
+    - The web's `client/api.ts`, `client/data/users.ts` and user screens now import them.
+  - **Found on the emulator:**
+    - A paragraph that starts with a Latin name ("Omar · سيُسجَّل…") took a left-to-right base direction, and its full stop moved to the wrong side. The name now has its own line.
+    - An alert with no buttons shows Android's English "OK". Single-message alerts now pass a "إغلاق" button.
+  - **Checked on the emulator** against the E2E server, as an admin:
+    - the sync card;
+    - dark and automatic theme across the app;
+    - a profile name change, shown in Settings;
+    - the center screen;
+    - creating a teacher with a class (the list showed one class and "hasn't changed the password");
+    - resetting the password;
+    - disabling, after which the list showed "موقوف".
+
+    The settings password screen reuses the form checked in 2.6. iOS is the user's check.
+  - Tests: core 432 in 27 files (the shared API helpers), web 279 in 34, mobile 56 in 9. Web `next build` compiles; the web E2E suite wasn't rerun (the web change is imports only).

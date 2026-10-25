@@ -53,17 +53,8 @@ import {
   type Permission,
   type Role,
 } from "@qct/core/shared/access";
+import { PERMISSION_MESSAGE_KEY } from "@qct/core/shared/center-users";
 import { parseWithCodes, type FieldError as CodedError } from "@qct/core/shared/schemas/errors";
-
-const PERMISSION_KEY: Record<
-  Permission,
-  "classesManage" | "studentsManage" | "lessonsRun" | "reportsView"
-> = {
-  "classes.manage": "classesManage",
-  "students.manage": "studentsManage",
-  "lessons.run": "lessonsRun",
-  "reports.view": "reportsView",
-};
 
 type FieldName = "name" | "username" | "phone" | "password";
 
@@ -321,7 +312,7 @@ function UserForm({ user, onSaved }: { user?: CenterUser; onSaved: () => Promise
                     onChange={() => setPermissions((current) => toggle(current, permission))}
                     className="size-5 shrink-0 accent-primary"
                   />
-                  <span>{t(`permissions.${PERMISSION_KEY[permission]}`)}</span>
+                  <span>{t(`permissions.${PERMISSION_MESSAGE_KEY[permission]}`)}</span>
                 </label>
               ))}
             </fieldset>

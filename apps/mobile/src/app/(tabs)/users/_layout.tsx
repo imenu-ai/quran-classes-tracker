@@ -7,6 +7,7 @@ export default function UsersStack() {
   return (
     <Stack screenOptions={useStackOptions()}>
       <Stack.Screen name="index" options={{ title: t("title") }} />
+      <Stack.Screen name="[id]" options={{ title: t("editTitle") }} />
     </Stack>
   );
 }

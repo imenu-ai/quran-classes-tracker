@@ -2,22 +2,27 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { useTheme } from "@/theme/theme";
 import { Text } from "./text";
 
-/** A labelled single choice among a few options, as full-width radio rows. */
+/**
+ * A labelled single choice among a few options, as full-width radio rows.
+ * `hideLabel` when a heading above already says it (it still names the group).
+ */
 export function ChoiceList<T extends string>({
   label,
   value,
   options,
   onChange,
+  hideLabel = false,
 }: Readonly<{
   label: string;
   value: T;
-  options: readonly { value: T; label: string }[];
+  options: readonly { value: T; label: string; hint?: string }[];
   onChange: (value: T) => void;
+  hideLabel?: boolean;
 }>) {
   const { colors } = useTheme();
   return (
     <View style={styles.field} accessibilityRole="radiogroup" accessibilityLabel={label}>
-      <Text weight="medium">{label}</Text>
+      {hideLabel ? null : <Text weight="medium">{label}</Text>}
       {options.map((option) => {
         const selected = option.value === value;
         return (
@@ -42,7 +47,14 @@ export function ChoiceList<T extends string>({
             >
               {selected ? <View style={[styles.dot, { backgroundColor: colors.primary }]} /> : null}
             </View>
-            <Text style={styles.label}>{option.label}</Text>
+            <View style={styles.label}>
+              <Text weight={option.hint ? "medium" : "regular"}>{option.label}</Text>
+              {option.hint ? (
+                <Text tone="muted" size={14}>
+                  {option.hint}
+                </Text>
+              ) : null}
+            </View>
           </Pressable>
         );
       })}
@@ -71,5 +83,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   dot: { width: 10, height: 10, borderRadius: 5 },
-  label: { flex: 1 },
+  label: { flex: 1, gap: 2 },
 });
