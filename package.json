@@ -11,6 +11,7 @@
     "start": "pnpm --filter @qct/web start",
     "mobile": "pnpm --filter @qct/mobile start",
     "mobile:android": "pnpm --filter @qct/mobile android",
+    "mobile:e2e": "pnpm --filter @qct/mobile test:e2e",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",

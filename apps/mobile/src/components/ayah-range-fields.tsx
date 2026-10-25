@@ -35,6 +35,7 @@ export function AyahRangeFields({
   const ayahField = (field: "fromAyah" | "toAyah", key: "from" | "to") => (
     <View style={styles.half}>
       <TextField
+        testID={`ayah.${key}`}
         label={t(`glossary.${field}`)}
         value={value[key]}
         onChangeText={(text) => onChange({ ...value, [key]: text }, field)}

@@ -81,6 +81,7 @@ export function SurahPicker({
             <SmallButton label={tCommon("close")} onPress={() => setOpen(false)} />
           </View>
           <TextInput
+            testID="surah.search"
             value={query}
             onChangeText={setQuery}
             placeholder={t("searchSurah")}

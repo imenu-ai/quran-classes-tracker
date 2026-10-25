@@ -66,6 +66,7 @@ export default function SignInScreen() {
     <Screen width="form">
       <Text tone="muted">{t("login.subtitle")}</Text>
       <TextField
+        testID="sign-in.code"
         label={t("login.centerCode")}
         hint={t("login.centerCodeHint")}
         error={fieldErrors.code}
@@ -77,6 +78,7 @@ export default function SignInScreen() {
         autoComplete="off"
       />
       <TextField
+        testID="sign-in.username"
         label={t("login.username")}
         error={fieldErrors.username}
         value={username}
@@ -87,6 +89,7 @@ export default function SignInScreen() {
         autoComplete="username"
       />
       <TextField
+        testID="sign-in.password"
         label={t("login.password")}
         error={fieldErrors.password}
         value={password}

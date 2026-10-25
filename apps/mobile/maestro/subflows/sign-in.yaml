@@ -1,0 +1,18 @@
+# Signs in with CODE, USERNAME and PASSWORD (the seeded accounts in
+# apps/web/e2e/accounts.ts) and waits for the first sync.
+appId: ai.imenu.quran
+---
+- tapOn:
+    id: sign-in.code
+- eraseText
+- inputText: ${CODE}
+- hideKeyboard
+- tapOn:
+    id: sign-in.username
+- inputText: ${USERNAME}
+- hideKeyboard
+- tapOn:
+    id: sign-in.password
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn: دخول

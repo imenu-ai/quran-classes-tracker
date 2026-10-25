@@ -157,12 +157,14 @@ function UserForm({
       <Stack.Screen options={{ title: isNew ? t("newTitle") : t("editTitle") }} />
       <Section title={t("detailsSection")}>
         <TextField
+          testID="user.name"
           label={t("name")}
           value={values.name}
           onChangeText={set("name")}
           error={errors.name}
         />
         <TextField
+          testID="user.username"
           label={t("username")}
           hint={t("usernameHint")}
           value={values.username}
@@ -174,6 +176,7 @@ function UserForm({
           autoComplete="off"
         />
         <TextField
+          testID="user.phone"
           label={t("phone")}
           hint={t("phoneHint")}
           value={values.phone}
@@ -185,6 +188,7 @@ function UserForm({
         />
         {isNew ? (
           <TextField
+            testID="user.password"
             label={t("password")}
             hint={t("passwordHint")}
             value={values.password}

@@ -519,7 +519,7 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
   - Both entry points: "طباعة الشهر" and the class's "طباعة كشوف الطلاب" (month, "تحديد الكل").
   - "رابط ولي الأمر": the web link, copy, the share sheet and its QR.
 - [x] **2.13 Tablets.** iPad and Android tablet layouts: multi-column grids and readable content widths where the web uses two columns; phones portrait, tablets in all orientations (iPad multitasking needs it). Checked on your iPad and an Android tablet emulator.
-- [ ] **2.14 Mobile E2E and device checks.** Maestro flows on the Android emulator (main flow, offline, roles) with their own seeded server; an `en` LTR smoke render in Jest; a README checklist for iPhone and iPad (offline, print, share, RTL).
+- [x] **2.14 Mobile E2E and device checks.** Maestro flows on the Android emulator (main flow, offline, roles) with their own seeded server; an `en` LTR smoke render in Jest; a README checklist for iPhone and iPad (offline, print, share, RTL).
 - [ ] **2.15 Account deletion (#50).** Who can delete what (e.g. an admin deletes the center and all its data; a teacher deletes his own account) is agreed with you before the step. The API, the app screens, and the same option on the web.
 - [ ] **2.16 Release.**
   - App icon, splash screen, a privacy policy page on the web, a demo center for App Review.
@@ -819,3 +819,25 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
 
     On the `qct_phone` emulator, the same build stayed in portrait with the system set to landscape. The iPad check is the user's.
   - Tests: mobile 64 in 11 (core and web unchanged). `expo-doctor` passes 20/20.
+
+- 2026-10-25 (2.14):
+  - **Maestro flows** in `apps/mobile/maestro/`, on the Android emulator. Maestro 2.11 is installed in `~/.maestro`, outside the repo; it drives the development build.
+    - `main-flow`: sign in, create a class and a student, present, recite now (An-Naba 1–5) with a mark, the month table, and "متصل" in Settings at the end.
+    - `offline`: airplane mode, create a class; the indicator shows "غير متصل" with the change waiting. Back online it syncs; signing out (which wipes the device) and in again brings the class back from the server.
+    - `roles`: the admin creates a class, a student and a teacher assigned to that class with the default permissions, then signs out. The teacher goes through the forced password change, sees only that class, with no "إنشاء حلقة", Users tab or "إضافة طالب", and takes attendance, which syncs.
+    - Subflows open the app from a cleared state on Metro's bundle (a development-client deep link) and sign in.
+  - **The runner,** `pnpm mobile:e2e` (`apps/mobile/scripts/e2e.mts`, run with tsx, now a mobile dev dependency): the web's E2E server, Metro on 8082 with `EXPO_PUBLIC_API_URL` pointing at it (`--clear`, since the value is inlined), `adb reverse` for both ports, builds the bundle, then `maestro test`. It stops the process trees afterwards. The server seeds three more accounts for it (`MOBILE_ACCOUNTS`, one center per flow).
+  - **testIDs** on the fields the flows type into: sign-in, the class and student forms, the ayah range, the surah search, the password form, the user editor, and the two mark pickers (a new `testID` prop on `ScorePicker`).
+  - **Findings while writing them** (in the `plan-step-workflow` skill):
+    - Android's dropdown picker shows only its first items, so the flow picks 5.
+    - Maestro types ASCII only on Android, so the test data is Latin.
+    - Airplane mode doesn't cut `adb reverse`, but the app goes by the device's network state, so it still behaves offline.
+    - Rerunning a flow against the same server finds the records it made before. That's why the runner starts a fresh server every time.
+    - The development client's greeting came up over the sign-in screen after a slow first load; the deep link now passes `disableOnboarding=1`.
+    - An emulator that had run all day wedged adb twice and had Android kill the starting app (ANR). The runner restarts a silent adb server, builds the bundle before the flows start, and times adb calls out. A reboot fixed the ANR.
+
+    No app bug turned up.
+  - **English smoke render** (`src/ltr.test.tsx`): the classes, a class, a student (today, recitations, the month table), the class statistics and Settings render in English with left-to-right layout and no Arabic text or label left. A control case shows the check catches Arabic. `renderWithApp` and `renderArabic` take an optional locale.
+  - **Run:** the three flows pass through `pnpm mobile:e2e` on `qct_phone` in about 8½ minutes.
+  - **README:** the Maestro run and its flows, and a checklist for the iPhone and the iPad (RTL, offline, print, share, iPad layouts, native controls). The iOS checks are the user's, on a development build with 2.12's and 2.13's native modules.
+  - Tests: mobile 71 in 12 (core and web unchanged).

@@ -133,6 +133,7 @@ export function HomeworkItem({
                   value={item.memorizationRate}
                   onChange={(score) => onRate("memorizationRate", score)}
                   disabled={readOnly}
+                  testID="score.memorization"
                 />
                 {exam ? (
                   <View style={styles.spacer} />
@@ -142,6 +143,7 @@ export function HomeworkItem({
                     value={item.behaviorRate}
                     onChange={(score) => onRate("behaviorRate", score)}
                     disabled={readOnly}
+                    testID="score.behavior"
                   />
                 )}
               </View>

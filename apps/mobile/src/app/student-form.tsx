@@ -120,6 +120,7 @@ function StudentForm({
     <Screen width="form">
       <Stack.Screen options={{ title: t(existing ? "students.editTitle" : "students.addTitle") }} />
       <TextField
+        testID="student.name"
         label={t("students.fullName")}
         value={form.fullName}
         onChangeText={(value) => set("fullName", value)}
@@ -128,6 +129,7 @@ function StudentForm({
         autoComplete="off"
       />
       <TextField
+        testID="student.birth-year"
         label={t("students.birthYear")}
         value={form.birthYear}
         onChangeText={(value) => set("birthYear", value)}
@@ -162,6 +164,7 @@ function StudentForm({
         style={{ minHeight: 80, paddingVertical: 10, textAlignVertical: "top" }}
       />
       <TextField
+        testID="student.parent-id"
         label={t("students.parentId")}
         hint={errors.parentId ? undefined : t("students.parentIdHint")}
         value={form.parentId}

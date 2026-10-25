@@ -1,0 +1,88 @@
+# The teacher's day, like the web's main-flow spec: a class, a student,
+# attendance, a recitation with its mark, and the month table, all synced.
+appId: ai.imenu.quran
+name: Main flow
+env:
+  CODE: "200001"
+  USERNAME: m_main
+---
+- runFlow: subflows/open-app.yaml
+- runFlow: subflows/sign-in.yaml
+- extendedWaitUntil:
+    visible: متصل
+    timeout: 30000
+
+# A class (the create sheet), then its page.
+- tapOn: إنشاء حلقة
+- tapOn:
+    id: class.name
+- inputText: Fajr
+- hideKeyboard
+- tapOn:
+    text: إنشاء حلقة
+    index: 1
+- extendedWaitUntil:
+    visible: لا يوجد طلاب في هذه الحلقة
+    timeout: 10000
+
+# A student.
+- tapOn: إضافة طالب
+- tapOn:
+    id: student.name
+- inputText: Omar Ali
+- tapOn:
+    id: student.birth-year
+- inputText: "2015"
+- hideKeyboard
+- scrollUntilVisible:
+    element: إضافة طالب
+    direction: DOWN
+- tapOn: إضافة طالب
+- extendedWaitUntil:
+    visible: Omar Ali
+    timeout: 10000
+
+# Today: present, then a portion recited on the spot.
+- tapOn: Omar Ali
+- tapOn: حاضر
+- tapOn: تسميع الآن
+- tapOn: "السورة: اختر السورة"
+- inputText: "78"
+- tapOn: 78 · النبأ · 40 آية
+- tapOn:
+    id: ayah.from
+- inputText: "1"
+- tapOn:
+    id: ayah.to
+- inputText: "5"
+- hideKeyboard
+- tapOn: حفظ
+
+# The recited item opens by itself; the memorization mark from its picker.
+- extendedWaitUntil:
+    visible: النبأ 1–5
+    timeout: 10000
+- scrollUntilVisible:
+    element:
+      id: score.memorization
+    direction: DOWN
+- tapOn:
+    id: score.memorization
+# A mark the dropdown shows without scrolling.
+- tapOn: "5"
+- extendedWaitUntil:
+    visible: 5 · —
+    timeout: 10000
+
+# The month table shows the day.
+- scrollUntilVisible:
+    element: .*2026.*
+    direction: UP
+- tapOn: أكتوبر 2026
+- assertVisible: "5"
+
+# Everything reached the server: the sync section says so.
+- tapOn: الإعدادات
+- extendedWaitUntil:
+    visible: متصل
+    timeout: 30000

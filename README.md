@@ -82,6 +82,7 @@ The service worker is **off in development**. To try offline behaviour on your m
 | `pnpm typecheck`                    | Generates route types, then `tsc --noEmit`                               |
 | `pnpm test` / `pnpm test:watch`     | Unit and integration tests (Vitest; Jest in the mobile app)              |
 | `pnpm test:e2e`                     | Playwright end-to-end tests (see below)                                  |
+| `pnpm mobile:e2e`                   | Maestro flows for the mobile app on the Android emulator (see below)     |
 | `pnpm format` / `pnpm format:check` | Prettier                                                                 |
 | `pnpm db:indexes`                   | Create or update MongoDB indexes                                         |
 | `pnpm center:create`                | Create a center and its admin (prints the center code)                   |
@@ -229,7 +230,7 @@ On the iPhone:
 
 ## Mobile app
 
-`apps/mobile` is an Expo app (SDK 58, React Native 0.88) with native navigation and controls, in Arabic and right to left from the start. It's being built in Phase 2 (PLAN.md); so far it has the empty tabs. EAS project: `@imenu/quran-classes-tracker`; bundle id and Android package `ai.imenu.quran`.
+`apps/mobile` is an Expo app (SDK 58, React Native 0.88) with native navigation and controls, in Arabic and right to left from the start. It's being built in Phase 2 (PLAN.md): so far the teacher's day, class statistics, settings and user management, printing and the parent link, and tablet layouts. EAS project: `@imenu/quran-classes-tracker`; bundle id and Android package `ai.imenu.quran`.
 
 **Setup (Windows, Android).**
 
@@ -265,6 +266,31 @@ Development builds show two checks in Settings: the local classes with a button 
 Sign-in, registration, "forgot password" (it opens the web page) and the forced password change need that server. A signed-in user's saved session opens the app without it: their data lives on the phone (`qct-<userId>.db`), and changes made offline sync once the server is reachable.
 
 **Tests and checks:** `pnpm lint`, `pnpm typecheck` and `pnpm test` cover the app too (ESLint with the logical-style rule, Jest with `jest-expo`). `npx expo-doctor` (from `apps/mobile`) checks dependency versions.
+
+`src/ltr.test.tsx` renders the main screens in English (the hidden version) and fails on any Arabic left on them.
+
+**End-to-end flows (Maestro, Android).** `pnpm mobile:e2e` runs the flows in `apps/mobile/maestro/` on the emulator, against their own server:
+
+1. Once: install [Maestro](https://maestro.dev) (it goes to `~/.maestro`; set `MAESTRO` if it's elsewhere) and the development build (`pnpm mobile:android`).
+2. Start one emulator, e.g. `qct_phone`. Stop `pnpm mobile` if it's running on port 8082.
+3. `pnpm mobile:e2e` starts the web app's E2E server (as `pnpm test:e2e` does: a fresh in-memory MongoDB, a build in `.next-e2e`, port 3100 or `E2E_PORT`), then Metro on port 8082 (or `METRO_PORT`) pointed at it, reverses both ports into the emulator, and runs every flow. `SKIP_E2E_BUILD=1` reuses the last web build. One flow: `pnpm mobile:e2e maestro/offline.yaml`.
+
+| Flow        | Covers                                                                                                                                                         |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `main-flow` | sign in, create a class and a student, mark him present, recite now with a mark, the month table, everything synced                                            |
+| `offline`   | airplane mode: create a class, the indicator shows it waiting; back online it syncs; after signing out (which wipes the device) and in again, it's still there |
+| `roles`     | the admin creates a class, a student and a teacher for it; the teacher's forced password change, only that class, no admin controls, taking attendance         |
+
+Each flow starts from a cleared app. Flows find fields by their `testID` (`sign-in.code`, `class.name`, `ayah.from`, …); Maestro types ASCII only on Android, so the test data is in Latin letters. If adb stops answering, the runner restarts its server; if every flow fails at the sign-in screen with the emulator's home screen showing, Android killed the app as it started (an emulator that has run for hours): `adb reboot`, then run again.
+
+**Checks on an iPhone and an iPad** (a development build with the current native modules, see above; Maestro doesn't run iOS from Windows):
+
+- [ ] Right to left: the header title, back arrow and tabs on the right; titles readable (not mirrored); Arabic text joined.
+- [ ] Offline: airplane mode, mark a student, add a class; the indicator shows "غير متصل" and the pending count. Close the app fully and reopen: everything is there. Airplane mode off: "متصل", and the web shows the changes.
+- [ ] Print: a student's month ("طباعة الشهر") opens the iOS print sheet with one A4 page; "مشاركة PDF" shares a PDF named after the student and month, with the Arabic font embedded. From the class statistics, print all students: one page each. Also offline.
+- [ ] Share: the parent link ("رابط ولي الأمر") copies, opens the share sheet, and shows a QR code that a phone camera opens.
+- [ ] iPad: the classes in columns (three in landscape), the class page in two; it rotates freely, and forms and sheets stay narrow and centred. The iPhone stays in portrait.
+- [ ] The score wheel and form sheets behave natively; the keyboard doesn't cover the field being typed in.
 
 ## Deployment
 

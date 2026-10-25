@@ -55,6 +55,7 @@ function ClassForm({ id, initialName }: Readonly<{ id?: string; initialName: str
   return (
     <Sheet title={t(id ? "classes.renameTitle" : "classes.createTitle")}>
       <TextField
+        testID="class.name"
         label={t("classes.name")}
         placeholder={t("classes.namePlaceholder")}
         value={name}

@@ -85,3 +85,4 @@ The same product rules apply (messages, glossary, wording, 360 px, offline). Wha
    - A user whose `locale` is `en` gets English once `ENABLED_LOCALES=ar,en` is set.
    - `pnpm test:e2e` runs an LTR smoke test that checks `dir`, `lang` and no horizontal overflow on every main screen.
    - See the `plan-step-workflow` skill for ports and accounts.
+4. In the mobile app: Jest tests render with `renderWithApp(ui, services)` (`apps/mobile/src/test/app-services.tsx`, Arabic by default; a third argument picks `en`). `src/ltr.test.tsx` renders the main screens in English and fails on any Arabic text or label left on them: add a new main screen there. Then check it on the emulator at 360 dp; `pnpm mobile:e2e` runs the Maestro flows (see `plan-step-workflow`).

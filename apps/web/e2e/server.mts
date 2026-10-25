@@ -6,7 +6,7 @@
  */
 import { spawn, spawnSync } from "node:child_process";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import { E2E_ACCOUNTS, E2E_PASSWORD, E2E_PORT } from "./accounts";
+import { E2E_ACCOUNTS, E2E_PASSWORD, E2E_PORT, MOBILE_ACCOUNTS } from "./accounts";
 
 const mongo = await MongoMemoryServer.create();
 const env = {
@@ -25,7 +25,7 @@ const { ensureIndexes } = await import("../src/server/indexes");
 const { getDb } = await import("../src/server/db");
 const { createCenter } = await import("../src/server/centers");
 await ensureIndexes(getDb());
-for (const { username, code } of E2E_ACCOUNTS) {
+for (const { username, code } of [...E2E_ACCOUNTS, ...MOBILE_ACCOUNTS]) {
   await createCenter(
     {
       centerName: `center-${username}`,
@@ -41,7 +41,9 @@ for (const { username, code } of E2E_ACCOUNTS) {
     { code },
   );
 }
-console.log(`[e2e] MongoDB ready, ${E2E_ACCOUNTS.length} accounts created`);
+console.log(
+  `[e2e] MongoDB ready, ${E2E_ACCOUNTS.length + MOBILE_ACCOUNTS.length} accounts created`,
+);
 
 if (!process.env.SKIP_E2E_BUILD) {
   const build = spawnSync("pnpm", ["exec", "next", "build"], {

@@ -77,6 +77,24 @@ Notes:
 - **Accounts:** one per spec and project (`e2e/accounts.ts`). Each browser context gets its own `x-forwarded-for`, so sign-ins don't share a rate-limit bucket.
 - **Arabic text in specs** comes from `packages/core/messages/ar.json` via the `ar` export in `e2e/fixtures.ts`. Never hard-code UI strings.
 
+### The mobile app's flows (Maestro)
+
+`pnpm mobile:e2e` (`apps/mobile/scripts/e2e.mts`) starts the same E2E server, Metro on 8082 pointed at it, reverses both ports into the emulator, and runs `apps/mobile/maestro/*.yaml`. Its accounts are `MOBILE_ACCOUNTS` in `e2e/accounts.ts`. Pass a flow's path to run just that one.
+
+- **One emulator running, with the current development build.** Maestro is in `~/.maestro` (2.11 at the time of 2.14).
+- **Run it in the background** with `E2E_PORT=3105 SKIP_E2E_BUILD=1` when the web build is current. Each flow cold-loads the bundle, so a full run takes several minutes.
+- **The server's data persists across flows and runs of one server.** Flows create named records ("Maghrib", a teacher's username), so rerunning a flow against the same server finds the old ones (two "Maghrib" classes once sent the teacher the wrong one). The runner starts a fresh server every time; do the same when running `maestro test` by hand.
+- **Writing flows:**
+  - Fields by `testID` (`id: class.name`); buttons and rows by their Arabic text (Maestro's YAML takes it as is). Text is a full-string regex, so `متصل` doesn't match "غير متصل".
+  - `inputText` types ASCII only on Android: Latin test data.
+  - `hideKeyboard` after each field, or the next one sits under the keyboard.
+  - Android's dropdown picker shows its first items only (a mark of 5, not 9).
+  - The sync indicator is only on the tab roots and in Settings.
+  - Airplane mode doesn't cut `adb reverse`; the app goes by the device's network state, so offline still works as offline.
+- **A hung start** is usually a wedged adb server (`adb devices` never returns). The runner restarts it once; if that doesn't help, kill every `adb.exe`, then `adb start-server`.
+- **Every flow failing at "تسجيل الدخول" with the emulator's home screen showing:** Android killed the app as it started (logcat: `ANR in ai.imenu.quran … failed to complete startup`). An emulator that has run all day gets there; `adb reboot` fixed it. The runner builds the bundle before the flows, so Metro's cold build isn't competing with the app's start.
+- **By hand:** `maestro test maestro/main-flow.yaml -e METRO_URL=http://localhost:8082 -e PASSWORD=e2e-password-123` from `apps/mobile`, with `JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8"` or the Arabic prints as question marks. When a step fails, the hierarchy in `~/.maestro/tests/<run>/` shows what was on screen.
+
 ## Windows shell quirks
 
 The development machine is Windows, using Git Bash and PowerShell.
@@ -84,5 +102,6 @@ The development machine is Windows, using Git Bash and PowerShell.
 - **Backslashes can get mangled** when a file's contents pass through a shell command or heredoc. `\\` has come out as `\`, and `ؐ` as a literal character.
   - For content with backslashes, write the file with the Write tool. Or write it from Python using `chr(92)`.
   - Afterwards, grep the file to confirm the backslashes survived.
+  - The Write and Edit tools turned a regex's `\u0600-\u06FF` into the literal characters once. Unicode escapes are safest from Python with `chr(92)`.
 - **`VAR=x cmd` is bash-only.** In PowerShell use `$env:VAR = "x"; cmd`.
 - **Long commands:** the tool timeout is 10 minutes. Run anything longer, such as the E2E suite, in the background and wait for the notification.

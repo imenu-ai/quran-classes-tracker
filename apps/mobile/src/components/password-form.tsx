@@ -59,6 +59,7 @@ export function PasswordForm({
   return (
     <>
       <TextField
+        testID="password.current"
         label={t("currentPassword")}
         error={fieldError("current")}
         value={current}
@@ -69,6 +70,7 @@ export function PasswordForm({
         autoComplete="current-password"
       />
       <TextField
+        testID="password.new"
         label={t("newPassword")}
         hint={t("passwordLengthHint")}
         error={fieldError("next")}
@@ -80,6 +82,7 @@ export function PasswordForm({
         autoComplete="new-password"
       />
       <TextField
+        testID="password.confirm"
         label={t("confirmPassword")}
         error={fieldError("confirm")}
         value={confirm}

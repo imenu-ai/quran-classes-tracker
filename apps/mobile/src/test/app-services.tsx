@@ -3,6 +3,7 @@ import { LocalDatabase } from "@qct/core/data/database";
 import { LocalStore } from "@qct/core/data/local-store";
 import { createMemoryStorage } from "@qct/core/data/memory-storage";
 import { SyncEngine } from "@qct/core/data/sync/engine";
+import type { Locale } from "@qct/core/i18n/config";
 import type { SessionSnapshot } from "@qct/core/shared/session";
 import { AppServicesProvider, type AppServices } from "@/data/app-data";
 import { renderArabic } from "./render";
@@ -48,6 +49,10 @@ export function createTestServices(
 }
 
 /** renderArabic, inside the signed-in user's services. */
-export function renderWithApp(ui: ReactNode, services: AppServices = createTestServices()) {
-  return renderArabic(<AppServicesProvider value={services}>{ui}</AppServicesProvider>);
+export function renderWithApp(
+  ui: ReactNode,
+  services: AppServices = createTestServices(),
+  locale: Locale = "ar",
+) {
+  return renderArabic(<AppServicesProvider value={services}>{ui}</AppServicesProvider>, locale);
 }

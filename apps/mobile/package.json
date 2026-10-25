@@ -9,7 +9,8 @@
     "ios": "expo run:ios",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
-    "test": "jest"
+    "test": "jest",
+    "test:e2e": "tsx scripts/e2e.mts"
   },
   "expo": {
     "install": {
@@ -89,6 +90,7 @@
     "eslint-config-prettier": "^10.1.8",
     "jest": "~30.5.2",
     "jest-expo": "~58.0.12",
+    "tsx": "^4.23.15",
     "typescript": "5.9.3"
   }
 }

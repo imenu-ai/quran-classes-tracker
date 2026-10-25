@@ -21,11 +21,13 @@ export function ScorePicker({
   value,
   onChange,
   disabled = false,
+  testID,
 }: Readonly<{
   label: string;
   value: number | null;
   onChange: (score: number | null) => Promise<unknown>;
   disabled?: boolean;
+  testID?: string;
 }>) {
   const t = useTranslations("common");
   const { colors, fonts } = useTheme();
@@ -61,6 +63,7 @@ export function ScorePicker({
       >
         <Picker
           enabled={!disabled}
+          testID={testID}
           mode="dropdown"
           selectedValue={shown === null ? "" : String(shown)}
           onValueChange={(next) => choose(next === "" ? null : Number(next))}

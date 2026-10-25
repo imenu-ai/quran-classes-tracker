@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react-native";
 import type { ReactNode } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import type { Locale } from "@qct/core/i18n/config";
 import { AppIntlProvider } from "@/i18n/intl-provider";
 
 const METRICS = {
@@ -9,11 +10,11 @@ const METRICS = {
   insets: { top: 47, left: 0, right: 0, bottom: 34 },
 };
 
-/** Renders a screen as the app does: the real Arabic messages, a phone's safe area. */
-export function renderArabic(ui: ReactNode) {
+/** Renders a screen as the app does: the real Arabic messages (or `locale`'s), a phone's safe area. */
+export function renderArabic(ui: ReactNode, locale: Locale = "ar") {
   return render(
     <SafeAreaProvider initialMetrics={METRICS}>
-      <AppIntlProvider locale="ar">{ui}</AppIntlProvider>
+      <AppIntlProvider locale={locale}>{ui}</AppIntlProvider>
     </SafeAreaProvider>,
   );
 }
