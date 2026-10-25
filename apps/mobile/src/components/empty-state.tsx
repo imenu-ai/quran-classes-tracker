@@ -22,5 +22,6 @@ export function EmptyState({
 
 const styles = StyleSheet.create({
   box: { paddingVertical: 48, gap: 8, alignItems: "center" },
-  centered: { textAlign: "center" },
+  // Full width, centred: text sized to its own measurement can lose its last word on Android.
+  centered: { alignSelf: "stretch", textAlign: "center" },
 });

@@ -30,8 +30,10 @@ export const TEST_SESSION: SessionSnapshot = {
 export const respondWith = (status: number) =>
   jest.fn(async () => ({ ok: status < 400, status, json: async () => ({}) }) as Response);
 
-/** The real store and engine over the in-memory adapter, as the app wires them. */
-export function createTestServices(options: { fetch?: typeof fetch } = {}): AppServices {
+/** The real store and engine over the in-memory adapter, as the app wires them (a teacher by default). */
+export function createTestServices(
+  options: { fetch?: typeof fetch; session?: Partial<SessionSnapshot> } = {},
+): AppServices {
   const db = new LocalDatabase(createMemoryStorage());
   const store = new LocalStore(db, { tenantId: TEST_SESSION.tenantId, deviceId: "d1" });
   const engine = new SyncEngine({
@@ -41,7 +43,8 @@ export function createTestServices(options: { fetch?: typeof fetch } = {}): AppS
     // No retry timers left running after a test.
     timers: { set: () => null, clear: () => {} },
   });
-  return { session: TEST_SESSION, db, store, engine, signOut: jest.fn(async () => {}) };
+  const session = { ...TEST_SESSION, ...options.session };
+  return { session, db, store, engine, signOut: jest.fn(async () => {}) };
 }
 
 /** renderArabic, inside the signed-in user's services. */

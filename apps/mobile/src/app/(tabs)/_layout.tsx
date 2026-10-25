@@ -1,13 +1,17 @@
 import { NativeTabs } from "expo-router/native-tabs";
 import { useTranslations } from "use-intl";
+import { isAdmin } from "@qct/core/shared/access";
 import { useAppReady } from "@/data/app-data";
+import { useSession } from "@/session/session";
 import { useTheme } from "@/theme/theme";
 
-/** The four native tabs, each with its own stack (users becomes admins-only in 2.8). */
+/** The native tabs, each with its own stack. Users is for admins only. */
 export default function TabsLayout() {
   const t = useTranslations("nav");
   const { colors, fonts } = useTheme();
   const ready = useAppReady();
+  const { snapshot } = useSession();
+  const admin = snapshot !== null && isAdmin(snapshot);
   // The user's database opens at start (a few milliseconds); screens read it.
   if (!ready) return null;
   return (
@@ -27,7 +31,7 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Label>{t("search")}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="magnifyingglass" md="search" />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="users">
+      <NativeTabs.Trigger name="users" hidden={!admin}>
         <NativeTabs.Trigger.Label>{t("users")}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="person.2.fill" md="group" />
       </NativeTabs.Trigger>

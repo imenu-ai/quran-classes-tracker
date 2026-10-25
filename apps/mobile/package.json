@@ -37,6 +37,7 @@
     "@better-auth/expo": "1.7.7",
     "@expo-google-fonts/ibm-plex-sans": "^0.4.1",
     "@expo-google-fonts/ibm-plex-sans-arabic": "^0.4.2",
+    "@expo/ui": "~58.0.23",
     "@formatjs/intl-enumerator": "^2.1.2",
     "@formatjs/intl-getcanonicallocales": "^3.2.12",
     "@formatjs/intl-locale": "^5.3.12",

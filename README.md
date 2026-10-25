@@ -245,7 +245,7 @@ pnpm mobile:android   # builds and installs the development app, then starts Met
 pnpm mobile           # later: just Metro, for the installed development app
 ```
 
-The first build takes 10–20 minutes (Gradle and the Android NDK download once); later ones take about a minute. The app's own code reloads without a rebuild; a new native library or a change to `app.json` needs a new build.
+The first build takes 10–20 minutes (Gradle and the Android NDK download once); later ones take about a minute. The app's own code reloads without a rebuild; a new native library or a change to `app.json` needs a new build. (Step 2.8 added `@expo/ui`, so an Android build from before it can't show the header buttons and menus.)
 
 **On an iPhone** (no Mac needed; EAS builds in the cloud):
 

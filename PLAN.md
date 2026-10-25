@@ -406,6 +406,7 @@ Fonts: IBM Plex Sans Arabic (`ar`) and IBM Plex Sans (`en`) via `next/font/googl
 | expo **SDK 58** (React Native 0.88, React 19.3; current on 2026-10-24) + dev client | New Architecture, config plugins, dev builds (Expo Go can't load our native modules). |
 | expo-router | File routes, native stack, native tabs, form sheets, header search. |
 | expo-sqlite | The local database (#48, §2.13 SQLite rules): one `qct-<userId>.db` per user since 2.7, and `qct-app.db` (session, device id, center code) since 2.6. |
+| @expo/ui | Needed on Android by Expo Router's native header buttons and menus (`Stack.Toolbar`), which it draws with Jetpack Compose; iOS uses UIKit's own (2.8). |
 | react-native-keyboard-controller (+ react-native-reanimated, react-native-worklets) | The field being typed in stays above the keyboard on edge-to-edge Android (2.6). |
 | expo-clipboard, expo-web-browser | Copying the center code; the web's forgot-password page (the picker below also gives registration its time zone list). |
 | better-auth + @better-auth/expo (same version as the server), expo-secure-store, expo-network, expo-linking, expo-constants, expo-web-browser | Sign-in and the stored session (#49). The plugin replaces `:` in SecureStore keys and splits large values itself. The last four are its required peers. Since 2.7, expo-network also tells the sync engine when the phone goes offline or comes back. |
@@ -504,7 +505,7 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
   - Tested in Vitest through the same SQL on `node:sqlite`: it passes the 2.4 contract suite and runs the shared `LocalStore` and sync tests. `node:sqlite` needs no flag from Node 22.13, so `engines` and `.nvmrc` move to at least 22.13.
   - Mobile triggers and lock, the sync indicator, 401 → sign-in banner, `accessVersion` resync. Logout with the unsynced warning and "sync now"; database wipe.
   - Checked: offline writes on the emulator sync to a local server and show up in the web app.
-- [ ] **2.8 Home, classes and students.**
+- [x] **2.8 Home, classes and students.**
   - Native tabs (home, search, settings, users for admins). Class cards; create, rename and archive (blocked with active students) in form sheets; archived classes.
   - The class page's student list; add, edit, move and archive students (including the parent ID); the header search bar with Arabic normalization; empty and loading states; access (hidden or read-only).
 - [ ] **2.9 The student page.**
@@ -678,3 +679,26 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
     - After the phone's session was revoked from the web, a new class waited behind the banner, and signing in again sent it.
   - **Android clipping, again:** a label sized to its own measured width (`Button`'s, centred with `alignItems`) sometimes lost its last word ("تسجيل الخروج" showed as "تسجيل"), even with `textBreakStrategy="simple"`. Button labels now take the button's full width with centred text. The indicator puts "sign in again" on its own line, for the same reason and to fit 360 dp.
   - Tests: core 425 in 25 files (the shared suites on SQLite, plus migration and chunking tests), web 282 in 35, mobile 20 in 5. The mobile tests use real services over the memory adapter (`src/test/app-services.tsx`), and `jest.setup.ts` mocks the auth client, the database file and the device sources.
+
+- 2026-10-25 (2.8):
+  - **Native header actions:** Expo Router's `Stack.Toolbar`, with a button for "create class" and menus for the class (rename, archive or restore) and the student (edit, move, archive or restore).
+    - On Android it needs `@expo/ui` (Jetpack Compose), a new native module. The Android build was redone; iOS doesn't load it, so the current iPhone build still runs 2.8.
+    - Android takes only images as icons there. `useToolbarIcon` draws the Material symbol with `expo-symbols` (`unstable_getMaterialSymbolSourceAsync`); iOS uses SF Symbols. Menu actions have text only.
+  - **Forms:** create or rename a class, archive a class and move a student are form sheets sized to their content. The student form is longer, so it's a page sheet with a native header. All are root-stack routes over the tabs. Archiving a student asks with a native alert.
+    - Archiving a class follows the web's choices: with active students, move them to another class first, or archive them with it. Afterwards it returns to the list.
+    - The class pickers are the native picker (the wheel on iOS, a dropdown on Android). The memorization direction is a pair of radio rows.
+  - **The student page** opens from a class and from search. Its route file exists in both the Home and Search stacks (both re-export `src/screens/student-screen.tsx`), so a search result keeps the Search tab. Until 2.9 it shows the student's details (class, birth year and age, direction, note, parent ID) and the actions menu.
+  - **Search** uses the native header search bar (behind an icon on Android, as the platform does) with the shared Arabic-aware matching.
+  - **Access:** the Users tab is hidden from non-admins. "Create class" and the class menu need `classes.manage`; "add student", the student menu and restoring students need `students.manage` (`useAccess`, like the web's). A teacher with no classes sees the "ask your admin" empty state.
+  - **Bidi:** two numbers on one line ("2015 · 11 سنة") can reorder in RTL, so the age has its own line under the birth year.
+  - **Android clipping (2.6, 2.7):** text centred by `alignItems` is sized to its own measurement, so the empty state's lines now take the full width, like button labels.
+  - **Checked on the emulator** against the E2E server, as an admin:
+    - Create a class (the sheet sits above the keyboard, then the class opens). The class menu, and archive with a student still in it.
+    - Add a student: a too-short parent ID is refused with the shared error, and the error clears on edit.
+    - The student menu: edit (the form opens filled in), move to a second class, archive with the alert, and restore from the class's archived list.
+    - Search by part of the name, with the result opening inside the Search tab. Archiving an empty class returns to the list. Dark mode.
+    - The web then showed the same classes and student.
+
+    Not checked on a device: the teacher's read-only view and the hidden Users tab (covered by Jest), and iOS.
+  - **Testing:** uiautomator doesn't see inside modals and sheets on Android, so those were driven by coordinates. Screen tests mock `expo-router` with `src/test/expo-router-mock.tsx`, which renders toolbar items and the search bar as plain controls.
+  - Tests: core 425 in 25 files, web 282 in 35, mobile 34 in 6.

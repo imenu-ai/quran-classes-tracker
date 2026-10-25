@@ -55,10 +55,17 @@ function SessionIntl({ children }: Readonly<{ children: ReactNode }>) {
  * its change first. Otherwise: the tabs (and signing in again when the
  * server ended the session).
  */
+const formSheet = {
+  presentation: "formSheet",
+  sheetAllowedDetents: "fitToContents",
+  sheetGrabberVisible: true,
+} as const;
+
 function GatedStack() {
   const theme = useTheme();
   const t = useTranslations("auth");
   const tSync = useTranslations("sync");
+  const tStudents = useTranslations("students");
   const stackOptions = useStackOptions();
   const withHeader = (title: string) => ({ ...stackOptions, headerShown: true, title });
   const { snapshot } = useSession();
@@ -73,6 +80,14 @@ function GatedStack() {
           <Stack.Screen
             name="sign-in-again"
             options={{ ...withHeader(tSync("signInAgain")), presentation: "modal" }}
+          />
+          {/* Short forms are sheets sized to their content; the student form is a page sheet. */}
+          <Stack.Screen name="class-form" options={formSheet} />
+          <Stack.Screen name="archive-class" options={formSheet} />
+          <Stack.Screen name="move-student" options={formSheet} />
+          <Stack.Screen
+            name="student-form"
+            options={{ ...withHeader(tStudents("addTitle")), presentation: "modal" }}
           />
         </Stack.Protected>
         <Stack.Protected guard={signedIn && mustChangePassword}>
