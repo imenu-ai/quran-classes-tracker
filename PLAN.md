@@ -397,7 +397,7 @@ Records pulled from the server aren't re-validated on the device, so newer field
 | @playwright/test | 1.63.x | E2E: iPhone 15 (WebKit), Pixel 7, Desktop Chrome. |
 | tsx | latest | Runs the TS CLI scripts. |
 
-Fonts: IBM Plex Sans Arabic (`ar`) and IBM Plex Sans (`en`) via `next/font/google`, self-hosted. Node 22 LTS, at least 22.13 for `node:sqlite` (`.nvmrc`, `engines`).
+Fonts: IBM Plex Sans Arabic (`ar`) and IBM Plex Sans (`en`), self-hosted with `next/font/local` from WOFF2 files in `apps/web/src/app/fonts` (OFL; since 2026-10-25, before that `next/font/google`). Node 22 LTS, at least 22.13 for `node:sqlite` (`.nvmrc`, `engines`).
 
 **Mobile (Phase 2; versions pinned in `apps/mobile/package.json` since 2.5: Expo 58.0.19, Expo Router 58.0.26, React Native 0.88.0, React 19.3.0, use-intl 4.14.9, jest-expo 58.0.12)**
 
@@ -861,4 +861,9 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
     - `adb kill-server` hangs as well when adb is wedged, so the runner now ends every adb process and waits for the device to reconnect.
     - The development client's own menu once opened over the app after the checks that close it; `open-app` now waits for the app or the menu before closing it.
     - Right after the first sync, each look at the screen took about 8 s, so a scroll to the bottom of Settings ran out of its default 20 s; those scrolls get 60 s.
+
+- 2026-10-25 (fix, Amplify build):
+  - **The Amplify build failed in `next/font`** (`Cannot read properties of null (reading '1')`). `next/font/google` downloads the fonts at build time, and Google answered Amplify's build machine with a font file URL that has no extension (the extensionless `fonts.gstatic.com/l/font?kit=…` form), which Next 15.5's loader can't parse. From this PC Google still returned `.woff2` URLs, so it depends on who asks.
+  - **Fix:** the fonts are now files in the repo, loaded with `next/font/local`, so the build fetches nothing. One WOFF2 per weight (400–700) for each family, about 70 KB each, converted with fonttools from the same TTFs the mobile app bundles (`@expo-google-fonts`, 0.4.x), with the OFL license beside them. Each file covers all of the family's scripts, so there are no `unicode-range` subsets: the login page loads three files (about 215 KB).
+  - **Checked:** `next build` passes. In Chromium the login page renders in IBM Plex Sans Arabic from `/_next/static/media` and makes no requests to Google.
 
