@@ -561,5 +561,87 @@
       "offline": "Deleting needs an internet connection",
       "generic": "Couldn't delete. Try again"
     }
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "updated": "Last updated: 26 October 2026",
+    "intro": "This page explains what the Quran Memorization app (on iPhone, iPad and Android, and on the web) stores, why, and how it's deleted.",
+    "sections": {
+      "publisher": {
+        "title": "Who we are",
+        "body": "The app is published by {publisher}, in Israel. For anything about privacy, write to {email}"
+      },
+      "centers": {
+        "title": "Centers and their data",
+        "body": "Each memorization center that registers owns the data it enters about its students and teachers, and decides what to enter. We store and process that data only to provide the service to the center."
+      },
+      "data": {
+        "title": "What we store",
+        "body": "The center: its name, time zone and code.\n\nUsers (admins and teachers): name, username, phone number if entered, email address for admins (for password reset), role, permissions and assigned classes. Passwords are never stored themselves, only a hash they can't be recovered from.\n\nStudents (entered by the center): full name, birth year, class, notes, memorization direction, the parent's ID number if entered, attendance, recited portions, homework and marks.\n\nTechnical data: a session token that keeps you signed in, a random identifier per device used for syncing, and IP addresses in server logs and to protect sign-in from repeated attempts."
+      },
+      "use": {
+        "title": "How we use it",
+        "body": "Only to provide the service: signing in, syncing between devices, reports and printing, the parent link, password-reset emails, and protecting the service from abuse.\n\nWe show no ads, use no analytics or tracking tools, and don't sell data or share it for marketing."
+      },
+      "storage": {
+        "title": "Where it's stored",
+        "body": "Data is stored on Amazon Web Services servers and in a MongoDB Atlas database in Frankfurt, Germany; emails are sent through Amazon SES. These providers process the data on our behalf, only to run the service."
+      },
+      "device": {
+        "title": "On your device",
+        "body": "So the app works offline, it keeps a copy of your classes' data on your device. That copy is deleted when you sign out."
+      },
+      "parents": {
+        "title": "The parent link",
+        "body": "The parent link shows a student's month to whoever has the link and the parent ID number registered for the student. The browser remembers the device for 30 days with a cookie, which the \"{forget}\" button forgets."
+      },
+      "children": {
+        "title": "Children",
+        "body": "The app is meant for teachers and center staff, not for children. Student data may concern minors; the center enters it, and is responsible for getting parents' consent where that's required."
+      },
+      "retention": {
+        "title": "Retention and deletion",
+        "body": "We keep data for as long as the center's account exists.\n\nEvery user can delete their account in Settings → Account → \"Delete account\", and a center's admin can delete the center with all its data in Settings → Center → \"Delete the center\". Deletion is immediate and permanent. Backup copies kept by the hosting provider, if any, are deleted when they expire.\n\nYou can also ask for deletion by writing to {email}"
+      },
+      "rights": {
+        "title": "Your rights",
+        "body": "You can see and correct your data in the app, or by writing to us. If you're a student's parent, contact the memorization center about the student's data, or write to us."
+      },
+      "security": {
+        "title": "Security",
+        "body": "Data travels encrypted between your device and the server (HTTPS), passwords are stored as Argon2 hashes, and each user sees only what their permissions allow."
+      },
+      "changes": {
+        "title": "Changes",
+        "body": "If we change this policy, we'll update this page and its date."
+      }
+    }
+  },
+  "support": {
+    "title": "Support",
+    "intro": "For help with the app, or to report a problem, write to {email}",
+    "sections": {
+      "password": {
+        "title": "Forgot your password",
+        "body": "Admins: choose \"Forgot password?\" on the sign-in page, and you'll get an email.\n\nTeachers: ask your center's admin to set a new password for you on the Users page."
+      },
+      "code": {
+        "title": "The center code",
+        "body": "The center code has 6 digits. The admin finds it in Settings → Center and gives it to the teachers."
+      },
+      "offline": {
+        "title": "Working offline",
+        "body": "The app works without internet, and syncs changes when the connection is back. The sync state shows on the home page and in Settings."
+      },
+      "deletion": {
+        "title": "Deleting your account or the center",
+        "body": "In Settings → Account → \"Delete account\". An admin can delete the whole center in Settings → Center → \"Delete the center\". The privacy policy has the details."
+      }
+    }
+  },
+  "legal": {
+    "privacy": "Privacy Policy",
+    "support": "Help and support",
+    "contact": "Contact"
   }
 }

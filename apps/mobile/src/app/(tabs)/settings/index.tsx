@@ -6,6 +6,7 @@ import { Button } from "@/components/button";
 import { ChoiceList } from "@/components/choice-list";
 import { DevSyncCheck } from "@/components/dev-sync-check";
 import { IntlCheck } from "@/components/intl-check";
+import { LegalLinks } from "@/components/legal-links";
 import { ListRow } from "@/components/list-row";
 import { Screen } from "@/components/screen";
 import { Section } from "@/components/section";
@@ -96,6 +97,7 @@ export default function SettingsScreen() {
           onPress={() => router.push("/delete-account")}
         />
       </Section>
+      <LegalLinks />
       {__DEV__ ? <DevSyncCheck /> : null}
       {__DEV__ ? <IntlCheck /> : null}
     </Screen>
