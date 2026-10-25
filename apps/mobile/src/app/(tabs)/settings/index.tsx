@@ -49,7 +49,7 @@ export default function SettingsScreen() {
   }
 
   return (
-    <Screen>
+    <Screen width="narrow">
       <SyncSection />
       <ListRow
         title={t("settings.profileTitle")}

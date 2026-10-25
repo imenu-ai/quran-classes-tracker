@@ -8,6 +8,7 @@ import { useTranslations } from "use-intl";
 import { DEFAULT_LOCALE } from "@qct/core/i18n/config";
 import { useStackOptions } from "@/components/stack-options";
 import { AppDataProvider } from "@/data/app-data";
+import { lockPhonesToPortrait } from "@/device/orientation";
 import { AppIntlProvider } from "@/i18n/intl-provider";
 import { SessionProvider, useSession } from "@/session/session";
 import { FONT_FILES } from "@/theme/fonts";
@@ -18,6 +19,8 @@ import { navigationTheme, useTheme } from "@/theme/theme";
 void SplashScreen.preventAutoHideAsync();
 // Light, dark or the phone's setting, chosen in Settings.
 applySavedThemePreference();
+// Phones in portrait; tablets turn.
+lockPhonesToPortrait();
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(FONT_FILES);

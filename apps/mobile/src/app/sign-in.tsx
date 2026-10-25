@@ -63,7 +63,7 @@ export default function SignInScreen() {
   }
 
   return (
-    <Screen>
+    <Screen width="form">
       <Text tone="muted">{t("login.subtitle")}</Text>
       <TextField
         label={t("login.centerCode")}

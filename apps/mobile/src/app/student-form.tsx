@@ -53,7 +53,7 @@ export default function StudentFormScreen() {
   // Editing waits for the student, so the form starts from their values.
   if (id && existing === undefined) {
     return (
-      <Screen>
+      <Screen width="form">
         <Loading />
       </Screen>
     );
@@ -117,7 +117,7 @@ function StudentForm({
       : activeClasses;
 
   return (
-    <Screen>
+    <Screen width="form">
       <Stack.Screen options={{ title: t(existing ? "students.editTitle" : "students.addTitle") }} />
       <TextField
         label={t("students.fullName")}

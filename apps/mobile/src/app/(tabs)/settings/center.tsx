@@ -29,7 +29,7 @@ export default function CenterScreen() {
   const t = useTranslations("settings");
   const { session } = useApp();
   return (
-    <Screen>
+    <Screen width="narrow">
       <CodeCard
         label={t("centerCode")}
         code={session.centerCode}

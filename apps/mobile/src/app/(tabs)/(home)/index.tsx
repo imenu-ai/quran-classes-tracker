@@ -4,6 +4,7 @@ import { unarchiveClass } from "@qct/core/data/entities/classes";
 import { ArchivedList } from "@/components/archived-list";
 import { Button } from "@/components/button";
 import { EmptyState } from "@/components/empty-state";
+import { Grid } from "@/components/grid";
 import { useToolbarIcon } from "@/components/icons";
 import { ListRow } from "@/components/list-row";
 import { Loading } from "@/components/loading";
@@ -51,14 +52,16 @@ export default function HomeScreen() {
             {canManage ? <Button label={t("classes.create")} onPress={create} /> : null}
           </>
         ) : (
-          list.active.map(({ record, studentCount }) => (
-            <ListRow
-              key={record.id}
-              title={record.name}
-              subtitle={t("classes.studentCount", { count: studentCount })}
-              onPress={() => open(record.id)}
-            />
-          ))
+          <Grid maxColumns={3}>
+            {list.active.map(({ record, studentCount }) => (
+              <ListRow
+                key={record.id}
+                title={record.name}
+                subtitle={t("classes.studentCount", { count: studentCount })}
+                onPress={() => open(record.id)}
+              />
+            ))}
+          </Grid>
         )}
         {list ? (
           <ArchivedList

@@ -7,6 +7,7 @@ import { ageFromBirthYear, todayInTimeZone } from "@qct/core/domain/dates/local-
 import { ArchivedList } from "@/components/archived-list";
 import { Button } from "@/components/button";
 import { EmptyState } from "@/components/empty-state";
+import { Grid } from "@/components/grid";
 import { useToolbarIcon } from "@/components/icons";
 import { ListRow } from "@/components/list-row";
 import { Badge, Loading } from "@/components/loading";
@@ -109,14 +110,16 @@ export default function ClassScreen() {
               />
             ) : null}
             {addButton}
-            {students.active.map((student) => (
-              <ListRow
-                key={student.id}
-                title={student.fullName}
-                subtitle={t("students.age", { age: ageFromBirthYear(student.birthYear, today) })}
-                onPress={() => openStudent(student.id)}
-              />
-            ))}
+            <Grid maxColumns={2}>
+              {students.active.map((student) => (
+                <ListRow
+                  key={student.id}
+                  title={student.fullName}
+                  subtitle={t("students.age", { age: ageFromBirthYear(student.birthYear, today) })}
+                  onPress={() => openStudent(student.id)}
+                />
+              ))}
+            </Grid>
           </>
         )}
         <ArchivedList

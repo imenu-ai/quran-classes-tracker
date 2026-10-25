@@ -42,7 +42,7 @@ export default function UserEditorScreen() {
   if (id === "new") return <UserForm onChanged={reload} />;
   if (state.status === "loading") {
     return (
-      <Screen>
+      <Screen width="narrow">
         <Loading />
       </Screen>
     );
@@ -50,7 +50,7 @@ export default function UserEditorScreen() {
   const user = state.status === "ready" ? state.users.find((u) => u.id === id) : undefined;
   if (!user) {
     return (
-      <Screen>
+      <Screen width="narrow">
         <Stack.Screen options={{ title: t("editTitle") }} />
         <EmptyState
           title={
@@ -153,7 +153,7 @@ function UserForm({
   }
 
   return (
-    <Screen>
+    <Screen width="narrow">
       <Stack.Screen options={{ title: isNew ? t("newTitle") : t("editTitle") }} />
       <Section title={t("detailsSection")}>
         <TextField

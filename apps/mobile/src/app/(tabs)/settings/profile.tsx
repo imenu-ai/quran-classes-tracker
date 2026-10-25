@@ -85,7 +85,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <Screen>
+    <Screen width="narrow">
       <TextField
         label={t("displayName")}
         value={values.name}

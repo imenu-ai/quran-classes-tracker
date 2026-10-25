@@ -54,7 +54,7 @@ export default function SignInAgainScreen() {
   }
 
   return (
-    <Screen>
+    <Screen width="form">
       <Text tone="muted">{tSync("signInAgainHint")}</Text>
       <View style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }]}>
         <Text weight="semibold">{session.name}</Text>

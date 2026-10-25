@@ -27,7 +27,7 @@ export default function ParentLinkScreen() {
 
   if (!student) {
     return (
-      <Screen>
+      <Screen width="form">
         <Loading />
       </Screen>
     );
@@ -36,7 +36,7 @@ export default function ParentLinkScreen() {
   const url = parentLink(API_URL, student.id);
 
   return (
-    <Screen>
+    <Screen width="form">
       <Text weight="semibold" size={18}>
         {student.fullName}
       </Text>

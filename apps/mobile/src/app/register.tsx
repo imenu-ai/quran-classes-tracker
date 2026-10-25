@@ -96,7 +96,7 @@ export default function RegisterScreen() {
   if (code) return <CenterCode code={code} />;
 
   return (
-    <Screen>
+    <Screen width="form">
       <Text tone="muted">{t("subtitle")}</Text>
       <Text weight="semibold" size={18}>
         {t("centerSection")}
@@ -197,7 +197,7 @@ function CenterCode({ code }: Readonly<{ code: string }>) {
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   return (
-    <Screen>
+    <Screen width="form">
       <Text weight="semibold" size={20}>
         {t("title")}
       </Text>

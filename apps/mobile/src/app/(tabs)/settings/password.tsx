@@ -9,7 +9,7 @@ export default function PasswordScreen() {
   const t = useTranslations("settings");
   const tCommon = useTranslations("common");
   return (
-    <Screen>
+    <Screen width="narrow">
       <PasswordForm
         submitLabel={t("changePassword")}
         onChanged={() => {

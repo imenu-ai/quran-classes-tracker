@@ -518,7 +518,7 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
   - HTML month sheets from the shared builders (font embedded, QR as SVG) through `expo-print`: print, or save and share a PDF.
   - Both entry points: "طباعة الشهر" and the class's "طباعة كشوف الطلاب" (month, "تحديد الكل").
   - "رابط ولي الأمر": the web link, copy, the share sheet and its QR.
-- [ ] **2.13 Tablets.** iPad and Android tablet layouts: multi-column grids and readable content widths where the web uses two columns; phones portrait, tablets in all orientations (iPad multitasking needs it). Checked on your iPad and an Android tablet emulator.
+- [x] **2.13 Tablets.** iPad and Android tablet layouts: multi-column grids and readable content widths where the web uses two columns; phones portrait, tablets in all orientations (iPad multitasking needs it). Checked on your iPad and an Android tablet emulator.
 - [ ] **2.14 Mobile E2E and device checks.** Maestro flows on the Android emulator (main flow, offline, roles) with their own seeded server; an `en` LTR smoke render in Jest; a README checklist for iPhone and iPad (offline, print, share, RTL).
 - [ ] **2.15 Account deletion (#50).** Who can delete what (e.g. an admin deletes the center and all its data; a teacher deletes his own account) is agreed with you before the step. The API, the app screens, and the same option on the web.
 - [ ] **2.16 Release.**
@@ -797,3 +797,25 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
     - **Students' sheets:** the selection count followed "تحديد الكل", and printing opened the dialog.
     - **Along the way:** after a test-server restart, a student that referenced a class from the old server was refused, and Settings listed it ("يرتبط بسجل غير موجود على الخادم"), which is how 2.11 meant it to work.
   - Tests: core 434 in 28 files (the QR helper), web 279 in 34, mobile 60 in 10. Web `next build` compiles.
+
+- 2026-10-25 (2.13):
+  - **Readable widths** like the web's containers. `Screen` centres its content at a `width`:
+    - `page`, 896 dp (`max-w-4xl`): the default;
+    - `narrow`, 672 (`max-w-2xl`): Settings, its screens, and the user editor;
+    - `form`, 448 (`max-w-md`): sign-in, registration, password change, sign-in again, the student and homework forms, the parent link and the students' sheets.
+
+    Form sheets (`Sheet`) cap their content at the form width too, since Android shows them edge to edge on a tablet.
+  - **Grids** at the web's breakpoints, from the window's width (so an iPad in split view gets what its own width allows):
+    - class cards: two columns from 768 dp, three from 1280;
+    - a class's students: two columns from 768.
+
+    `Grid` fills rows in the writing direction and keeps a short last row at the column width.
+  - **Orientation:** `app.json` now allows every orientation (`default`), which iPad split view and Slide Over need. Phones lock to portrait at start with `expo-screen-orientation` (`src/device/orientation.ts`): a phone is a screen whose shorter side is under 600 dp. `expo-screen-orientation` is a new native module, so both platforms need a new development build (the iPhone needed one for 2.12 anyway).
+  - **The lockfile:** adding the module also made pnpm merge duplicate peer variants of Better Auth's adapters onto `@better-auth/utils` 0.5.0 (0.4.2 stays for what needs it). The web's tests, including the auth integration tests, pass on it.
+  - **Checked on the `qct_tablet` emulator** (Pixel Tablet, 1280 × 800 dp), with data seeded through the web:
+    - three class columns in landscape and two in portrait, turning with the device;
+    - a class's students in two columns;
+    - the student page at the page width, Settings at the narrow width, and the create-class sheet's content at the form width.
+
+    On the `qct_phone` emulator, the same build stayed in portrait with the system set to landscape. The iPad check is the user's.
+  - Tests: mobile 64 in 11 (core and web unchanged). `expo-doctor` passes 20/20.

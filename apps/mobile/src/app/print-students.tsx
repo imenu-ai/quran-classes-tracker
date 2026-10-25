@@ -36,7 +36,7 @@ export default function PrintStudentsScreen() {
   );
   if (!students || !lessonMonths) {
     return (
-      <Screen>
+      <Screen width="form">
         <Loading />
       </Screen>
     );
@@ -83,14 +83,14 @@ function PrintForm({
 
   if (students.length === 0) {
     return (
-      <Screen>
+      <Screen width="form">
         <Text tone="muted">{t("noStudents")}</Text>
       </Screen>
     );
   }
 
   return (
-    <Screen>
+    <Screen width="form">
       <PickerField
         label={t("month")}
         value={month}

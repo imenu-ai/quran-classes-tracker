@@ -12,7 +12,7 @@ export default function ChangePasswordScreen() {
   const t = useTranslations("auth.changePassword");
   const { enter } = useSession();
   return (
-    <Screen>
+    <Screen width="form">
       <Text tone="muted">{t("subtitle")}</Text>
       <PasswordForm
         submitLabel={t("submit")}

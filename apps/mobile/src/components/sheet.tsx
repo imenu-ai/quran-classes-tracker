@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/theme/theme";
+import { CONTENT_WIDTH } from "./screen";
 import { Text } from "./text";
 
 /**
@@ -30,5 +31,6 @@ export function Sheet({
 }
 
 const styles = StyleSheet.create({
-  sheet: { padding: 20, gap: 12 },
+  // A form's width on a tablet (Android shows sheets edge to edge there).
+  sheet: { width: "100%", maxWidth: CONTENT_WIDTH.form, alignSelf: "center", padding: 20, gap: 12 },
 });

@@ -47,7 +47,7 @@ export default function HomeworkFormScreen() {
   const history = useStudentHomework(studentId);
   if (!student || !history) {
     return (
-      <Screen>
+      <Screen width="form">
         <Loading />
       </Screen>
     );
@@ -63,7 +63,7 @@ export default function HomeworkFormScreen() {
 function Gone() {
   const t = useTranslations("common");
   return (
-    <Screen>
+    <Screen width="form">
       <Button variant="plain" label={t("close")} onPress={() => router.back()} />
     </Screen>
   );
@@ -173,7 +173,7 @@ function HomeworkForm({
   }
 
   return (
-    <Screen>
+    <Screen width="form">
       <Stack.Screen options={{ title }} />
       <Text tone="muted">{student.fullName}</Text>
       {suggested ? (
