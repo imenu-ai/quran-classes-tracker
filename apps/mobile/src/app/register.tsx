@@ -10,6 +10,7 @@ import { apiFetch } from "@/auth/client";
 import { Button } from "@/components/button";
 import { CodeCard } from "@/components/code-card";
 import { FormError } from "@/components/form-error";
+import { LegalLinks } from "@/components/legal-links";
 import { Screen } from "@/components/screen";
 import { Text } from "@/components/text";
 import { TextField } from "@/components/text-field";
@@ -185,6 +186,7 @@ export default function RegisterScreen() {
         busy={busy}
         onPress={() => void submit()}
       />
+      <LegalLinks />
     </Screen>
   );
 }

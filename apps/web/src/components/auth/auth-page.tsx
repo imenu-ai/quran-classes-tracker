@@ -1,5 +1,6 @@
 import { BookOpenText } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LegalLinks } from "../legal/legal-links";
 
 /** The centered, logo-topped layout of sign-in, registration and password pages. */
 export function AuthPage({
@@ -23,6 +24,7 @@ export function AuthPage({
         {subtitle && <p className="text-muted-foreground">{subtitle}</p>}
       </div>
       {children}
+      <LegalLinks />
     </main>
   );
 }

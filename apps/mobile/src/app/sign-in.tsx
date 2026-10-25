@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useTranslations } from "use-intl";
@@ -8,9 +8,11 @@ import { getLoginErrorKey, type LoginErrorKey } from "@qct/core/shared/login-err
 import { authClient } from "@/auth/client";
 import { Button } from "@/components/button";
 import { FormError } from "@/components/form-error";
+import { LegalLinks } from "@/components/legal-links";
 import { Screen } from "@/components/screen";
 import { Text } from "@/components/text";
 import { TextField } from "@/components/text-field";
+import { TextLink } from "@/components/text-link";
 import { API_URL } from "@/config";
 import { readRememberedCenterCode, rememberCenterCode } from "@/device/device-store";
 import { useSession } from "@/session/session";
@@ -107,12 +109,13 @@ export default function SignInScreen() {
         onPress={() => void submit()}
       />
       <View style={styles.links}>
-        <Link label={t("login.forgotLink")} onPress={() => void openForgotPassword()} />
+        <TextLink label={t("login.forgotLink")} onPress={() => void openForgotPassword()} />
         <View style={styles.row}>
           <Text tone="muted">{t("login.registerPrompt")}</Text>
-          <Link label={t("login.registerLink")} onPress={() => router.push("/register")} />
+          <TextLink label={t("login.registerLink")} onPress={() => router.push("/register")} />
         </View>
       </View>
+      <LegalLinks />
     </Screen>
   );
 }
@@ -125,18 +128,7 @@ function openForgotPassword() {
   return WebBrowser.openBrowserAsync(`${API_URL}/forgot-password`);
 }
 
-function Link({ label, onPress }: Readonly<{ label: string; onPress: () => void }>) {
-  return (
-    <Pressable onPress={onPress} accessibilityRole="link" hitSlop={8} style={styles.link}>
-      <Text tone="primary" weight="medium">
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   links: { gap: 8, alignItems: "center", paddingTop: 8 },
   row: { flexDirection: "row", gap: 6, alignItems: "center", flexWrap: "wrap" },
-  link: { minHeight: 44, justifyContent: "center" },
 });

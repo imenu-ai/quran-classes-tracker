@@ -7,6 +7,7 @@ import { PasswordSection } from "@/components/settings/password-section";
 import { ProfileSection } from "@/components/settings/profile-section";
 import { SyncSection } from "@/components/settings/sync-section";
 import { ThemeSection } from "@/components/settings/theme-section";
+import { LegalLinks } from "@/components/legal/legal-links";
 import { PageContainer, PageHeader } from "@/components/shell/page";
 
 /** Sync details, profile, password, center, appearance and sign-out. */
@@ -21,6 +22,7 @@ export default function SettingsPage() {
       <CenterSection />
       <ThemeSection />
       <LogoutSection />
+      <LegalLinks />
     </PageContainer>
   );
 }

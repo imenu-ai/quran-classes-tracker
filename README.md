@@ -296,6 +296,25 @@ Each flow starts from a cleared app. Flows find fields by their `testID` (`sign-
 - [ ] iPad: the classes in columns (three in landscape), the class page in two; it rotates freely, and forms and sheets stay narrow and centred. The iPhone stays in portrait.
 - [ ] The score wheel and form sheets behave natively; the keyboard doesn't cover the field being typed in.
 
+### Releasing the app
+
+The listing texts, App Review notes, privacy answers and the screenshot list are in `apps/mobile/store/app-store.md`. The release builds talk to `https://quran.imenu.ai` (`EXPO_PUBLIC_API_URL` in `apps/mobile/eas.json`), and the store listing links to its `/privacy` and `/support` pages, so the web app must be deployed first.
+
+**iOS** (from `apps/mobile`; asks for the Apple ID sign-in and its two-factor code):
+
+```sh
+npx eas-cli build --profile production --platform ios   # the build number goes up by itself
+npx eas-cli submit --profile production --platform ios --latest   # to App Store Connect / TestFlight
+```
+
+Then, in App Store Connect: test in TestFlight, fill in the listing from `store/app-store.md`, add the screenshots and the demo accounts' passwords, and submit for review.
+
+**JavaScript-only fixes** to a released version go out without a new build: `npx eas-cli update --channel production --message "…"`. A new native module or an `app.json` change needs a new build and a new version (`version` in `app.json`; the runtime version follows it).
+
+**Android without Google Play:** `npx eas-cli build --profile android-apk --platform android` makes an APK and prints a link to its download page. People open it on their phone and allow installing from that source when Android asks; Play Protect may warn about an unknown developer. JavaScript fixes reach it through EAS Update like the iOS app; native changes need a new APK. EAS keeps the signing key, and the same key will sign the Play Store version later, so installed copies can update to it.
+
+**The demo center for App Review** (production, code `689723`, `demo_admin` and `demo_teacher`). If a reviewer deletes it, recreate it from the repo root with the production `apps/web/.env`: `pnpm center:create --center "مركز النور التجريبي" --name "المدير التجريبي" --email mhmdtshref+qct-demo@gmail.com --username demo_admin`, then `pnpm dev:seed --center <new code>`, add `demo_teacher` (one class, "run lessons" and "see reports") in Users, and update the code in App Store Connect.
+
 ## Deployment
 
 Production runs on **AWS Amplify Hosting** (Next.js SSR, region `eu-central-1`) with **MongoDB Atlas**. Amplify supports SSR up to Next.js 15, which is why Next is pinned to 15.
