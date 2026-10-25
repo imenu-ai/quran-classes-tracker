@@ -7,7 +7,7 @@ import {
   checkAyahRange,
   type AyahRangeDraft,
   type AyahRangeField,
-} from "@/client/forms/ayah-range";
+} from "@qct/core/forms/ayah-range";
 import { installDomPolyfills, renderArabic } from "@/test/dom";
 import { AyahRangeFields } from "./ayah-range-fields";
 import { SurahPicker } from "./surah-picker";

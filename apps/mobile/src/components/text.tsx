@@ -27,6 +27,9 @@ export function Text({
       // Android's default ("highQuality") line breaking measured Arabic in the
       // custom font narrower than it then laid it out, so the last word wrapped
       // onto a clipped second line ("تسجيل الخروج" showed as "تسجيل").
+      // A label sized to its own text can still be laid out a fraction of a
+      // pixel narrower than measured, depending on where it sits: give it the
+      // full width (Button) or room to spare (Badge, SmallButton).
       textBreakStrategy="simple"
       {...props}
       style={[{ fontFamily: fonts[weight], color, fontSize: size, lineHeight: size * 1.5 }, style]}

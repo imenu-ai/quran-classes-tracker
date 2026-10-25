@@ -197,13 +197,13 @@ describe("the student form", () => {
 });
 
 describe("the student page and search", () => {
-  it("shows the student and the menu for those who manage students", async () => {
+  it("shows today and the menu for those who manage students", async () => {
     const services = admin();
     const cls = await createClass(services.store, "حلقة الفجر");
     const student = await createStudent(services.store, studentInput(cls.id, "أحمد علي"));
     params.mockReturnValue({ id: student.id });
     await renderWithApp(<StudentScreen />, services);
-    expect(await screen.findByText("حلقة الفجر")).toBeOnTheScreen();
+    expect(await screen.findByText(ar.today.title)).toBeOnTheScreen();
     await fireEvent.press(button(ar.students.move));
     expect(router.push).toHaveBeenCalledWith({
       pathname: "/move-student",

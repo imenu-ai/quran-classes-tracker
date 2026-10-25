@@ -4,7 +4,8 @@ import { Text } from "./text";
 
 /**
  * A full-width action, at least 48 pt tall. `busy` shows a spinner and blocks
- * taps; `disabled` dims it. "destructive" is for archiving and the like.
+ * taps; `disabled` dims it. "destructive" is for archiving and the like. A
+ * plain button can take a `color` for its outline and label (exams' violet).
  */
 export function Button({
   label,
@@ -12,12 +13,14 @@ export function Button({
   busy = false,
   disabled = false,
   variant = "primary",
+  color,
 }: Readonly<{
   label: string;
   onPress: () => void;
   busy?: boolean;
   disabled?: boolean;
   variant?: "primary" | "plain" | "destructive";
+  color?: string;
 }>) {
   const { colors } = useTheme();
   const filled = variant !== "plain";
@@ -27,7 +30,7 @@ export function Button({
       ? "#ffffff"
       : variant === "primary"
         ? colors.primaryForeground
-        : colors.foreground;
+        : (color ?? colors.foreground);
   const blocked = busy || disabled;
   return (
     <Pressable
@@ -37,7 +40,9 @@ export function Button({
       accessibilityState={{ busy, disabled: blocked }}
       style={({ pressed }) => [
         styles.button,
-        filled ? { backgroundColor: background } : { borderColor: colors.border, borderWidth: 1 },
+        filled
+          ? { backgroundColor: background }
+          : { borderColor: color ?? colors.border, borderWidth: 1 },
         (pressed || busy) && styles.dimmed,
         disabled && styles.disabled,
       ]}

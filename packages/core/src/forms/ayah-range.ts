@@ -1,6 +1,6 @@
-import { validateAyahRange } from "@qct/core/domain/quran/validation";
-import { parseIntegerInput } from "@qct/core/domain/text/digits";
-import type { FieldError } from "@qct/core/shared/schemas/errors";
+import { validateAyahRange } from "../domain/quran/validation";
+import { parseIntegerInput } from "../domain/text/digits";
+import type { FieldError } from "../shared/schemas/errors";
 
 export type AyahRangeField = "surah" | "fromAyah" | "toAyah";
 

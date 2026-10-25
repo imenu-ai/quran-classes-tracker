@@ -1,7 +1,11 @@
 import { loadActiveClasses, loadClass, loadClassList } from "@qct/core/data/entities/classes";
+import { loadStudentProfile } from "@qct/core/data/entities/profile";
 import { loadStudentSearch } from "@qct/core/data/entities/search";
 import { loadClassStudents, loadStudent } from "@qct/core/data/entities/students";
+import { loadStudentToday } from "@qct/core/data/entities/today";
+import type { StudentRecord } from "@qct/core/shared/schemas/student";
 import { useAppLocale } from "@/i18n/locale";
+import { useApp } from "./app-data";
 import { useLocalQuery } from "./use-local-query";
 
 // The shared queries as live screen data, like the web's `client/data` hooks.
@@ -43,5 +47,40 @@ export function useStudentSearch(query: string) {
     (db) => loadStudentSearch(db, query, locale),
     [query, locale],
     ["students", "classes"],
+  );
+}
+
+/** Today for one student: the lesson (if started), attendance and homework. */
+export function useStudentToday(student: Pick<StudentRecord, "id" | "classId"> | null) {
+  const { session } = useApp();
+  const id = student?.id;
+  const classId = student?.classId;
+  return useLocalQuery(
+    async (db) => (id && classId ? loadStudentToday(db, { id, classId }, session.timezone) : null),
+    [id, classId, session.timezone],
+    ["lessons", "attendance", "homework"],
+  );
+}
+
+/** The student's months: homework, attendance and their lessons. */
+export function useStudentProfile(studentId: string | null) {
+  return useLocalQuery(
+    async (db) => (studentId ? loadStudentProfile(db, studentId) : null),
+    [studentId],
+    ["lessons", "attendance", "homework"],
+  );
+}
+
+/** A student's live homework (the next-homework suggestion reads it). */
+export function useStudentHomework(studentId: string | null) {
+  return useLocalQuery(
+    async (db) =>
+      studentId
+        ? (await db.query("homework", "studentId", { equals: studentId })).filter(
+            (item) => item.deletedAt === null,
+          )
+        : null,
+    [studentId],
+    ["homework"],
   );
 }

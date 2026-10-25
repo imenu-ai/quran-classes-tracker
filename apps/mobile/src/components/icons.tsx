@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { I18nManager, Platform, type ImageSourcePropType } from "react-native";
+import {
+  I18nManager,
+  Platform,
+  Pressable,
+  StyleSheet,
+  type ImageSourcePropType,
+} from "react-native";
 import {
   SymbolView,
   unstable_getMaterialSymbolSourceAsync,
@@ -55,3 +61,46 @@ export function useToolbarIcon(
   if (Platform.OS === "ios") return sf;
   return image ?? undefined;
 }
+
+/** A 44 pt button with only an icon; `label` names it for screen readers. */
+export function IconButton({
+  sf,
+  md,
+  label,
+  onPress,
+  color,
+}: Readonly<{
+  sf: SFSymbol;
+  md: AndroidSymbol;
+  label: string;
+  onPress: () => void;
+  color?: string;
+}>) {
+  const { colors } = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      hitSlop={4}
+      style={({ pressed }) => [iconStyles.button, pressed && iconStyles.pressed]}
+    >
+      <SymbolView
+        name={{ ios: sf, android: md }}
+        size={22}
+        tintColor={color ?? colors.foreground}
+      />
+    </Pressable>
+  );
+}
+
+const iconStyles = StyleSheet.create({
+  button: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 22,
+  },
+  pressed: { opacity: 0.5 },
+});

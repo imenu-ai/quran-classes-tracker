@@ -508,7 +508,7 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
 - [x] **2.8 Home, classes and students.**
   - Native tabs (home, search, settings, users for admins). Class cards; create, rename and archive (blocked with active students) in form sheets; archived classes.
   - The class page's student list; add, edit, move and archive students (including the parent ID); the header search bar with Arabic normalization; empty and loading states; access (hidden or read-only).
-- [ ] **2.9 The student page.**
+- [x] **2.9 The student page.**
   - The today card: attendance (present / absent / excused with its note), due homework as collapsible items, the mark wheel, postpone and undo, recite now, next-day homework with the suggestion.
   - The searchable sura sheet and ayah fields with live errors; exams with the violet rows.
   - The month table with month navigation and the edit sheet for past days; view-only mode.
@@ -702,3 +702,35 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
     Not checked on a device: the teacher's read-only view and the hidden Users tab (covered by Jest), and iOS.
   - **Testing:** uiautomator doesn't see inside modals and sheets on Android, so those were driven by coordinates. Screen tests mock `expo-router` with `src/test/expo-router-mock.tsx`, which renders toolbar items and the search bar as plain controls.
   - Tests: core 425 in 25 files, web 282 in 35, mobile 34 in 6.
+
+- 2026-10-25 (2.9):
+  - **The student page** follows the web's: the month table, then today. The 2.8 details card is gone; the details are in "edit student", as on the web since 1.10.
+  - **Today:**
+    - Attendance is three coloured buttons (tap the chosen one again to clear it), with the excuse note saved as you type.
+    - Due homework is collapsible items, each with the two mark wheels, postpone and undo.
+    - "Recite now", exams in violet, and next-day homework with edit and delete.
+    - Without `lessons.run` the card is view-only.
+    - The homework form is its own route, so an item recited on the spot can't be opened by a callback as on the web. A small event (`src/data/homework-events.ts`) tells the card instead.
+  - **The mark wheel** is the native picker: the wheel on iOS (shortened to 140 pt, so two fit side by side), a dropdown on Android. The chosen mark shows at once, as on the web.
+  - **The homework form** is a page sheet with the suggestion after the latest portion. The sura field opens a searchable sheet (React Native's `Modal`, a page sheet on iOS) using the shared `searchSurahs`, by name or number. The ayah fields show the allowed range and live errors.
+  - **Shared with the web:** the web's ayah-range check (`client/forms/ayah-range.ts`, React-free) moved to `packages/core/src/forms/ayah-range.ts` with its tests, and both apps use it.
+  - **The month table** is rows of fixed-width date and mark columns around the portion, with exam rows in violet and absences as badges. Arrows step through months; the averages and the attendance summary sit at the bottom.
+    - Tapping a row (with `lessons.run`) opens a form sheet that corrects that day: marks, undo a postponement, or an absence's status and note. It stays open on the same record even after the row leaves the table.
+    - "طباعة الشهر" waits for printing (2.12).
+  - **The Android clipping bug, examined:**
+    - Before, with `textBreakStrategy="simple"`, button labels, the sync banner, the item's "تعديل المقطع" and the "اختبار" badge each lost a word or a letter.
+    - A side-by-side probe on the emulator showed the same label, in the same style, clipped in one spot and whole in another. A box laid out a fraction of a pixel narrower than the text's measurement makes Android break the word itself.
+    - Passing the face's `fontWeight` looked like a fix in one probe, but the badge stayed clipped with it, so it was reverted.
+    - The fixes that held:
+      - labels across their control's full width (`Button`, the attendance buttons, the item's two equal-width actions);
+      - a 96 pt minimum width for `SmallButton`;
+      - a figure space (U+2007) at each end of a `Badge` label, which counts when measuring and can't be broken from the word, so only an invisible space can go.
+  - **Metro on Windows** missed several edits during the checks; restarting it with `--clear` each time was the only reliable way.
+  - **Checked on the emulator** against the E2E server, as an admin:
+    - Present; "recite now" with every field empty (three errors), then a sura picked by number, an out-of-range end ayah (live error), then 1–5.
+    - The recited item opened by itself; marks 5 and 4 on Android's dropdowns, shown as "5 · 4".
+    - Next-day homework suggested Al-Naba 6–10; an exam on Al-Ikhlas in violet.
+    - The month table with both rows, the exam badge and the averages. A day corrected to 8 updated the table and its average live.
+
+    Postponing and view-only mode are covered by Jest (postponing needs homework from an earlier day). iOS is the user's check.
+  - Tests: core 428 in 26 files, web 279 in 34 (the ayah-range tests moved to core), mobile 44 in 7. Web `next build` compiles.

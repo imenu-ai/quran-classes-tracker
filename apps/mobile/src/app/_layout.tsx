@@ -66,6 +66,7 @@ function GatedStack() {
   const t = useTranslations("auth");
   const tSync = useTranslations("sync");
   const tStudents = useTranslations("students");
+  const tHomework = useTranslations("homework");
   const stackOptions = useStackOptions();
   const withHeader = (title: string) => ({ ...stackOptions, headerShown: true, title });
   const { snapshot } = useSession();
@@ -88,6 +89,11 @@ function GatedStack() {
           <Stack.Screen
             name="student-form"
             options={{ ...withHeader(tStudents("addTitle")), presentation: "modal" }}
+          />
+          <Stack.Screen name="edit-day" options={formSheet} />
+          <Stack.Screen
+            name="homework-form"
+            options={{ ...withHeader(tHomework("addTitle")), presentation: "modal" }}
           />
         </Stack.Protected>
         <Stack.Protected guard={signedIn && mustChangePassword}>

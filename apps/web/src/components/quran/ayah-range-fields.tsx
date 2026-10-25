@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { useId } from "react";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import type { AyahRangeDraft, AyahRangeErrors, AyahRangeField } from "@/client/forms/ayah-range";
+import type { AyahRangeDraft, AyahRangeErrors, AyahRangeField } from "@qct/core/forms/ayah-range";
 import { getAyahCount } from "@qct/core/domain/quran/surahs";
 import { useErrorMessage } from "@/i18n/use-error-message";
 import { SurahPicker } from "./surah-picker";
