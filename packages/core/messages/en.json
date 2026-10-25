@@ -537,5 +537,29 @@
     "copyFailed": "Couldn't copy. Copy the link by hand.",
     "share": "Share",
     "shareTitle": "Following {name}"
+  },
+  "deletion": {
+    "accountButton": "Delete account",
+    "accountTitle": "Delete account",
+    "accountDescription": "Your name, username, phone number and password are deleted, and you're signed out on all your devices. The center's classes, students and their records stay as they are. Deleting can't be undone.",
+    "accountAdminHint": "If you're the center's only admin, make another user an admin first, or delete the whole center in the center settings.",
+    "pending": "{count, plural, one {One change on this device hasn't synced and will be lost} other {# changes on this device haven't synced and will be lost}}.",
+    "password": "Password",
+    "passwordHint": "Type your password to confirm",
+    "deleteAccount": "Delete my account permanently",
+    "accountDeleted": "Your account was deleted",
+    "centerButton": "Delete the center",
+    "centerTitle": "Delete the center",
+    "centerDescription": "The center is deleted permanently with everything in it: every user's account, the classes, students, attendance, homework and marks. Everyone is signed out on every device, and parent links stop working. Deleting can't be undone.",
+    "centerPrintHint": "To keep the students' sheets, print them before deleting.",
+    "deleteCenter": "Delete the center permanently",
+    "centerDeleted": "The center and all its data were deleted",
+    "errors": {
+      "wrongPassword": "Wrong password",
+      "rateLimited": "Too many attempts. Try again in 15 minutes",
+      "lastAdmin": "You're the center's only admin. Make another user an admin first, or delete the center.",
+      "offline": "Deleting needs an internet connection",
+      "generic": "Couldn't delete. Try again"
+    }
   }
 }

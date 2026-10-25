@@ -160,3 +160,12 @@ export const updateCenterSchema = z.object({
   timezone: timeZoneSchema.optional(),
 });
 export type UpdateCenterInput = z.input<typeof updateCenterSchema>;
+
+/**
+ * Deleting one's account or the center (PLAN.md §0 #50): the password again,
+ * checked by the server. Any non-empty value; a wrong one is WRONG_PASSWORD.
+ */
+export const deletionSchema = z.object({
+  password: z.string().min(1).max(PASSWORD_MAX),
+});
+export type DeletionInput = z.input<typeof deletionSchema>;

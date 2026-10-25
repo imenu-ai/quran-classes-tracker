@@ -12,6 +12,7 @@ import ClassScreen from "./app/(tabs)/(home)/class/[id]";
 import ClassStatsScreen from "./app/(tabs)/(home)/class-stats/[id]";
 import HomeScreen from "./app/(tabs)/(home)/index";
 import SettingsScreen from "./app/(tabs)/settings/index";
+import DeleteCenterScreen from "./app/delete-center";
 import StudentScreen from "./screens/student-screen";
 
 jest.mock("expo-router", () => jest.requireActual("@/test/expo-router-mock"));
@@ -112,6 +113,13 @@ describe("English, left to right", () => {
     params.mockReturnValue({ id: cls.id });
     await renderWithApp(<ClassStatsScreen />, services, "en");
     expect(await screen.findByText("Omar Ali")).toBeOnTheScreen();
+    expect(arabicOnScreen()).toEqual([]);
+  });
+
+  it("deleting the center", async () => {
+    const { services } = await setup();
+    await renderWithApp(<DeleteCenterScreen />, services, "en");
+    expect(screen.getByText(en.deletion.centerDescription)).toBeOnTheScreen();
     expect(arabicOnScreen()).toEqual([]);
   });
 

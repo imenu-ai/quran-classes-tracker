@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 import { useTranslations } from "use-intl";
 import { getIntlLocale } from "@qct/core/i18n/config";
@@ -19,6 +20,7 @@ import { useApp } from "@/data/app-data";
 import { useAppLocale } from "@/i18n/locale";
 import { useErrorMessage } from "@/i18n/use-error-message";
 import { useSession } from "@/session/session";
+import { useTheme } from "@/theme/theme";
 
 /**
  * The center: its code (everyone may need to share it), and for admins its
@@ -38,13 +40,36 @@ export default function CenterScreen() {
         copiedLabel={t("codeCopied")}
       />
       {session.role === "admin" ? (
-        <CenterForm />
+        <>
+          <CenterForm />
+          <DeleteCenterSection />
+        </>
       ) : (
         <Section title={t("centerName")}>
           <Text>{session.tenantName}</Text>
         </Section>
       )}
     </Screen>
+  );
+}
+
+/**
+ * Admins: deleting the center, under the form. No heading of its own: it
+ * would repeat the button's label.
+ */
+function DeleteCenterSection() {
+  const t = useTranslations("deletion");
+  const { colors } = useTheme();
+  return (
+    <View style={[styles.deletion, { borderTopColor: colors.border }]}>
+      <Text tone="muted">{t("centerPrintHint")}</Text>
+      <Button
+        variant="plain"
+        color={colors.destructive}
+        label={t("centerButton")}
+        onPress={() => router.push("/delete-center")}
+      />
+    </View>
   );
 }
 
@@ -110,3 +135,7 @@ function CenterForm() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  deletion: { gap: 12, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 16 },
+});

@@ -62,6 +62,14 @@ export class TenantRepository<TDoc extends TenantDocument> {
   }
 
   /**
+   * Hard-deletes every document of this tenant. Only for deleting the whole
+   * center (PLAN.md §0 #50): synced records are otherwise soft-deleted.
+   */
+  deleteAll() {
+    return this.collection.deleteMany(this.scope());
+  }
+
+  /**
    * Inserts `doc`, or replaces this tenant's copy when `condition` matches it.
    * Returns "conflict" when a document with this _id exists but the condition
    * doesn't match (it's newer here, or it belongs to another tenant).

@@ -105,10 +105,14 @@ process.on("SIGINT", () => {
 });
 
 // The adb server sometimes wedges between runs: commands hang instead of
-// failing. A restart clears it (if not, kill every adb process).
+// failing, and so does `adb kill-server`. Ending every adb process clears it.
 if (runAdb("devices").status !== 0) {
-  console.log("[e2e] adb didn't answer; restarting its server");
-  runAdb("kill-server");
+  console.log("[e2e] adb didn't answer; ending its processes");
+  if (WINDOWS) spawnSync("taskkill", ["/IM", "adb.exe", "/F"]);
+  else spawnSync("pkill", ["-x", "adb"]);
+  runAdb("start-server");
+  // The emulator reconnects (and re-authorizes) in a few seconds.
+  spawnSync(ADB, ["wait-for-device"], { timeout: 90_000 });
 }
 const devices = adb("devices")
   .split("\n")

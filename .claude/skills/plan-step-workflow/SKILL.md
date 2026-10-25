@@ -90,8 +90,11 @@ Notes:
   - `hideKeyboard` after each field, or the next one sits under the keyboard.
   - Android's dropdown picker shows its first items only (a mark of 5, not 9).
   - The sync indicator is only on the tab roots and in Settings.
+  - Right after the first sync, Maestro needs seconds per look at the screen: give a `scrollUntilVisible` to the bottom of a long screen `timeout: 60000`.
+  - Two elements with the same text (a heading and a button) make `tapOn` take the first; keep labels unique on a screen.
   - Airplane mode doesn't cut `adb reverse`; the app goes by the device's network state, so offline still works as offline.
-- **A hung start** is usually a wedged adb server (`adb devices` never returns). The runner restarts it once; if that doesn't help, kill every `adb.exe`, then `adb start-server`.
+- **A hung start** is usually a wedged adb server (`adb devices` never returns, and neither does `adb kill-server`). The runner ends every adb process and waits for the device. By hand: kill every `adb.exe`, then `adb start-server`.
+- **"Maestro Android driver did not start up in time"** came from the same tired emulator: `adb reboot`.
 - **Every flow failing at "تسجيل الدخول" with the emulator's home screen showing:** Android killed the app as it started (logcat: `ANR in ai.imenu.quran … failed to complete startup`). An emulator that has run all day gets there; `adb reboot` fixed it. The runner builds the bundle before the flows, so Metro's cold build isn't competing with the app's start.
 - **By hand:** `maestro test maestro/main-flow.yaml -e METRO_URL=http://localhost:8082 -e PASSWORD=e2e-password-123` from `apps/mobile`, with `JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8"` or the Arabic prints as question marks. When a step fails, the hierarchy in `~/.maestro/tests/<run>/` shows what was on screen.
 

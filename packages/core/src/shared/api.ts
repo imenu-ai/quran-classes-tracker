@@ -14,6 +14,8 @@ export type ApiErrorCode =
   | "CLASS_NOT_FOUND"
   | "NOT_FOUND"
   | "FORBIDDEN"
+  | "WRONG_PASSWORD"
+  | "RATE_LIMITED"
   | "OFFLINE"
   | "GENERIC";
 
@@ -28,6 +30,8 @@ const SERVER_CODES: readonly string[] = [
   "CLASS_NOT_FOUND",
   "NOT_FOUND",
   "FORBIDDEN",
+  "WRONG_PASSWORD",
+  "RATE_LIMITED",
 ];
 
 /** The result of a response the server answered, from its status and JSON body. */
@@ -36,4 +40,25 @@ export function apiResult<T>(ok: boolean, body: unknown): ApiResult<T> {
   const { error, errors } = (body ?? {}) as { error?: string; errors?: FieldError[] };
   const code = error && SERVER_CODES.includes(error) ? (error as ApiErrorCode) : "GENERIC";
   return { ok: false, code, errors: errors ?? [] };
+}
+
+export type DeletionErrorKey =
+  "wrongPassword" | "rateLimited" | "lastAdmin" | "offline" | "generic";
+
+/** The `deletion.errors.*` message for a failed account or center deletion. */
+export function deletionErrorKey(code: ApiErrorCode): DeletionErrorKey {
+  switch (code) {
+    // An empty password never leaves the form; anything else invalid is wrong too.
+    case "WRONG_PASSWORD":
+    case "INVALID_INPUT":
+      return "wrongPassword";
+    case "RATE_LIMITED":
+      return "rateLimited";
+    case "LAST_ADMIN":
+      return "lastAdmin";
+    case "OFFLINE":
+      return "offline";
+    default:
+      return "generic";
+  }
 }

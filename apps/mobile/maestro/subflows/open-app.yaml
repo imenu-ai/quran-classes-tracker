@@ -10,7 +10,11 @@ appId: ai.imenu.quran
 # disableOnboarding skips the development client's greeting, which a slow
 # first bundle brought up over the sign-in screen after the checks below.
 - openLink: ai.imenu.quran://expo-development-client/?url=${METRO_URL}&disableOnboarding=1
-# The development client's menu, should it still greet a fresh install.
+# The development client's menu can still come up over the app once it has
+# loaded: wait for the app or the menu, then close the menu.
+- extendedWaitUntil:
+    visible: تسجيل الدخول|Continue|Close
+    timeout: 120000
 - runFlow:
     when:
       visible: Continue
@@ -23,4 +27,4 @@ appId: ai.imenu.quran
       - tapOn: Close
 - extendedWaitUntil:
     visible: تسجيل الدخول
-    timeout: 120000
+    timeout: 30000

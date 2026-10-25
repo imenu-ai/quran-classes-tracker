@@ -105,6 +105,9 @@ The CLI scripts read `apps/web/.env.local` then `apps/web/.env`; variables alrea
 - **Forgotten passwords.**
   - An admin resets his own by email (`/forgot-password`, sent through Amazon SES).
   - A teacher asks his admin, who sets a new one.
+- **Deleting.** Both ask for the password again (5 tries per 15 minutes), in the app and on the web, and need a connection.
+  - **One's own account:** Settings → Account → "حذف الحساب". The user's sign-in and details (name, username, phone, email) are deleted and every device of theirs is signed out; the center's classes, students and records stay. The center's last active admin can't: they make another user an admin first, or delete the center.
+  - **The center** (admins): Settings → Center → "حذف المركز". Every user is signed out, then every user, class, student, lesson, attendance and homework record and the center itself are deleted. Parent links stop working. Print the students' sheets first to keep them.
 - **How access is enforced.** The device hides what a user can't do. The server checks every sync: a teacher's writes need the matching permission and one of his classes, and pulls only return his classes. When an admin changes someone's classes or permissions, that user's devices rebuild their local copy at the next sync.
 
 ## Daily use
@@ -280,6 +283,7 @@ Sign-in, registration, "forgot password" (it opens the web page) and the forced 
 | `main-flow` | sign in, create a class and a student, mark him present, recite now with a mark, the month table, everything synced                                            |
 | `offline`   | airplane mode: create a class, the indicator shows it waiting; back online it syncs; after signing out (which wipes the device) and in again, it's still there |
 | `roles`     | the admin creates a class, a student and a teacher for it; the teacher's forced password change, only that class, no admin controls, taking attendance         |
+| `deletion`  | the only admin can't delete their own account; a wrong password, then the center deleted; signed out, and the account no longer signs in                       |
 
 Each flow starts from a cleared app. Flows find fields by their `testID` (`sign-in.code`, `class.name`, `ayah.from`, …); Maestro types ASCII only on Android, so the test data is in Latin letters. If adb stops answering, the runner restarts its server; if every flow fails at the sign-in screen with the emulator's home screen showing, Android killed the app as it started (an emulator that has run for hours): `adb reboot`, then run again.
 

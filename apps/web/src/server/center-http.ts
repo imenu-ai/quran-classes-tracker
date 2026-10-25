@@ -10,6 +10,8 @@ const STATUS: Record<CenterError["code"], number> = {
   USERNAME_TAKEN: 409,
   EMAIL_TAKEN: 409,
   LAST_ADMIN: 409,
+  WRONG_PASSWORD: 400,
+  RATE_LIMITED: 429,
 };
 
 /** Runs a center service call, answering its CenterError as JSON. */

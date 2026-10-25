@@ -61,7 +61,7 @@ Agreed with the user from 2026-10-05 on; the date marks when a group was added.
 | 47 | Repo | A pnpm monorepo: `apps/web` (the Next.js app), `apps/mobile` (Expo), `packages/core` (React-free TypeScript: domain, shared schemas and sync rules, messages, the data layer). Amplify builds `apps/web`. |
 | 48 | One data layer | `LocalStore`, the outbox, the sync engine and the per-entity actions move to `packages/core`, written against a small storage interface. The web keeps Dexie; the app uses **SQLite (expo-sqlite)**. Same rules, same tests, one place. |
 | 49 | Mobile auth | Better Auth's **Expo plugin**; the session token lives in the device's secure storage (SecureStore). Same 400-day session, same center code + username + password sign-in. |
-| 50 | Registration and deletion | Centers can register in the app. Apple requires in-app account deletion for that, so deletion is the step before store submission (2.15); its details are agreed before that step. |
+| 50 | Registration and deletion | Centers can register in the app. Apple requires in-app account deletion for that (2.15, agreed 2026-10-25): every user can delete his own account (his sign-in and personal details; the center's records stay), except the center's last active admin. An admin can delete the center with all its users and records. Both ask for the password again, in the app and on the web. |
 | 51 | Builds and stores | **EAS Build** in the cloud (iOS builds from Windows) and **EAS Submit**; **EAS Update** for JS-only fixes. App Store first (account exists); Google Play when its developer account is created. |
 | 52 | Older app versions | Installed apps update slowly, so the API stays backward-compatible with every released app version: new fields are optional with server-side defaults (as in §4), and endpoints aren't renamed or removed. |
 | 53 | Direction on mobile | React Native sets direction when the app starts (`I18nManager`), not per screen. The app starts in RTL (only `ar` is enabled); a language change reloads the app. Styles use `start`/`end` only. |
@@ -520,7 +520,7 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
   - "رابط ولي الأمر": the web link, copy, the share sheet and its QR.
 - [x] **2.13 Tablets.** iPad and Android tablet layouts: multi-column grids and readable content widths where the web uses two columns; phones portrait, tablets in all orientations (iPad multitasking needs it). Checked on your iPad and an Android tablet emulator.
 - [x] **2.14 Mobile E2E and device checks.** Maestro flows on the Android emulator (main flow, offline, roles) with their own seeded server; an `en` LTR smoke render in Jest; a README checklist for iPhone and iPad (offline, print, share, RTL).
-- [ ] **2.15 Account deletion (#50).** Who can delete what (e.g. an admin deletes the center and all its data; a teacher deletes his own account) is agreed with you before the step. The API, the app screens, and the same option on the web.
+- [x] **2.15 Account deletion (#50).** Every user deletes his own account, except the last active admin; an admin deletes the center and all its data (agreed with you). The API, the app screens, and the same option on the web.
 - [ ] **2.16 Release.**
   - App icon, splash screen, a privacy policy page on the web, a demo center for App Review.
   - App Store: listing in Arabic and English, EAS production build, TestFlight, then submission. EAS Update channel for JS fixes.
@@ -841,3 +841,24 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
   - **Run:** the three flows pass through `pnpm mobile:e2e` on `qct_phone` in about 8½ minutes.
   - **README:** the Maestro run and its flows, and a checklist for the iPhone and the iPad (RTL, offline, print, share, iPad layouts, native controls). The iOS checks are the user's, on a development build with 2.12's and 2.13's native modules.
   - Tests: mobile 71 in 12 (core and web unchanged).
+
+- 2026-10-25 (2.15):
+  - **Agreed with the user:** every user can delete his own account, except the center's last active admin; an admin can delete the center with everything in it (§0 #50).
+  - **API** (`apps/web/src/server/deletion.ts`). Both routes take `{ password }`, checked against the credential account with argon2. Five attempts per user per 15 minutes, then `RATE_LIMITED` (429); a wrong password is `WRONG_PASSWORD` (400, not 401, so the apps don't take it for an ended session).
+    - `DELETE /api/account`: the member document first (no request of his passes after that), then his sessions, accounts and user. The center's records stay: they belong to the center, and only carry his id in `updatedBy`. The last active admin gets `LAST_ADMIN` (409); a disabled admin doesn't count.
+    - `DELETE /api/center` (admins): every user's sessions first, then every synced record (`TenantRepository.deleteAll`, the one hard delete), the version counter, each user with his member document (the admin's own last, so a half-finished run can be repeated after signing in), the records again (in case a request already past its session check wrote one), and the tenant. Password-reset tokens and rate-limit entries aren't tied to a center and expire on their own.
+  - **App:** "حذف الحساب" under Settings → Account, and "حذف المركز" at the bottom of Settings → Center for admins (no heading of its own: it would repeat the button's label). Each opens a page sheet that says what goes, asks for the password, and has a destructive button that stays dimmed until one is typed. The account screen tells admins what to do if they're the only one, and warns about changes not yet synced from this device. Once the server has deleted it, the device signs out (wiping the local database) and an alert says so.
+  - **Web:** the same, as dialogs in the account and center sections of Settings (`DeletionDialog`). Afterwards the device is forgotten and `/login` shows a toast.
+  - **Shared:** `deletionSchema`, the `WRONG_PASSWORD` and `RATE_LIMITED` codes, `deletionErrorKey`, and the `deletion.*` messages in both languages.
+  - **Checked:**
+    - Server integration tests: wrong and right passwords, the last admin (a disabled one doesn't count), the rate limit, admins only, everything of the center gone (records, members, users, sessions, accounts, counter, tenant) and nothing of another center.
+    - Jest: both screens, the entry points, errors, the pending warning; the center screen joins the English smoke test. A Vitest component test for the web dialog.
+    - A new Maestro flow, `deletion`, on `qct_phone`: the only admin is refused, then a wrong password, the center deleted, signed out, and the account no longer signs in.
+    - The web dialogs at 360 px in Chromium: RTL, no horizontal overflow, the same steps.
+    - The whole Maestro suite (four flows) passes through `pnpm mobile:e2e`, in 20½ minutes on an emulator that had run all day.
+  - Tests: core 436 in 28 files, web 287 in 36, mobile 81 in 13. The web's `next build` compiles with the new `DELETE` handlers.
+  - **The Maestro runner,** after more trouble with an emulator that had run all day:
+    - `adb kill-server` hangs as well when adb is wedged, so the runner now ends every adb process and waits for the device to reconnect.
+    - The development client's own menu once opened over the app after the checks that close it; `open-app` now waits for the app or the menu before closing it.
+    - Right after the first sync, each look at the screen took about 8 s, so a scroll to the bottom of Settings ran out of its default 20 s; those scrolls get 60 s.
+

@@ -44,4 +44,5 @@ export const MOBILE_ACCOUNTS = [
   { username: "m_main", code: "200001" },
   { username: "m_offline", code: "200002" },
   { username: "m_roles", code: "200003" },
+  { username: "m_delete", code: "200004" },
 ] as const;

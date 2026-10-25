@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { apiResult } from "./api";
+import { apiResult, deletionErrorKey } from "./api";
 import { sortCenterUsers, type CenterUser } from "./center-users";
 
 describe("apiResult", () => {
@@ -16,6 +16,11 @@ describe("apiResult", () => {
     });
   });
 
+  it("keeps the deletion codes", () => {
+    expect(apiResult(false, { error: "WRONG_PASSWORD" })).toMatchObject({ code: "WRONG_PASSWORD" });
+    expect(apiResult(false, { error: "RATE_LIMITED" })).toMatchObject({ code: "RATE_LIMITED" });
+  });
+
   it("turns anything else into GENERIC", () => {
     expect(apiResult(false, { error: "SOMETHING_NEW" })).toEqual({
       ok: false,
@@ -23,6 +28,16 @@ describe("apiResult", () => {
       errors: [],
     });
     expect(apiResult(false, null)).toEqual({ ok: false, code: "GENERIC", errors: [] });
+  });
+});
+
+describe("deletionErrorKey", () => {
+  it("names the message for each failure", () => {
+    expect(deletionErrorKey("WRONG_PASSWORD")).toBe("wrongPassword");
+    expect(deletionErrorKey("RATE_LIMITED")).toBe("rateLimited");
+    expect(deletionErrorKey("LAST_ADMIN")).toBe("lastAdmin");
+    expect(deletionErrorKey("OFFLINE")).toBe("offline");
+    expect(deletionErrorKey("FORBIDDEN")).toBe("generic");
   });
 });
 

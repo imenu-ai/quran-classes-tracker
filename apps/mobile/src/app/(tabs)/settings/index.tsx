@@ -14,6 +14,7 @@ import { Text } from "@/components/text";
 import { useApp } from "@/data/app-data";
 import type { ThemePreference } from "@/device/device-store";
 import { useThemePreference } from "@/theme/preference";
+import { useTheme } from "@/theme/theme";
 
 const THEMES: { value: ThemePreference; label: "themeSystem" | "themeLight" | "themeDark" }[] = [
   { value: "system", label: "themeSystem" },
@@ -29,6 +30,7 @@ export default function SettingsScreen() {
   const t = useTranslations();
   const { session, db, engine, signOut } = useApp();
   const [theme, setTheme] = useThemePreference();
+  const { colors } = useTheme();
   const [busy, setBusy] = useState(false);
 
   const leave = () => {
@@ -86,6 +88,12 @@ export default function SettingsScreen() {
           label={t("auth.logout")}
           busy={busy}
           onPress={() => void confirmSignOut()}
+        />
+        <Button
+          variant="plain"
+          color={colors.destructive}
+          label={t("deletion.accountButton")}
+          onPress={() => router.push("/delete-account")}
         />
       </Section>
       {__DEV__ ? <DevSyncCheck /> : null}

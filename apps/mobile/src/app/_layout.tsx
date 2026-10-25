@@ -75,6 +75,7 @@ function GatedStack() {
   const tHomework = useTranslations("homework");
   const tPrint = useTranslations("print");
   const tParent = useTranslations("parentLink");
+  const tDeletion = useTranslations("deletion");
   const stackOptions = useStackOptions();
   const withHeader = (title: string) => ({ ...stackOptions, headerShown: true, title });
   const { snapshot } = useSession();
@@ -111,6 +112,14 @@ function GatedStack() {
           <Stack.Screen
             name="homework-form"
             options={{ ...withHeader(tHomework("addTitle")), presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="delete-account"
+            options={{ ...withHeader(tDeletion("accountTitle")), presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="delete-center"
+            options={{ ...withHeader(tDeletion("centerTitle")), presentation: "modal" }}
           />
         </Stack.Protected>
         <Stack.Protected guard={signedIn && mustChangePassword}>
