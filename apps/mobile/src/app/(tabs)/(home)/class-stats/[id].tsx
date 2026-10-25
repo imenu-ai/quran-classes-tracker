@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useFormatter, useTranslations } from "use-intl";
 import { ALL_TIME, type StatsPeriod, type StudentStanding } from "@qct/core/domain/stats/class";
+import { Button } from "@/components/button";
 import { EmptyState } from "@/components/empty-state";
 import { Chevron, useToolbarIcon } from "@/components/icons";
 import { Loading } from "@/components/loading";
@@ -22,6 +23,7 @@ const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 export default function ClassStatsScreen() {
   const t = useTranslations("classStats");
   const tCommon = useTranslations("common");
+  const tPrint = useTranslations("print");
   const format = useFormatter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const canView = useAccess().can("reports.view");
@@ -108,6 +110,15 @@ export default function ClassStatsScreen() {
         <Text weight="semibold" accessibilityLabel={`${t("period")}: ${periodLabel}`}>
           {t("period")}: {periodLabel}
         </Text>
+        {students.size > 0 ? (
+          <Button
+            variant="plain"
+            label={tPrint("printStudents")}
+            onPress={() =>
+              router.push({ pathname: "/print-students", params: { classId: cls.id } })
+            }
+          />
+        ) : null}
 
         {statistics.lessonDays === 0 ? (
           <EmptyState title={t("noLessons")} />

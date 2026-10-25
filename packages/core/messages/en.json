@@ -487,6 +487,7 @@
     "pageTitle": "Print",
     "title": "Monthly record",
     "printButton": "Print / Save PDF",
+    "sharePdf": "Share PDF",
     "hint": "To get a PDF file, choose “Save as PDF” (or “Share” on iPhone) in the print dialog.",
     "sheetCount": "Sheets: {count}",
     "noStudents": "No students to print",

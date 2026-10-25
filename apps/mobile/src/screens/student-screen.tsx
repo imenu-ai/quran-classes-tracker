@@ -71,6 +71,13 @@ export default function StudentScreen() {
               {t("students.edit")}
             </Stack.Toolbar.MenuAction>
             <Stack.Toolbar.MenuAction
+              onPress={() =>
+                router.push({ pathname: "/parent-link", params: { studentId: student.id } })
+              }
+            >
+              {t("parentLink.menu")}
+            </Stack.Toolbar.MenuAction>
+            <Stack.Toolbar.MenuAction
               onPress={() => router.push({ pathname: "/move-student", params: { id: student.id } })}
             >
               {t("students.move")}

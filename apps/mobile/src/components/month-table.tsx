@@ -13,7 +13,9 @@ import { isExam } from "@qct/core/shared/schemas/homework";
 import type { StudentRecord } from "@qct/core/shared/schemas/student";
 import { useApp } from "@/data/app-data";
 import { usePortionLabel } from "@/i18n/portion";
+import { usePrintSheets, type PrintMode } from "@/print/use-print";
 import { useTheme } from "@/theme/theme";
+import { Button } from "./button";
 import { Badge } from "./loading";
 import { Text } from "./text";
 
@@ -261,8 +263,57 @@ export function MonthTable({
               excused: stats?.excused ?? 0,
             })}
           </Text>
+          <PrintButtons classId={student.classId} studentIds={[student.id]} month={month} />
         </View>
       ) : null}
+    </View>
+  );
+}
+
+/**
+ * Print the month's sheet (the system dialog), or share it as a PDF. Shared
+ * with the class's student sheets.
+ */
+export function PrintButtons({
+  classId,
+  studentIds,
+  month,
+  printLabel,
+}: Readonly<{
+  classId: string;
+  studentIds: readonly string[];
+  month: string;
+  printLabel?: string;
+}>) {
+  const t = useTranslations("print");
+  const print = usePrintSheets();
+  const [busy, setBusy] = useState<PrintMode | null>(null);
+  const run = (mode: PrintMode) => {
+    setBusy(mode);
+    print(classId, studentIds, month, mode)
+      .catch((error: unknown) => console.error("Printing failed", error))
+      .finally(() => setBusy(null));
+  };
+  return (
+    <View style={styles.print}>
+      <View style={styles.printButton}>
+        <Button
+          variant="plain"
+          label={printLabel ?? t("printMonth")}
+          busy={busy === "print"}
+          disabled={busy !== null || studentIds.length === 0}
+          onPress={() => run("print")}
+        />
+      </View>
+      <View style={styles.printButton}>
+        <Button
+          variant="plain"
+          label={t("sharePdf")}
+          busy={busy === "share"}
+          disabled={busy !== null || studentIds.length === 0}
+          onPress={() => run("share")}
+        />
+      </View>
     </View>
   );
 }
@@ -343,4 +394,6 @@ const styles = StyleSheet.create({
   empty: { paddingVertical: 24, alignSelf: "stretch", textAlign: "center" },
   footer: { borderTopWidth: 2 },
   summary: { paddingHorizontal: 12, paddingTop: 10 },
+  print: { flexDirection: "row", gap: 10, paddingHorizontal: 12, paddingTop: 12 },
+  printButton: { flex: 1 },
 });

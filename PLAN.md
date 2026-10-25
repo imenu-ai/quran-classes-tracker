@@ -514,7 +514,7 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
   - The month table with month navigation and the edit sheet for past days; view-only mode.
 - [x] **2.10 Class statistics.** Year and month filter (native menus), attendance rate and average marks, the ranked students (§0 #34–36).
 - [x] **2.11 Settings and administration.** Profile, password, theme, sync details with retry/discard, center settings (name, time zone); user management for admins: create, edit classes and permissions, reset password, disable.
-- [ ] **2.12 Printing and the parent link.**
+- [x] **2.12 Printing and the parent link.**
   - HTML month sheets from the shared builders (font embedded, QR as SVG) through `expo-print`: print, or save and share a PDF.
   - Both entry points: "طباعة الشهر" and the class's "طباعة كشوف الطلاب" (month, "تحديد الكل").
   - "رابط ولي الأمر": the web link, copy, the share sheet and its QR.
@@ -775,3 +775,25 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
 
     The settings password screen reuses the form checked in 2.6. iOS is the user's check.
   - Tests: core 432 in 27 files (the shared API helpers), web 279 in 34, mobile 56 in 9. Web `next build` compiles; the web E2E suite wasn't rerun (the web change is imports only).
+
+- 2026-10-25 (2.12):
+  - **Printing:** the sheets come from the same local data and shared builders as the web's `/print` (`loadPrintSheets`, `buildMonthSheet`).
+    - `src/print/month-sheet-html.ts` lays them out as one HTML document, one A4 page per student, like the web's `MonthSheet`: fixed light colours, the QR beside the header, density by row count, user text in `<bdi>` and escaped.
+    - IBM Plex Sans Arabic (regular and bold) is embedded as `@font-face` data, read once from the app's bundled fonts. `File` has no base64 helper in SDK 58, so its bytes are encoded with `btoa`.
+    - `expo-print` opens the system print dialog, or saves a PDF that `expo-sharing` hands to the share sheet. The PDF is renamed to "<student or class> <month>.pdf"; expo-print names it with a random id.
+  - **Entry points:**
+    - "طباعة الشهر" and "مشاركة PDF" under the month table (new message `print.sharePdf`).
+    - "طباعة كشوف الطلاب" on the class statistics, as on the web, opens a page sheet: the month, "تحديد الكل" and each student (all selected at first), then print or share.
+  - **The parent link** ("رابط ولي الأمر" in the student menu) is a page sheet:
+    - the QR (react-native-svg) on white;
+    - the link, which points at the app's server (`EXPO_PUBLIC_API_URL`), where the web parent page lives;
+    - copy, and React Native's share sheet;
+    - the "no parent ID yet" warning.
+  - **Shared with the web:** `packages/core/src/shared/qr.ts` draws the QR's path (`qrShape`, `qrViewBox`) and standalone SVG for printed HTML (`qrSvgMarkup`). The `qrcode` dependency moved from the web to core, and the web's `QrCode` uses it. qrcode needs only `TextEncoder`, which Hermes has.
+  - **New native modules:** `expo-print`, `expo-sharing` and `react-native-svg`, plus `expo-file-system` and `expo-asset` as direct dependencies. The Android build was redone, and the iPhone needs a new development build. `expo-doctor` passes 20/20.
+  - **Checked on the emulator** against the E2E server:
+    - **Printing:** the print dialog showed the sheet's preview (RTL, QR, table, counts; the emulator's paper defaults to Letter). The shared PDF, pulled from the device, is one A4 page in the embedded font with Arabic shaped correctly. The share sheet named it "Omar 2026-10.pdf".
+    - **Parent link:** the screen showed the QR; copy said so; share opened the share sheet. Playwright opened that link on the web with the parent ID and saw the student's month, including attendance recorded on the phone.
+    - **Students' sheets:** the selection count followed "تحديد الكل", and printing opened the dialog.
+    - **Along the way:** after a test-server restart, a student that referenced a class from the old server was refused, and Settings listed it ("يرتبط بسجل غير موجود على الخادم"), which is how 2.11 meant it to work.
+  - Tests: core 434 in 28 files (the QR helper), web 279 in 34, mobile 60 in 10. Web `next build` compiles.
