@@ -1,8 +1,10 @@
+import { loadClassStatistics } from "@qct/core/data/entities/class-stats";
 import { loadActiveClasses, loadClass, loadClassList } from "@qct/core/data/entities/classes";
 import { loadStudentProfile } from "@qct/core/data/entities/profile";
 import { loadStudentSearch } from "@qct/core/data/entities/search";
 import { loadClassStudents, loadStudent } from "@qct/core/data/entities/students";
 import { loadStudentToday } from "@qct/core/data/entities/today";
+import type { StatsPeriod } from "@qct/core/domain/stats/class";
 import type { StudentRecord } from "@qct/core/shared/schemas/student";
 import { useAppLocale } from "@/i18n/locale";
 import { useApp } from "./app-data";
@@ -82,5 +84,15 @@ export function useStudentHomework(studentId: string | null) {
         : null,
     [studentId],
     ["homework"],
+  );
+}
+
+/** A class's statistics and ranked students for a period (all time, a year or a month). */
+export function useClassStatistics(classId: string, period: StatsPeriod) {
+  const { session } = useApp();
+  const locale = useAppLocale();
+  return useLocalQuery(
+    (db) => loadClassStatistics(db, classId, period, session.timezone, locale),
+    [classId, period.year, period.month, session.timezone, locale],
   );
 }

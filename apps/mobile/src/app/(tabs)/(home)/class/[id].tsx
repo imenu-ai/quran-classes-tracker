@@ -99,6 +99,15 @@ export default function ClassScreen() {
                 {t("classes.studentCount", { count: students.active.length })}
               </Text>
             </View>
+            {access.can("reports.view") ? (
+              <Button
+                variant="plain"
+                label={t("classStats.button")}
+                onPress={() =>
+                  router.push({ pathname: "/class-stats/[id]", params: { id: cls.id } })
+                }
+              />
+            ) : null}
             {addButton}
             {students.active.map((student) => (
               <ListRow

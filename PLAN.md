@@ -512,7 +512,7 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
   - The today card: attendance (present / absent / excused with its note), due homework as collapsible items, the mark wheel, postpone and undo, recite now, next-day homework with the suggestion.
   - The searchable sura sheet and ayah fields with live errors; exams with the violet rows.
   - The month table with month navigation and the edit sheet for past days; view-only mode.
-- [ ] **2.10 Class statistics.** Year and month filter (native menus), attendance rate and average marks, the ranked students (§0 #34–36).
+- [x] **2.10 Class statistics.** Year and month filter (native menus), attendance rate and average marks, the ranked students (§0 #34–36).
 - [ ] **2.11 Settings and administration.** Profile, password, theme, sync details with retry/discard, center settings (name, time zone); user management for admins: create, edit classes and permissions, reset password, disable.
 - [ ] **2.12 Printing and the parent link.**
   - HTML month sheets from the shared builders (font embedded, QR as SVG) through `expo-print`: print, or save and share a PDF.
@@ -734,3 +734,15 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
 
     Postponing and view-only mode are covered by Jest (postponing needs homework from an earlier day). iOS is the user's check.
   - Tests: core 428 in 26 files, web 279 in 34 (the ayah-range tests moved to core), mobile 44 in 7. Web `next build` compiles.
+
+- 2026-10-25 (2.10):
+  - **Class statistics** (`(home)/class-stats/[id]`), reached from the class page's "الإحصائيات" button (`reports.view`), show the same data as the web through the shared `loadClassStatistics`: the attendance rate with its counts, the two average marks, and the ranked students (top three highlighted), each opening their page. Without `reports.view` the screen says so.
+  - **The period** comes from a native header menu instead of the web's two selects: "كل الأوقات" at the top, then a submenu per year with "كل الأشهر" and the twelve months, the current choice ticked. The chosen period is shown in the screen ("الفترة: أكتوبر 2026"). It's screen state, not a URL parameter as on the web.
+  - "طباعة كشوف الطلاب" waits for printing (2.12).
+  - **Checked on the emulator** with two students, one present and one absent:
+    - all time showed 50% and the ranking;
+    - the menu and its year submenu opened; August showed "no lessons" and October the figures again;
+    - a ranked student opened their page.
+
+    The year submenu's arrow is drawn by Expo UI's Compose menu and points right in Arabic too; it isn't ours to mirror. iOS is the user's check.
+  - Tests: mobile 47 in 8 (core and web unchanged).
