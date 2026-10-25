@@ -1,18 +1,18 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Db } from "mongodb";
-import { monthKey, todayInTimeZone } from "@/domain/dates/local-date";
+import { monthKey, todayInTimeZone } from "@qct/core/domain/dates/local-date";
 import {
   buildMonthSheet,
   buildStudentProfile,
   referencedLessonIds,
   type HistoryRow,
-} from "@/domain/stats/month-sheet";
-import { DEFAULT_TIME_ZONE } from "@/i18n/config";
-import type { ParentError, ParentReport, ParentRow } from "@/shared/parent";
-import type { AttendanceRecord } from "@/shared/schemas/attendance";
-import { isExam, type HomeworkRecord } from "@/shared/schemas/homework";
-import type { LessonRecord } from "@/shared/schemas/lesson";
-import { normalizeParentId, type StudentRecord } from "@/shared/schemas/student";
+} from "@qct/core/domain/stats/month-sheet";
+import { DEFAULT_TIME_ZONE } from "@qct/core/i18n/config";
+import type { ParentError, ParentReport, ParentRow } from "@qct/core/shared/parent";
+import type { AttendanceRecord } from "@qct/core/shared/schemas/attendance";
+import { isExam, type HomeworkRecord } from "@qct/core/shared/schemas/homework";
+import type { LessonRecord } from "@qct/core/shared/schemas/lesson";
+import { normalizeParentId, type StudentRecord } from "@qct/core/shared/schemas/student";
 import { COLLECTIONS } from "./collections";
 import {
   consumeRateLimit,

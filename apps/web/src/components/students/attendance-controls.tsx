@@ -5,13 +5,13 @@ import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useApp } from "@/client/app-context";
-import { setExcuseNote } from "@/client/data/attendance";
+import { setExcuseNote } from "@qct/core/data/entities/attendance";
 import { cn } from "@/lib/utils";
 import {
   ATTENDANCE_STATUSES,
   EXCUSE_NOTE_MAX,
   type AttendanceStatus,
-} from "@/shared/schemas/attendance";
+} from "@qct/core/shared/schemas/attendance";
 
 /** Each status has its own color when selected: green, red, amber. */
 const SELECTED: Record<AttendanceStatus, string> = {

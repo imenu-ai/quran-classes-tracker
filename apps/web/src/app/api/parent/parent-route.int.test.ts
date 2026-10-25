@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { COLLECTIONS } from "@/server/collections";
 import { ensureIndexes } from "@/server/indexes";
-import { classRecord, studentRecord } from "@/test/records";
+import { classRecord, studentRecord } from "@qct/core/test/records";
 import { startTestMongo } from "@/test/mongo";
 import { DELETE, POST } from "./route";
 

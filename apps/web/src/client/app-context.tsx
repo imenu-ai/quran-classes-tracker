@@ -11,23 +11,25 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { openLocalDb, type LocalDb } from "./db/dexie";
-import { LocalStore } from "./db/local-store";
+import type { LocalDatabase } from "@qct/core/data/database";
+import { LocalStore } from "@qct/core/data/local-store";
+import { SyncEngine, type SyncStatus } from "@qct/core/data/sync/engine";
+import { openLocalDatabase } from "./db/dexie";
 import {
   bootstrapSession,
   getDeviceId,
   readSession,
   type SessionSnapshot,
 } from "./session/session";
-import { SyncEngine, type SyncStatus } from "./sync/engine";
 import { requestPersistentStorage } from "./pwa/install";
 import { warmPageCache } from "./pwa/page-cache";
 import { attachNavigationGuard } from "./navigation-guard";
+import { browserIsOnline, webSyncLock } from "./sync/browser";
 import { attachSyncTriggers } from "./sync/triggers";
 
 export interface AppServices {
   session: SessionSnapshot;
-  db: LocalDb;
+  db: LocalDatabase;
   store: LocalStore;
   engine: SyncEngine;
 }
@@ -86,10 +88,12 @@ export function AppProvider({
 
     void getDeviceId().then((deviceId) => {
       if (cancelled) return;
-      const db = openLocalDb(userId);
+      const db = openLocalDatabase(userId);
       const store = new LocalStore(db, { tenantId, deviceId });
       engine = new SyncEngine({
         db,
+        lock: webSyncLock,
+        isOnline: browserIsOnline,
         getAccessVersion: () => accessVersion.current,
         // New classes or permissions: the engine rebuilt the local copy;
         // refresh the saved session so the UI shows the new access.

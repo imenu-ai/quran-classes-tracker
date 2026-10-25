@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/client/auth/auth-client";
-import { emailSchema } from "@/shared/access";
-import { parseWithCodes } from "@/shared/schemas/errors";
+import { emailSchema } from "@qct/core/shared/access";
+import { parseWithCodes } from "@qct/core/shared/schemas/errors";
 import { useErrorMessage } from "@/i18n/use-error-message";
 
 /**

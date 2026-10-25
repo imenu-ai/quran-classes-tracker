@@ -18,8 +18,8 @@ import {
   type UpdateCenterInput,
   type UpdateMemberInput,
   type UpdateProfileInput,
-} from "@/shared/access";
-import { parseWithCodes, type FieldError } from "@/shared/schemas/errors";
+} from "@qct/core/shared/access";
+import { parseWithCodes, type FieldError } from "@qct/core/shared/schemas/errors";
 import { getAuth } from "./auth/auth";
 import { hashPassword } from "./auth/password";
 import { COLLECTIONS } from "./collections";
@@ -35,7 +35,9 @@ export type CenterErrorCode =
   | "NOT_FOUND"
   | "LAST_ADMIN"
   | "CLASS_NOT_FOUND"
-  | "FORBIDDEN";
+  | "FORBIDDEN"
+  | "WRONG_PASSWORD"
+  | "RATE_LIMITED";
 
 export class CenterError extends Error {
   constructor(
@@ -53,7 +55,7 @@ export class CenterError extends Error {
 const isDuplicateKey = (error: unknown) =>
   error instanceof MongoServerError && error.code === 11000;
 
-function parse<T extends Parameters<typeof parseWithCodes>[0]>(schema: T, input: unknown) {
+export function parse<T extends Parameters<typeof parseWithCodes>[0]>(schema: T, input: unknown) {
   const result = parseWithCodes(schema, input);
   if (!result.success) throw new CenterError("INVALID_INPUT", result.errors);
   return result.data;
@@ -254,7 +256,7 @@ async function getMemberOrThrow(db: Db, tenantId: string, userId: string) {
 }
 
 /** True when `userId` is the only active admin left in the center. */
-async function isLastActiveAdmin(db: Db, tenantId: string, userId: string) {
+export async function isLastActiveAdmin(db: Db, tenantId: string, userId: string) {
   const others = await membersCollection(db).countDocuments({
     tenantId,
     role: "admin",

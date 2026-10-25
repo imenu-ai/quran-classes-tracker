@@ -1,6 +1,6 @@
 # Implementation Plan: Quran Memorization (تحفيظ القرآن)
 
-Status: **Phase 1 done (the PWA, deployed on Amplify). Phase 2 (React Native app) planned, waiting for the go-ahead.** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-22
+Status: **Phase 1 done (the PWA, deployed on Amplify). Phase 2 (React Native app) in progress: 2.1–2.6 done.** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-24
 
 Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bottom)
 
@@ -61,7 +61,7 @@ Agreed with the user from 2026-10-05 on; the date marks when a group was added.
 | 47 | Repo | A pnpm monorepo: `apps/web` (the Next.js app), `apps/mobile` (Expo), `packages/core` (React-free TypeScript: domain, shared schemas and sync rules, messages, the data layer). Amplify builds `apps/web`. |
 | 48 | One data layer | `LocalStore`, the outbox, the sync engine and the per-entity actions move to `packages/core`, written against a small storage interface. The web keeps Dexie; the app uses **SQLite (expo-sqlite)**. Same rules, same tests, one place. |
 | 49 | Mobile auth | Better Auth's **Expo plugin**; the session token lives in the device's secure storage (SecureStore). Same 400-day session, same center code + username + password sign-in. |
-| 50 | Registration and deletion | Centers can register in the app. Apple requires in-app account deletion for that, so deletion is the step before store submission (2.15); its details are agreed before that step. |
+| 50 | Registration and deletion | Centers can register in the app. Apple requires in-app account deletion for that (2.15, agreed 2026-10-25): every user can delete his own account (his sign-in and personal details; the center's records stay), except the center's last active admin. An admin can delete the center with all its users and records. Both ask for the password again, in the app and on the web. |
 | 51 | Builds and stores | **EAS Build** in the cloud (iOS builds from Windows) and **EAS Submit**; **EAS Update** for JS-only fixes. App Store first (account exists); Google Play when its developer account is created. |
 | 52 | Older app versions | Installed apps update slowly, so the API stays backward-compatible with every released app version: new fields are optional with server-side defaults (as in §4), and endpoints aren't renamed or removed. |
 | 53 | Direction on mobile | React Native sets direction when the app starts (`I18nManager`), not per screen. The app starts in RTL (only `ar` is enabled); a language change reloads the app. Styles use `start`/`end` only. |
@@ -185,10 +185,39 @@ Response: `{ results: [{ id, status: 'applied' | 'stale' | 'rejected', code?, pa
 
 ### 2.13 The mobile app (Phase 2, planned)
 - **Same server, same protocol.** The app calls the existing `/api/*` routes on Amplify (base URL from `EXPO_PUBLIC_API_URL`). Better Auth's Expo plugin sends the session cookie from SecureStore; the app's own API calls add it too and save a renewed one from `withTenant`.
-- **Local data:** one SQLite file per user (`qct-<userId>.db`) and a device-level one (`qct-app.db`: session snapshot, device id, center code). Each syncable table stores the record as JSON plus the columns the Dexie indexes use today (§4). Screens subscribe to the tables they read; `LocalStore` notifies them after each committed transaction, which replaces `useLiveQuery`.
+- **Local data:** one SQLite file per user (`qct-<userId>.db`) and a device-level one (`qct-app.db`: session snapshot, device id, center code). Each syncable table stores the record as JSON plus the columns the Dexie indexes use today (§4). Screens subscribe to the tables they read; `LocalStore` notifies them after each committed transaction, which replaces `useLiveQuery` (§2.14).
+- **SQLite rules (measured in the 2026-10-24 spike):**
+  - Writes only go through one in-app write queue, and transactions only through `withExclusiveTransactionAsync`, with `PRAGMA busy_timeout` as a safety net. `withTransactionAsync` doesn't isolate: a write made elsewhere during it joins it and is rolled back with it. Without `busy_timeout`, a write during an exclusive transaction fails with "database is locked".
+  - SQLite's own change listener isn't used: it fires once per row, mid-transaction, and even for rolled-back writes.
+  - Bulk writes insert up to 100 rows per statement: 5,000 records took 0.55 s, against 4.6 s one row at a time.
+- **Hermes gaps:** Hermes has no `Intl.PluralRules`, `Intl.Locale`, `Intl.RelativeTimeFormat`, `Intl.supportedValuesOf` or `crypto.getRandomValues`.
+  - Without them, plural messages render their key, `getDirection` falls back to `ltr` for Arabic, and `uuid` throws.
+  - The app loads FormatJS polyfills (with `ar` and `en` data) and `expo-crypto`'s `getRandomValues` before anything else. With them, every probed format matched Node.
+  - `DateTimeFormat` (including Asia/Hebron daylight saving) and `NumberFormat` are native and already match.
 - **Sync engine:** the shared engine from `packages/core` with mobile triggers: app start, `AppState → active`, NetInfo back online, 1.5 s after writes, every 60 s while active. Single-flight is an in-process lock (one JS runtime). Logout and a forced logout delete the user's database file.
 - **Not carried over:** the service worker, page-shell cache, install guide, `storage.persist()` and the navigation guard (native navigation doesn't abort pending writes).
 - **Printing:** the shared month-sheet builders produce an HTML sheet (embedded font, QR as SVG); `expo-print` opens the system print dialog or saves a PDF to share.
+
+### 2.14 One data layer (Phase 2, step 2.4, planned)
+`LocalStore`, the outbox, apply-pull, the sync engine and the per-entity actions and queries move into `packages/core` and talk to a small **storage interface**. Each app supplies an **adapter**: Dexie on the web (2.4), SQLite on mobile (2.7).
+
+- **Async.** Every operation returns a Promise. IndexedDB is async-only, and expo-sqlite's async API keeps queries off the UI thread. The synchronous `node:sqlite` is wrapped for tests.
+- **A small set of operations** per table, the only ones shared code may use:
+  - `get`, `bulkGet`, `put`, `bulkPut`, `delete`, `bulkDelete`;
+  - `query(table, index, …)` with `equals`, `between` or `anyOf`, on the indexes of §4's Dexie list (including `[classId+date]`).
+
+  Sorting, filtering and statistics stay in plain TypeScript after the fetch, as today. Each operation maps directly to Dexie, and to SQL on indexed columns.
+- **Transactions pass an explicit handle.** `store.transaction(async (tx) => { … })`. The callback can only reach `tx`, which has the reads above and the `LocalStore` writes (`create`, `update`, `upsert`, `softDelete`, `restore`). That makes it all or nothing on both platforms. Dexie's implicit transaction zone has no SQLite equivalent.
+  - Web: one Dexie read-write transaction over every data table, so actions no longer list their tables (`writableTables` goes away).
+  - Mobile: §2.13's write queue and exclusive transaction.
+- **Change notifications after commit.** `LocalStore`, and apply-pull for synced records, announce the set of tables a committed transaction changed.
+  - The mobile screen hook re-runs a query when a table it read changed.
+  - The web ignores the announcements: `useLiveQuery` already sees Dexie's writes, so web screens don't change.
+- **Shared queries.** The per-entity read functions (a class's students, a student's month…) live in core and take a reader, either the store or `tx`.
+  - The web's hooks wrap them in `useLiveQuery`; Dexie tracks reads made through its adapter.
+  - Mobile's hooks wrap them in the subscription hook.
+- **One contract test suite** runs against every adapter: Dexie on `fake-indexeddb` in 2.4, SQLite on `node:sqlite` in 2.7. The existing `LocalStore`, action and sync tests then run unchanged on top of each.
+- **Injected platform pieces.** The sync engine gets its lock, triggers, `fetch`, clock and online check from the app. The web passes Web Locks and the browser events it uses today.
 
 ---
 
@@ -202,8 +231,29 @@ A pnpm workspace since 2.2 (`pnpm-workspace.yaml`, `.npmrc` with `node-linker=ho
 ├── package.json         root scripts (pass-through) · Prettier
 ├── infra/               amplify-stack.yml · github-deploy-role.yml
 ├── .github/workflows/   ci.yml (lint + typecheck on PRs) · deploy-stack.yml
+├── packages/core/       React-free shared code, package @qct/core (TypeScript source; the
+│   │                    importing app compiles it: Next's transpilePackages)
+│   ├── messages/            ar.json · en.json
+│   └── src/
+│       ├── domain/          PURE: quran (sura map, validation, search) · homework (suggestion,
+│       │                    progress) · stats (monthly, class, month-sheet) · dates · text
+│       ├── shared/          client + server: schemas · sync (protocol, lww, tables) · access ·
+│       │                    ids · session · parent
+│       ├── data/            storage interface · LocalDatabase · memory adapter · LocalStore ·
+│       │                    outbox · sync (engine, apply-pull, rejected, backoff, indicator) ·
+│       │                    entities (actions and queries) · testing (suites for every adapter)
+│       ├── i18n/            config · direction · formats · error messages
+│       └── test/            record builders
+├── apps/mobile/         the Expo app, package @qct/mobile (EAS project @imenu/quran-classes-tracker)
+│   ├── index.ts             entry: polyfills first, then Expo Router
+│   ├── app.json · eas.json  ai.imenu.quran · RTL at start · fonts · splash · build profiles
+│   └── src/
+│       ├── app/             routes: (tabs) with native tabs, a stack per tab
+│       ├── components/      Text · Screen · EmptyState · stack options · the dev Intl check
+│       ├── i18n/            locale · use-intl provider · message types
+│       ├── theme/           colors (the web's tokens) · fonts · useTheme
+│       └── polyfills.ts     Intl and crypto for Hermes
 └── apps/web/            the Next.js app, package @qct/web
-    ├── messages/            ar.json · en.json
     ├── scripts/             center-create.ts · db-indexes.ts · dev-seed.ts
     ├── e2e/                 main-flow · offline · roles · parent · ltr-smoke specs; server.mts
     └── src/
@@ -214,21 +264,17 @@ A pnpm workspace since 2.2 (`pnpm-workspace.yaml`, `.npmrc` with `node-linker=ho
         │   ├── (print)/     print
         │   ├── parent/      the parent page
         │   └── api/         auth · sync/push · sync/pull · me · account · centers · center · parent
-        ├── domain/          PURE: quran (sura map, validation, search) · homework (suggestion,
-        │                    progress) · stats (monthly, class, month-sheet) · dates · text
-        ├── shared/          client + server: schemas · sync (protocol, lww, tables) · access ·
-        │                    ids · session · parent
-        ├── i18n/            config · direction · request · formats · error messages
+        ├── i18n/            request (next-intl) · message types · useErrorMessage
         ├── server/          env · db · indexes · auth · repositories · sync · centers · members ·
         │                    parent · email (SES) · rate-limit
-        ├── client/          db (Dexie, LocalStore, outbox) · data (hooks and actions per entity) ·
-        │                    sync (engine, apply-pull, triggers, backoff) · session · auth · pwa
+        ├── client/          db (Dexie schema and adapter) · data (live-query hooks) ·
+        │                    sync (triggers, Web Locks) · session · auth · pwa
         ├── components/      ui (shadcn, rtl) · shell · classes · students · homework · lessons ·
         │                    print · parent · users · settings · auth · quran
         └── test/            setup, fake-indexeddb, mongo-memory helpers
 ```
 
-Tests sit next to the code as `*.test.ts(x)`. Server integration tests are `*.int.test.ts` and use `mongodb-memory-server`.
+Tests sit next to the code as `*.test.ts(x)`; each package runs its own with Vitest. Server integration tests are `*.int.test.ts` and use `mongodb-memory-server`.
 
 ---
 
@@ -351,16 +397,20 @@ Records pulled from the server aren't re-validated on the device, so newer field
 | @playwright/test | 1.63.x | E2E: iPhone 15 (WebKit), Pixel 7, Desktop Chrome. |
 | tsx | latest | Runs the TS CLI scripts. |
 
-Fonts: IBM Plex Sans Arabic (`ar`) and IBM Plex Sans (`en`) via `next/font/google`, self-hosted. Node 22 LTS (`.nvmrc`, `engines`).
+Fonts: IBM Plex Sans Arabic (`ar`) and IBM Plex Sans (`en`) via `next/font/google`, self-hosted. Node 22 LTS, at least 22.13 for `node:sqlite` (`.nvmrc`, `engines`).
 
-**Mobile (Phase 2, planned; exact versions pinned in 2.5)**
+**Mobile (Phase 2; versions pinned in `apps/mobile/package.json` since 2.5: Expo 58.0.19, Expo Router 58.0.26, React Native 0.88.0, React 19.3.0, use-intl 4.14.9, jest-expo 58.0.12)**
 
 | Library | Why |
 |---|---|
-| expo (latest stable SDK at 2.5; SDK 56 = React Native 0.85, React 19.2) + dev client | New Architecture, config plugins, dev builds (Expo Go can't load our native modules). |
+| expo **SDK 58** (React Native 0.88, React 19.3; current on 2026-10-24) + dev client | New Architecture, config plugins, dev builds (Expo Go can't load our native modules). |
 | expo-router | File routes, native stack, native tabs, form sheets, header search. |
-| expo-sqlite | The local database (#48). |
-| better-auth + @better-auth/expo, expo-secure-store | Sign-in and the stored session (#49). A known issue: SecureStore rejects `:` in keys, so the storage adapter maps them. |
+| expo-sqlite | The local database (#48, §2.13 SQLite rules): one `qct-<userId>.db` per user since 2.7, and `qct-app.db` (session, device id, center code) since 2.6. |
+| @expo/ui | Needed on Android by Expo Router's native header buttons and menus (`Stack.Toolbar`), which it draws with Jetpack Compose; iOS uses UIKit's own (2.8). |
+| react-native-keyboard-controller (+ react-native-reanimated, react-native-worklets) | The field being typed in stays above the keyboard on edge-to-edge Android (2.6). |
+| expo-clipboard, expo-web-browser | Copying the center code; the web's forgot-password page (the picker below also gives registration its time zone list). |
+| better-auth + @better-auth/expo (same version as the server), expo-secure-store, expo-network, expo-linking, expo-constants, expo-web-browser | Sign-in and the stored session (#49). The plugin replaces `:` in SecureStore keys and splits large values itself. The last four are its required peers. Since 2.7, expo-network also tells the sync engine when the phone goes offline or comes back. |
+| @formatjs/intl-getcanonicallocales, -locale, -pluralrules, -relativetimeformat, -enumerator; expo-crypto | Hermes's missing `Intl` APIs and `crypto.getRandomValues` (§2.13). |
 | use-intl | The core of next-intl: same ICU messages and `useTranslations` API. |
 | @react-native-picker/picker, @react-native-community/datetimepicker | The mark wheel (#32) and the system date picker. |
 | @react-native-community/netinfo | Online/offline trigger. |
@@ -378,7 +428,7 @@ Fonts: IBM Plex Sans Arabic (`ar`) and IBM Plex Sans (`en`) via `next/font/googl
 | Phase | Status |
 |---|---|
 | 1. The PWA: offline-first web app for centers, teachers and parents | [x] Done |
-| 2. React Native app: iOS and Android, phones and tablets | [ ] Planned, waiting for the go-ahead |
+| 2. React Native app: iOS and Android, phones and tablets | [ ] In progress |
 
 Every step ends with `pnpm lint && pnpm typecheck && pnpm test`, then one Conventional Commit on `dev`, then a tick in this file. Stop at the end of each phase for the go-ahead.
 
@@ -405,7 +455,11 @@ Built in 14 parts, in this order. Each part was planned, verified (unit, integra
 
 An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's features, native navigation and native controls (§0 #43–53, §2.13). Steps 2.1–2.4 prepare the repo and keep the web app unchanged; 2.5–2.13 build the app; 2.14–2.16 test, add account deletion and release.
 
-**Prerequisites:** an Expo (EAS) account; Android Studio with an emulator (phone and tablet) on the development machine; the Apple Developer account (have it); a Google Play developer account before 2.16's Android part.
+**Prerequisites:**
+- Done: an Expo (EAS) account (signed in); Android Studio with phone and tablet emulators (`qct_phone`, `qct_tablet`); the Apple Developer account.
+- Before 2.5: Windows long paths turned on (`LongPathsEnabled`, a one-time admin change). Otherwise local Android builds of `apps/mobile` may hit the 260-character path limit, and the app would build only on EAS.
+- Before 2.5's iPhone check: your iPhone registered for development builds (`eas device:create`).
+- Before 2.16's Android part: a Google Play developer account.
 
 **Verification per step:** `pnpm lint && pnpm typecheck && pnpm test` from the root runs every workspace package. Web steps also run `pnpm build` and the web E2E suite. Mobile UI steps are checked on the Android emulator (Claude) and on your iPhone/iPad dev build (you), at 360 dp in RTL, light and dark.
 
@@ -415,43 +469,58 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
   - Amplify build spec: `appRoot: apps/web` and `AMPLIFY_MONOREPO_APP_ROOT`; install only the web app's dependencies (`--filter`), still with the hoisted `node-linker`. CI runs lint and typecheck across the workspace.
   - Update README, `CLAUDE.md` and the three skills for the new paths.
   - Web behaviour unchanged: unit, integration and E2E tests and `pnpm build` green. **You deploy the stack change with the merge**; Amplify's first build of `main` may start before the stack update finishes and need one re-run.
-- [ ] **2.3 `packages/core`.** Move the pure code: `src/domain`, `src/shared`, the platform-free parts of `src/i18n` (config, direction, formats, error codes) and `messages/`. React-free, Vitest, imported as `@qct/core/...`. Web unchanged; tests move with their code.
-- [ ] **2.4 One data layer (#48).**
-  - A small storage interface in `packages/core`: tables with get / bulk get / query by index / put / delete, a transaction over several tables, plus outbox, rejected and meta.
-  - Move `LocalStore`, the outbox, apply-pull, the sync engine (with injected lock, triggers, `fetch` and clock), backoff, the indicator state and the per-entity actions (`src/client/data`) onto it.
-  - The web keeps a Dexie adapter and its `useLiveQuery` hooks. Every existing test runs against the Dexie adapter; web behaviour unchanged.
-- [ ] **2.5 Expo app scaffold (`apps/mobile`).**
-  - Latest stable Expo SDK, dev client, `ai.imenu.quran`, URL scheme, EAS profiles (development, preview, production), runtime version per app version.
+- [x] **2.3 `packages/core`.** Move the pure code: `src/domain`, `src/shared`, the platform-free parts of `src/i18n` (config, direction, formats, error codes) and `messages/`. React-free, Vitest, imported as `@qct/core/...`. Web unchanged; tests move with their code.
+- [x] **2.4 One data layer (#48, §2.14).**
+  - The storage interface in `packages/core`:
+    - async;
+    - per table: `get`, `bulkGet`, `query` by index (`equals`, `between`, `anyOf`), `put`, `bulkPut`, `delete`, `bulkDelete`;
+    - the outbox, rejected and meta stores;
+    - `transaction(fn)`, which passes an explicit `tx` handle;
+    - change notifications after commit.
+  - A contract test suite for adapters, and the Dexie adapter, which passes it on `fake-indexeddb`.
+  - Move these onto it: `LocalStore`, the outbox, apply-pull, the sync engine (with the lock, triggers, `fetch`, clock and online check injected), backoff, the indicator state, and the per-entity actions and queries (`src/client/data`).
+  - Multi-record actions take `tx` instead of Dexie's implicit transaction; `writableTables` goes away.
+  - The web keeps its `useLiveQuery` hooks, now wrapping the shared queries. Every existing test runs against the Dexie adapter, and web behaviour is unchanged: unit, integration and E2E tests and `pnpm build` green.
+- [x] **2.5 Expo app scaffold (`apps/mobile`).**
+  - **Setup:**
+    - Expo SDK 58, dev client, `ai.imenu.quran`, URL scheme, EAS profiles (development, preview, production), runtime version per app version.
+    - Metro resolves `@qct/core` from the workspace.
+    - One TypeScript version across the workspace: the repo's 5.9.3, unless Expo needs 6, which its template ships. Core type-checks under both.
+  - **Polyfills first (§2.13):** FormatJS (`ar`, `en`) and `expo-crypto`, loaded before anything else. A Jest test renders Arabic plurals and dates through them.
+  - **A fix in core:** `toAppLocale` and `getDirection` read the language subtag without `Intl.Locale`, so a missing polyfill can't silently turn Arabic into LTR.
   - RTL at start (#53), IBM Plex Sans Arabic, light/dark theme tokens, `use-intl` with the shared messages.
-  - Check Hermes `Intl` on both platforms (Arabic `PluralRules`, `DateTimeFormat` with a time zone, `numberingSystem: 'latn'`); add `@formatjs` polyfills only where missing.
   - ESLint blocks physical style props (`marginLeft`, `paddingRight`, `left`, `textAlign: 'left'`…) like the web's logical-class rule.
   - Jest (jest-expo) with Testing Library. Expo Router skeleton with native tabs and stacks and empty screens.
   - Add the mobile UI rules (logical styles, native controls, RTL, tablet widths) to the `rtl-i18n-ui` skill.
   - Checked on the Android emulator and on your iPhone dev build.
-- [ ] **2.6 Sign-in on mobile.**
+- [x] **2.6 Sign-in on mobile.**
   - Server: the Better Auth Expo plugin and the app scheme in `trustedOrigins`; integration tests that the cookie-header client works with `withTenant` (including the renewed cookie) and sync.
   - App: SecureStore storage adapter; sign-in with center code + username + password (code remembered); center registration; forgot password (the email's link opens the web reset page); the forced first password change; the session snapshot from `/api/me`; the signed-out gate.
-- [ ] **2.7 SQLite storage and sync on mobile.**
-  - The SQLite adapter (§2.13): per-user and device databases, schema migrations, transactions, change notifications and the screen hook that replaces `useLiveQuery`.
-  - Tested in Vitest through the same SQL interface on `node:sqlite`, running the shared LocalStore and sync tests.
+- [x] **2.7 SQLite storage and sync on mobile.**
+  - The SQLite adapter (§2.13, §2.14):
+    - per-user and device databases, and schema migrations;
+    - the write queue with exclusive transactions and `busy_timeout`;
+    - `bulkPut` at up to 100 rows per statement;
+    - change notifications from `LocalStore`, and the screen hook that replaces `useLiveQuery`.
+  - Tested in Vitest through the same SQL on `node:sqlite`: it passes the 2.4 contract suite and runs the shared `LocalStore` and sync tests. `node:sqlite` needs no flag from Node 22.13, so `engines` and `.nvmrc` move to at least 22.13.
   - Mobile triggers and lock, the sync indicator, 401 → sign-in banner, `accessVersion` resync. Logout with the unsynced warning and "sync now"; database wipe.
   - Checked: offline writes on the emulator sync to a local server and show up in the web app.
-- [ ] **2.8 Home, classes and students.**
+- [x] **2.8 Home, classes and students.**
   - Native tabs (home, search, settings, users for admins). Class cards; create, rename and archive (blocked with active students) in form sheets; archived classes.
   - The class page's student list; add, edit, move and archive students (including the parent ID); the header search bar with Arabic normalization; empty and loading states; access (hidden or read-only).
-- [ ] **2.9 The student page.**
+- [x] **2.9 The student page.**
   - The today card: attendance (present / absent / excused with its note), due homework as collapsible items, the mark wheel, postpone and undo, recite now, next-day homework with the suggestion.
   - The searchable sura sheet and ayah fields with live errors; exams with the violet rows.
   - The month table with month navigation and the edit sheet for past days; view-only mode.
-- [ ] **2.10 Class statistics.** Year and month filter (native menus), attendance rate and average marks, the ranked students (§0 #34–36).
-- [ ] **2.11 Settings and administration.** Profile, password, theme, sync details with retry/discard, center settings (name, time zone); user management for admins: create, edit classes and permissions, reset password, disable.
-- [ ] **2.12 Printing and the parent link.**
+- [x] **2.10 Class statistics.** Year and month filter (native menus), attendance rate and average marks, the ranked students (§0 #34–36).
+- [x] **2.11 Settings and administration.** Profile, password, theme, sync details with retry/discard, center settings (name, time zone); user management for admins: create, edit classes and permissions, reset password, disable.
+- [x] **2.12 Printing and the parent link.**
   - HTML month sheets from the shared builders (font embedded, QR as SVG) through `expo-print`: print, or save and share a PDF.
   - Both entry points: "طباعة الشهر" and the class's "طباعة كشوف الطلاب" (month, "تحديد الكل").
   - "رابط ولي الأمر": the web link, copy, the share sheet and its QR.
-- [ ] **2.13 Tablets.** iPad and Android tablet layouts: multi-column grids and readable content widths where the web uses two columns; phones portrait, tablets in all orientations (iPad multitasking needs it). Checked on your iPad and an Android tablet emulator.
-- [ ] **2.14 Mobile E2E and device checks.** Maestro flows on the Android emulator (main flow, offline, roles) with their own seeded server; an `en` LTR smoke render in Jest; a README checklist for iPhone and iPad (offline, print, share, RTL).
-- [ ] **2.15 Account deletion (#50).** Who can delete what (e.g. an admin deletes the center and all its data; a teacher deletes his own account) is agreed with you before the step. The API, the app screens, and the same option on the web.
+- [x] **2.13 Tablets.** iPad and Android tablet layouts: multi-column grids and readable content widths where the web uses two columns; phones portrait, tablets in all orientations (iPad multitasking needs it). Checked on your iPad and an Android tablet emulator.
+- [x] **2.14 Mobile E2E and device checks.** Maestro flows on the Android emulator (main flow, offline, roles) with their own seeded server; an `en` LTR smoke render in Jest; a README checklist for iPhone and iPad (offline, print, share, RTL).
+- [x] **2.15 Account deletion (#50).** Every user deletes his own account, except the last active admin; an admin deletes the center and all its data (agreed with you). The API, the app screens, and the same option on the web.
 - [ ] **2.16 Release.**
   - App icon, splash screen, a privacy policy page on the web, a demo center for App Review.
   - App Store: listing in Arabic and English, EAS production build, TestFlight, then submission. EAS Update channel for JS fixes.
@@ -502,3 +571,294 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
   - Amplify's docs require a root `.npmrc` with `node-linker=hoisted` for a pnpm monorepo, so local installs are hoisted now too (before, only the Amplify build passed the flag). The build spec runs from the workspace root (`buildPath: /`) with `appRoot: apps/web`, the matching `AMPLIFY_MONOREPO_APP_ROOT` app variable, a `--filter "@qct/web..."` install, the secret written to `apps/web/.env`, and artifacts in `apps/web/.next`. The filtered, frozen-lockfile install and the build were rehearsed on a clean export of the commit.
   - Root scripts pass through (`pnpm --filter @qct/web …` or `pnpm -r …`), so every documented command still runs from the root; CI needed no change. Prettier stays at the root for the whole workspace. Root-anchored ignore patterns moved to `apps/web/.gitignore`.
   - `E2E_PORT` overrides the E2E port: another project's `next start` held 3100 on this machine.
+- 2026-10-24 (2.3):
+  - `@qct/core` ships TypeScript source with no build step. `exports` maps `./*` to `./src/*.ts`, plus the two folder entry points and `./messages/*`. The web app compiles it through `transpilePackages`, which also bundles it into the server chunks. That matters on Amplify, whose SSR packaging misses symlinked packages: the build output never `require`s it. Metro reads the same `exports` later.
+  - Inside core, imports are relative. Its ESLint config (typescript-eslint, no Next rules) blocks React, Next, Dexie, Expo and `@/` imports. Its tsconfig has no DOM types, so code that only works in browsers fails the typecheck.
+  - The test record builders (`src/test/records.ts`) moved too, because a domain test uses them; web tests import them from `@qct/core/test/records`. Core's i18n tests use `createTranslator` from `use-intl/core` (the library inside next-intl, and the one the app will use). `formats.ts` declares its own `Formats` shape instead of importing next-intl's. `request.ts` loads the messages through a fixed map, since a template-string import can't cross into a package.
+  - Same totals as before: 487 tests in 67 files (core 202 in 18, web 285 in 49). `next build` and the E2E suite pass.
+- 2026-10-24 (native spike, before 2.4): the user asked for a short throwaway Expo app before designing the storage interface. It ran outside the repo on the `qct_phone` emulator, with a Better Auth server configured like `apps/web`, and compared Hermes with Node on 50 cases. It found:
+  - Expo SDK 58 (React Native 0.88, React 19.3, TypeScript 6 in its template) is current, so 2.5 pins it instead of 56. `@qct/core` loads in Metro as TypeScript source through its `exports`.
+  - The Hermes gaps of §2.13: 22 of 50 cases broke without the polyfills, and 49 matched Node with them. The last one is cosmetic: `resolvedOptions().locale` drops `ca-gregory`, but formatting is identical.
+  - The expo-sqlite rules of §2.13 (isolation, locking, the change listener, bulk speed). Reads are fast: 125 indexed rows parsed from JSON in 7 ms, the whole 5,000-row table in 80 ms. These shaped §2.14's design: an explicit transaction handle, notifications from `LocalStore`, and a batched `bulkPut`.
+  - `node:sqlite` runs the same SQL, but needs no flag only from Node 22.13 (see 2.7).
+  - Better Auth's Expo plugin works with the web config:
+    - username sign-in and the `expo-origin` header (server `expo()` plugin plus the scheme in `trustedOrigins`);
+    - the stored cookie on our own routes, and a renewed cookie readable from `set-cookie` and merged with `getSetCookie`;
+    - sign-out clears it, and Android's own cookie jar sends nothing.
+
+    The `:` key problem the plan expected is fixed upstream. Renewed cookies should be saved through the plugin's storage helper, not written straight to SecureStore: one session check went out without its cookie after a direct write.
+  - The first local Android build took 12 minutes and installed NDK 27.1 by itself. Windows long paths are off on the development machine, so the spike lived in a short folder (see the prerequisites).
+- 2026-10-24 (with the user): the app split was re-confirmed: two separate apps (the web PWA and a native Expo app with native controls) in one repo, sharing `packages/core` including the data layer; phones and tablets; the PWA stays complete (#43–48 unchanged).
+- 2026-10-24 (2.4):
+  - **Dexie's implicit transaction zone doesn't survive deeply nested native async calls.** The first Dexie run of the shared suites failed with `PrematureCommitError`. After two levels of nested `async` functions, a call like `db.table(x).put()` lost the zone and opened a second transaction, which waited for the first while the first committed. The old code never hit this, because each `LocalStore` write opened its own nested Dexie transaction. The adapter now binds every operation inside a transaction to Dexie's transaction object (`trans.table(name)`) and returns Dexie's own promises. That's the explicit handle of §2.14, all the way down. Inside a transaction, only storage work may be awaited.
+  - **Core tests can't use Dexie**, so core has an in-memory adapter: the reference implementation, and a fake for app tests. It copies records in and out, keeps a transaction's writes private until commit, and runs transactions one at a time like SQLite will. An action that wrongly opened a second transaction through `store` instead of `tx` would deadlock there, not pass quietly.
+  - **The moved tests are suites that take an adapter factory** (`packages/core/src/data/testing`): the storage contract, `LocalStore` and the outbox, every entity's actions, apply-pull, discard and the sync engine. `dataLayerSuites` runs them all on the memory adapter in core and on Dexie in the web; 2.7 adds SQLite. Pure tests (search, backoff, indicator) are plain core tests. A web test checks the Dexie schema against `TABLE_SCHEMA`.
+  - **Behaviour changes, all internal:**
+    - `setAttendance`, `setExcuseNote` and `clearAttendance` now read and write in one transaction (they used to read outside one).
+    - apply-pull reads and writes each table in bulk.
+    - `acknowledge` and `markFailed` use bulk operations.
+    - `LocalStore.subscribe` listeners receive the tables a write changed.
+    - The sync engine takes `lock`, `isOnline` and `apiBaseUrl` options. The web passes Web Locks and `navigator.onLine` (`src/client/sync/browser.ts`); without them the engine assumes online and runs unlocked.
+    - The web's `client/data` modules keep their hooks and re-export core's actions. The action-only `lessons`, `attendance` and `homework` modules were removed, and their importers point at core.
+  - **The contract doesn't use an adapter after `destroy`:** Dexie 4 refuses to reopen a deleted database. Each adapter's own test checks that the data is gone.
+  - Tests: core 317 in 22 files (the shared suites on memory, plus the existing core tests), web 286 in 36 files (the shared suites on Dexie, plus the web's own). `next build` compiles; E2E 14 passed, 1 skipped (the offline spec on iPhone WebKit, as always).
+
+- 2026-10-24 (2.5):
+  - **Decisions taken with the user:**
+    - The EAS project is owned by the `imenu` account: `@imenu/quran-classes-tracker`, slug `quran-classes-tracker`, URL scheme `ai.imenu.quran`.
+    - React moved to 19.3.0 across the workspace, the version Expo SDK 58 needs; the web's unit, integration and E2E tests and `next build` pass on it. With pnpm's hoisted layout, two React versions would have risked a duplicate React in the app.
+  - **Setup:**
+    - EAS profiles: `development` (dev client, internal), `preview` (internal) and `production` (auto-increment), each on its own update channel. Build numbers are kept by EAS (`appVersionSource: remote`), and `runtimeVersion` follows the app version.
+    - Metro finds `@qct/core` through Expo's own monorepo support, with no `metro.config.js`.
+    - TypeScript stays 5.9.3, the one workspace version; the app type-checks on it. `expo install` checks skip TypeScript, so `expo-doctor` passes 20/20.
+  - **Fonts are loaded at start with `useFonts`**, not embedded at build time. Embedded fonts get different family names on iOS and Android; loaded ones have one name on both. The splash screen stays up until they're ready, which takes a moment because they're bundled.
+  - **Polyfills:** `index.ts` loads them before Expo Router. The Jest test deletes `Intl.PluralRules`, `Intl.Locale`, `Intl.RelativeTimeFormat` and `Intl.supportedValuesOf` first, so it exercises FormatJS's data as on Hermes. The polyfills check `name in Intl`, so setting a property to `undefined` isn't enough. In core, `getDirection` and `toAppLocale` now use `languageOf()`, a hand parser, instead of `Intl.Locale`.
+  - **Checked on the `qct_phone` emulator, light and dark:**
+    - RTL from the start (even Expo's error overlay); IBM Plex Sans Arabic.
+    - The four native tabs, with labels always shown (Android hides them by default; the web always shows them).
+    - Through the development-only Intl check in Settings: Arabic's six plural forms, dates, weekday, percentage and `uuid` on Hermes.
+  - **Native tabs:** Material-symbol icons on Android need `expo-symbols`.
+  - **Windows toolchain findings:**
+    - `LongPathsEnabled` wasn't enough: the Android SDK's CMake 3.22.1 ships ninja 1.10.2, which still fails on paths over 260 characters (Reanimated's and Gesture Handler's generated C++). With the user's agreement, its `ninja.exe` was replaced by the official 1.12.1, keeping the old one beside it. An SDK update could bring it back (README, Mobile app).
+    - A `node_modules` built up by several incremental `pnpm add` runs with the hoisted linker once broke the Expo CLI: an old `chalk` resolved the wrong `ansi-styles`. A clean `pnpm install --frozen-lockfile` laid it out correctly, and every check ran again on a clean install.
+    - Expo's lint config brings `eslint-plugin-react-hooks` 7, which got hoisted over the web's 5.2 and turned on React Compiler rules in the web's lint. The web now declares `eslint-plugin-react-hooks@^5.2.0` itself.
+    - Metro's watcher on Windows sometimes misses edits; restart it with `--clear`.
+  - **Expo Router bundles every file under `src/app/`** as a route, so a test there broke the app bundle. Tests live outside it.
+  - The template's `AGENTS.md`, `LICENSE` and a `.claude/settings.json` (which turned on an Expo Claude plugin) were left out. Their useful advice (check the docs for the installed SDK, use `expo install`) is in the `rtl-i18n-ui` skill.
+  - **The iPhone check is the user's:** `eas build --profile development --platform ios` from `apps/mobile`. The first run asks for the Apple Developer sign-in, which can't run here.
+  - **Amplify rehearsal on a clean export of the commit:** the build spec's `pnpm install --frozen-lockfile --filter "@qct/web..."` and `pnpm --filter @qct/web build` work. With the hoisted linker, though, the filter doesn't narrow the install: it installs the whole workspace, React Native and Expo included (889 top-level packages either way). That costs install time and cache space, not correctness, since the SSR output traces only what the web uses. Worth revisiting if Amplify build times matter.
+  - Tests: core 318 in 22 files, web 286 in 36, mobile 5 in 2 (Jest). Lint and typecheck cover all three packages. Web `next build` compiles and E2E passes on React 19.3.
+- 2026-10-24 (2.5, the first iPhone build):
+  - **The first EAS iOS build failed:** "Could not find target 'thfyzalqraan' in project.pbxproj". With the Arabic `expo.name`, EAS's build worker computed a transliterated target name that prebuild hadn't created.
+  - **The fix:** `expo.name` is now the English name, "Quran Memorization" (Xcode target `QuranMemorization`). A small config plugin (`apps/mobile/plugins/with-display-name.js`) sets the name under the icon to "تحفيظ القرآن": `CFBundleDisplayName` on iOS, `app_name` on Android (#46 unchanged). A clean Android prebuild and build ran on the emulator with the new names.
+  - **EAS's first iOS build set up EAS Update:** it added `expo-updates` and `updates.url`, since the profiles use channels. The encryption answer is stored as `ITSAppUsesNonExemptEncryption: false`: HTTPS, the Keychain and system random numbers only, which are exempt.
+- 2026-10-24 (2.5, on the user's iPhone): the development build ran on the iPhone, but the large header title sat on the left. `forcesRTL` sets React Native's direction; UIKit's native views (the navigation bar and its large title) follow the app's iOS localization, which defaulted to English. The app now declares Arabic as its only localization (`supportedLocales: ["ar"]`, `CFBundleDevelopmentRegion: "ar"`). This needs a new iOS build.
+
+- 2026-10-24 (2.6):
+  - **Shared with the web, moved to core:** `SessionSnapshot` and `snapshotFromMe`, the sign-in and account error mapping, `normalizeCenterCode`, and the time-zone list. `MOBILE_APP_SCHEME` (`ai.imenu.quran`) is the one source for the app scheme Better Auth trusts.
+  - **Server:** `expo()` and `trustedOrigins: ["ai.imenu.quran://"]`. Integration tests act like the app through the real handlers: sign-in with `expo-origin` and no browser origin, `/api/me` and sync with the cookie in a header, the daily renewal forwarded by `withTenant` (and the renewed cookie working), and sign-out.
+  - **A finding about Better Auth's origin check:** it doesn't stop cookie-carrying requests from a foreign origin, not even a browser `Origin`; they reach the handler. That was already true before this step. The web's protection against cross-site requests is `SameSite=Lax` cookies plus JSON-only requests (no CORS preflight is granted). The native app isn't a browser, so CSRF doesn't apply to it. The trusted origin matters for Better Auth's callback and redirect checks.
+  - **The app:**
+    - Better Auth's Expo client keeps the cookie in SecureStore. One `storageAdapter` is shared with `apiFetch`, which sends the cookie on our own routes and saves a renewed one.
+    - `qct-app.db` (expo-sqlite, synchronous API) holds the session snapshot, the device id and the remembered center code.
+    - The gate uses Expo Router's `Stack.Protected`: signed out shows sign-in and registration, an admin-set password shows its change, otherwise the tabs.
+    - Sign-in and registration are plain screens in the root stack, not a group: a protected route falls back to the first available *screen*, and a group isn't one (it showed "Unmatched Route").
+    - Forgot password opens the web page in the in-app browser. Sign-out in Settings is plain for now; 2.7 adds the unsynced warning and the local data wipe.
+  - **Checked on the emulator against a local server** (the E2E world on port 3105, through `adb reverse`): registering a center through the app (the code card, copy, into the tabs through the cookie the registration set), sign-out, sign-in with the remembered code, a teacher's forced password change, and the session surviving an app restart.
+  - **Android fixes found that way, all in shared components:**
+    - **Clipped text:** Android's default `highQuality` line breaking measured Arabic in the custom font narrower than it laid it out, so the last word wrapped onto a clipped line ("تسجيل الخروج" showed as "تسجيل"). `Text` sets `textBreakStrategy="simple"`.
+    - **The keyboard covering fields:** edge-to-edge Android doesn't resize the window for the keyboard. `Screen` uses `react-native-keyboard-controller`'s `KeyboardAwareScrollView`, which needs Reanimated 4 and Worklets, all in SDK 58's set.
+    - **The gesture bar over the last control:** `Screen` pads Android's bottom inset.
+  - **Testing Library 14's `fireEvent` is async** like `render`: without `await`, a tap ran before the typed text reached state. The shared `renderArabic` test helper adds the safe area.
+  - **More Windows install friction:** `pnpm add` failed twice with ENOENT on a temporary folder (likely files held open, e.g. by a running Metro). Writing the dependency into `package.json` and running `pnpm install` worked; the versions come from Expo's `bundledNativeModules.json`. A running Metro also wrote stale typed routes (`.expo/types`, gitignored) that listed `packages/core` files as routes; deleting the file fixes the typecheck, and CI never has it.
+  - **New native modules,** so the iPhone needs a new development build.
+  - Tests: core 326 in 24 files (the error-mapping tests moved here from the web), web 282 in 35 (4 new Expo client tests), mobile 9 in 3.
+
+- 2026-10-25 (2.7):
+  - **The SQLite adapter lives in core** (`packages/core/src/data/sql-storage.ts`), written against a small `SqlDriver` (`all`, `run`, `exec`, `exclusiveTransaction`, `destroy`), so the same SQL runs on expo-sqlite in the app and on `node:sqlite` in Vitest (`testing/node-sqlite-driver.ts`). It passes the shared suites, 99 tests on SQLite.
+    - Each table stores the record as JSON plus one untyped column per indexed field, with SQL indexes for every entry of `TABLE_SCHEMA`. Untyped columns keep numbers as numbers and order them before strings, like IndexedDB. Compound indexes query with row values (`(f_classId, f_date) BETWEEN (?, ?) AND (?, ?)`).
+    - Transactions run one at a time through a queue, each as an exclusive SQLite transaction; `destroy` waits for the queue. `bulkPut`, `bulkGet` and `bulkDelete` work in chunks of 100. Migrations are a list, and `PRAGMA user_version` records how many ran.
+    - Core's tsconfig gets Node's types only through the test driver's `/// <reference types="node" />`. A lint rule blocks Node globals (`process`, `Buffer`, …) in core's non-test code, since it also runs in React Native.
+    - `engines` is now `>=22.13.0`. `.nvmrc` stays `22`, which resolves to the latest 22.x (above 22.13) locally, in CI and on Amplify.
+  - **The app:**
+    - `openUserDatabaseFile` opens `qct-<userId>.db` with WAL and `busy_timeout`, and runs transactions through `withExclusiveTransactionAsync` (its own connection, so nothing outside can join).
+    - `AppDataProvider` wires the `LocalDatabase`, `LocalStore` and `SyncEngine` for the signed-in user, like the web's `AppProvider`. Nothing opens while an admin-set password waits to be replaced.
+    - The engine gets the server URL and `sessionFetch`, which sends the stored cookie and saves a renewed one (`apiFetch` now wraps it). It also gets expo-network's connectivity, which was already in the build as a Better Auth peer, so no new native module was needed.
+    - There's no lock: one JavaScript runtime, and the engine never overlaps its own runs.
+    - `attachSyncTriggers` (`src/sync/triggers.ts`) syncs at start, when the app returns to the foreground, when the connection comes back (and shows offline when it goes), 1.5 s after local writes, and every 60 s in the foreground.
+    - `useLocalQuery` replaces `useLiveQuery`: it re-runs after a committed write to the tables it lists, and drops results from superseded runs.
+    - `SyncIndicator` sits at the top of each tab's first screen. A tap syncs now.
+    - On a 401 the indicator asks to sign in again and opens `sign-in-again`, a modal that asks only for the password of the user already on the device. Local changes wait, and `resumeAfterLogin` sends them.
+    - Sign-out warns with a native alert when changes are unsynced (cancel, sync now, sign out anyway). It then deletes the user's database before forgetting the session. Development builds show the local classes in Settings, with a button that adds one.
+  - **The mirrored header on iOS (2.5, seen again after the localization fix):** the large title still showed on the left with mirrored glyphs. react-native-screens forces right-to-left on the navigation bar's subviews (`semanticContentAttribute`, through the appearance proxy), and the large-title view, which iOS already mirrors for an RTL app, came out flipped twice. The app no longer uses large titles; standard titles are centred, so their side doesn't matter. This is JavaScript only, so no new build is needed.
+  - **Checked on the emulator** against the E2E server on port 3105:
+    - The stale session from an earlier server got a 401: the banner appeared, the local data stayed, and the sign-in-again screen opened.
+    - Sign-out with nothing pending deleted `qct-<userId>.db` at once. Signing in created a new one, in WAL mode.
+    - With Wi-Fi and data off, two classes were created: the indicator read "offline · two changes waiting" (the Arabic dual), and sign-out showed the warning.
+    - Back online, they synced by themselves, and Playwright found both on the web home page. A class created on the web reached the phone on a tap of the indicator.
+    - After the phone's session was revoked from the web, a new class waited behind the banner, and signing in again sent it.
+  - **Android clipping, again:** a label sized to its own measured width (`Button`'s, centred with `alignItems`) sometimes lost its last word ("تسجيل الخروج" showed as "تسجيل"), even with `textBreakStrategy="simple"`. Button labels now take the button's full width with centred text. The indicator puts "sign in again" on its own line, for the same reason and to fit 360 dp.
+  - Tests: core 425 in 25 files (the shared suites on SQLite, plus migration and chunking tests), web 282 in 35, mobile 20 in 5. The mobile tests use real services over the memory adapter (`src/test/app-services.tsx`), and `jest.setup.ts` mocks the auth client, the database file and the device sources.
+
+- 2026-10-25 (2.8):
+  - **Native header actions:** Expo Router's `Stack.Toolbar`, with a button for "create class" and menus for the class (rename, archive or restore) and the student (edit, move, archive or restore).
+    - On Android it needs `@expo/ui` (Jetpack Compose), a new native module. The Android build was redone; iOS doesn't load it, so the current iPhone build still runs 2.8.
+    - Android takes only images as icons there. `useToolbarIcon` draws the Material symbol with `expo-symbols` (`unstable_getMaterialSymbolSourceAsync`); iOS uses SF Symbols. Menu actions have text only.
+  - **Forms:** create or rename a class, archive a class and move a student are form sheets sized to their content. The student form is longer, so it's a page sheet with a native header. All are root-stack routes over the tabs. Archiving a student asks with a native alert.
+    - Archiving a class follows the web's choices: with active students, move them to another class first, or archive them with it. Afterwards it returns to the list.
+    - The class pickers are the native picker (the wheel on iOS, a dropdown on Android). The memorization direction is a pair of radio rows.
+  - **The student page** opens from a class and from search. Its route file exists in both the Home and Search stacks (both re-export `src/screens/student-screen.tsx`), so a search result keeps the Search tab. Until 2.9 it shows the student's details (class, birth year and age, direction, note, parent ID) and the actions menu.
+  - **Search** uses the native header search bar (behind an icon on Android, as the platform does) with the shared Arabic-aware matching.
+  - **Access:** the Users tab is hidden from non-admins. "Create class" and the class menu need `classes.manage`; "add student", the student menu and restoring students need `students.manage` (`useAccess`, like the web's). A teacher with no classes sees the "ask your admin" empty state.
+  - **Bidi:** two numbers on one line ("2015 · 11 سنة") can reorder in RTL, so the age has its own line under the birth year.
+  - **Android clipping (2.6, 2.7):** text centred by `alignItems` is sized to its own measurement, so the empty state's lines now take the full width, like button labels.
+  - **Checked on the emulator** against the E2E server, as an admin:
+    - Create a class (the sheet sits above the keyboard, then the class opens). The class menu, and archive with a student still in it.
+    - Add a student: a too-short parent ID is refused with the shared error, and the error clears on edit.
+    - The student menu: edit (the form opens filled in), move to a second class, archive with the alert, and restore from the class's archived list.
+    - Search by part of the name, with the result opening inside the Search tab. Archiving an empty class returns to the list. Dark mode.
+    - The web then showed the same classes and student.
+
+    Not checked on a device: the teacher's read-only view and the hidden Users tab (covered by Jest), and iOS.
+  - **Testing:** uiautomator doesn't see inside modals and sheets on Android, so those were driven by coordinates. Screen tests mock `expo-router` with `src/test/expo-router-mock.tsx`, which renders toolbar items and the search bar as plain controls.
+  - Tests: core 425 in 25 files, web 282 in 35, mobile 34 in 6.
+
+- 2026-10-25 (2.9):
+  - **The student page** follows the web's: the month table, then today. The 2.8 details card is gone; the details are in "edit student", as on the web since 1.10.
+  - **Today:**
+    - Attendance is three coloured buttons (tap the chosen one again to clear it), with the excuse note saved as you type.
+    - Due homework is collapsible items, each with the two mark wheels, postpone and undo.
+    - "Recite now", exams in violet, and next-day homework with edit and delete.
+    - Without `lessons.run` the card is view-only.
+    - The homework form is its own route, so an item recited on the spot can't be opened by a callback as on the web. A small event (`src/data/homework-events.ts`) tells the card instead.
+  - **The mark wheel** is the native picker: the wheel on iOS (shortened to 140 pt, so two fit side by side), a dropdown on Android. The chosen mark shows at once, as on the web.
+  - **The homework form** is a page sheet with the suggestion after the latest portion. The sura field opens a searchable sheet (React Native's `Modal`, a page sheet on iOS) using the shared `searchSurahs`, by name or number. The ayah fields show the allowed range and live errors.
+  - **Shared with the web:** the web's ayah-range check (`client/forms/ayah-range.ts`, React-free) moved to `packages/core/src/forms/ayah-range.ts` with its tests, and both apps use it.
+  - **The month table** is rows of fixed-width date and mark columns around the portion, with exam rows in violet and absences as badges. Arrows step through months; the averages and the attendance summary sit at the bottom.
+    - Tapping a row (with `lessons.run`) opens a form sheet that corrects that day: marks, undo a postponement, or an absence's status and note. It stays open on the same record even after the row leaves the table.
+    - "طباعة الشهر" waits for printing (2.12).
+  - **The Android clipping bug, examined:**
+    - Before, with `textBreakStrategy="simple"`, button labels, the sync banner, the item's "تعديل المقطع" and the "اختبار" badge each lost a word or a letter.
+    - A side-by-side probe on the emulator showed the same label, in the same style, clipped in one spot and whole in another. A box laid out a fraction of a pixel narrower than the text's measurement makes Android break the word itself.
+    - Passing the face's `fontWeight` looked like a fix in one probe, but the badge stayed clipped with it, so it was reverted.
+    - The fixes that held:
+      - labels across their control's full width (`Button`, the attendance buttons, the item's two equal-width actions);
+      - a 96 pt minimum width for `SmallButton`;
+      - a figure space (U+2007) at each end of a `Badge` label, which counts when measuring and can't be broken from the word, so only an invisible space can go.
+  - **Metro on Windows** missed several edits during the checks; restarting it with `--clear` each time was the only reliable way.
+  - **Checked on the emulator** against the E2E server, as an admin:
+    - Present; "recite now" with every field empty (three errors), then a sura picked by number, an out-of-range end ayah (live error), then 1–5.
+    - The recited item opened by itself; marks 5 and 4 on Android's dropdowns, shown as "5 · 4".
+    - Next-day homework suggested Al-Naba 6–10; an exam on Al-Ikhlas in violet.
+    - The month table with both rows, the exam badge and the averages. A day corrected to 8 updated the table and its average live.
+
+    Postponing and view-only mode are covered by Jest (postponing needs homework from an earlier day). iOS is the user's check.
+  - Tests: core 428 in 26 files, web 279 in 34 (the ayah-range tests moved to core), mobile 44 in 7. Web `next build` compiles.
+
+- 2026-10-25 (2.10):
+  - **Class statistics** (`(home)/class-stats/[id]`), reached from the class page's "الإحصائيات" button (`reports.view`), show the same data as the web through the shared `loadClassStatistics`: the attendance rate with its counts, the two average marks, and the ranked students (top three highlighted), each opening their page. Without `reports.view` the screen says so.
+  - **The period** comes from a native header menu instead of the web's two selects: "كل الأوقات" at the top, then a submenu per year with "كل الأشهر" and the twelve months, the current choice ticked. The chosen period is shown in the screen ("الفترة: أكتوبر 2026"). It's screen state, not a URL parameter as on the web.
+  - "طباعة كشوف الطلاب" waits for printing (2.12).
+  - **Checked on the emulator** with two students, one present and one absent:
+    - all time showed 50% and the ranking;
+    - the menu and its year submenu opened; August showed "no lessons" and October the figures again;
+    - a ranked student opened their page.
+
+    The year submenu's arrow is drawn by Expo UI's Compose menu and points right in Arabic too; it isn't ours to mirror. iOS is the user's check.
+  - Tests: mobile 47 in 8 (core and web unchanged).
+
+- 2026-10-25 (2.11):
+  - **Settings** keeps the web's parts in a native layout:
+    - The sync card: state, changes waiting, last sync (refreshed every 30 s), sync now, and refused changes with retry and discard (discard asks first).
+    - Rows to the profile, password and center screens. The theme as three radio rows. The account card with sign-out.
+  - **Profile** (name, username, phone, and email for admins) sends only what changed, then refreshes the session. **Password** reuses the forced-change form, now `PasswordForm`. **Center** shows the code card (shared with registration, now `CodeCard`); admins edit the name and time zone (native picker).
+  - **The theme** is saved on the device and applied with React Native's colour-scheme override (`Appearance.setColorScheme`). Screens, native headers, tabs and alerts all follow it, from the next start too.
+  - **Users (admins):**
+    - The list loads each time the tab comes into view, with you first, then admins, then by name.
+    - The editor covers details, role (with each role's explanation), permissions and classes. Assigned classes sync first so the server knows them.
+    - Reset password is a form sheet; disabling asks with a native alert; enabling is one tap. Server codes (taken username, last admin, offline…) show as on the web.
+  - **Shared with the web:**
+    - `packages/core/src/shared/api.ts`: the result type and `apiResult`, which turns a response into a result. Each app keeps its own fetch.
+    - `shared/center-users.ts`: `CenterUser`, `sortCenterUsers` and the permissions' message keys.
+    - The web's `client/api.ts`, `client/data/users.ts` and user screens now import them.
+  - **Found on the emulator:**
+    - A paragraph that starts with a Latin name ("Omar · سيُسجَّل…") took a left-to-right base direction, and its full stop moved to the wrong side. The name now has its own line.
+    - An alert with no buttons shows Android's English "OK". Single-message alerts now pass a "إغلاق" button.
+  - **Checked on the emulator** against the E2E server, as an admin:
+    - the sync card;
+    - dark and automatic theme across the app;
+    - a profile name change, shown in Settings;
+    - the center screen;
+    - creating a teacher with a class (the list showed one class and "hasn't changed the password");
+    - resetting the password;
+    - disabling, after which the list showed "موقوف".
+
+    The settings password screen reuses the form checked in 2.6. iOS is the user's check.
+  - Tests: core 432 in 27 files (the shared API helpers), web 279 in 34, mobile 56 in 9. Web `next build` compiles; the web E2E suite wasn't rerun (the web change is imports only).
+
+- 2026-10-25 (2.12):
+  - **Printing:** the sheets come from the same local data and shared builders as the web's `/print` (`loadPrintSheets`, `buildMonthSheet`).
+    - `src/print/month-sheet-html.ts` lays them out as one HTML document, one A4 page per student, like the web's `MonthSheet`: fixed light colours, the QR beside the header, density by row count, user text in `<bdi>` and escaped.
+    - IBM Plex Sans Arabic (regular and bold) is embedded as `@font-face` data, read once from the app's bundled fonts. `File` has no base64 helper in SDK 58, so its bytes are encoded with `btoa`.
+    - `expo-print` opens the system print dialog, or saves a PDF that `expo-sharing` hands to the share sheet. The PDF is renamed to "<student or class> <month>.pdf"; expo-print names it with a random id.
+  - **Entry points:**
+    - "طباعة الشهر" and "مشاركة PDF" under the month table (new message `print.sharePdf`).
+    - "طباعة كشوف الطلاب" on the class statistics, as on the web, opens a page sheet: the month, "تحديد الكل" and each student (all selected at first), then print or share.
+  - **The parent link** ("رابط ولي الأمر" in the student menu) is a page sheet:
+    - the QR (react-native-svg) on white;
+    - the link, which points at the app's server (`EXPO_PUBLIC_API_URL`), where the web parent page lives;
+    - copy, and React Native's share sheet;
+    - the "no parent ID yet" warning.
+  - **Shared with the web:** `packages/core/src/shared/qr.ts` draws the QR's path (`qrShape`, `qrViewBox`) and standalone SVG for printed HTML (`qrSvgMarkup`). The `qrcode` dependency moved from the web to core, and the web's `QrCode` uses it. qrcode needs only `TextEncoder`, which Hermes has.
+  - **New native modules:** `expo-print`, `expo-sharing` and `react-native-svg`, plus `expo-file-system` and `expo-asset` as direct dependencies. The Android build was redone, and the iPhone needs a new development build. `expo-doctor` passes 20/20.
+  - **Checked on the emulator** against the E2E server:
+    - **Printing:** the print dialog showed the sheet's preview (RTL, QR, table, counts; the emulator's paper defaults to Letter). The shared PDF, pulled from the device, is one A4 page in the embedded font with Arabic shaped correctly. The share sheet named it "Omar 2026-10.pdf".
+    - **Parent link:** the screen showed the QR; copy said so; share opened the share sheet. Playwright opened that link on the web with the parent ID and saw the student's month, including attendance recorded on the phone.
+    - **Students' sheets:** the selection count followed "تحديد الكل", and printing opened the dialog.
+    - **Along the way:** after a test-server restart, a student that referenced a class from the old server was refused, and Settings listed it ("يرتبط بسجل غير موجود على الخادم"), which is how 2.11 meant it to work.
+  - Tests: core 434 in 28 files (the QR helper), web 279 in 34, mobile 60 in 10. Web `next build` compiles.
+
+- 2026-10-25 (2.13):
+  - **Readable widths** like the web's containers. `Screen` centres its content at a `width`:
+    - `page`, 896 dp (`max-w-4xl`): the default;
+    - `narrow`, 672 (`max-w-2xl`): Settings, its screens, and the user editor;
+    - `form`, 448 (`max-w-md`): sign-in, registration, password change, sign-in again, the student and homework forms, the parent link and the students' sheets.
+
+    Form sheets (`Sheet`) cap their content at the form width too, since Android shows them edge to edge on a tablet.
+  - **Grids** at the web's breakpoints, from the window's width (so an iPad in split view gets what its own width allows):
+    - class cards: two columns from 768 dp, three from 1280;
+    - a class's students: two columns from 768.
+
+    `Grid` fills rows in the writing direction and keeps a short last row at the column width.
+  - **Orientation:** `app.json` now allows every orientation (`default`), which iPad split view and Slide Over need. Phones lock to portrait at start with `expo-screen-orientation` (`src/device/orientation.ts`): a phone is a screen whose shorter side is under 600 dp. `expo-screen-orientation` is a new native module, so both platforms need a new development build (the iPhone needed one for 2.12 anyway).
+  - **The lockfile:** adding the module also made pnpm merge duplicate peer variants of Better Auth's adapters onto `@better-auth/utils` 0.5.0 (0.4.2 stays for what needs it). The web's tests, including the auth integration tests, pass on it.
+  - **Checked on the `qct_tablet` emulator** (Pixel Tablet, 1280 × 800 dp), with data seeded through the web:
+    - three class columns in landscape and two in portrait, turning with the device;
+    - a class's students in two columns;
+    - the student page at the page width, Settings at the narrow width, and the create-class sheet's content at the form width.
+
+    On the `qct_phone` emulator, the same build stayed in portrait with the system set to landscape. The iPad check is the user's.
+  - Tests: mobile 64 in 11 (core and web unchanged). `expo-doctor` passes 20/20.
+
+- 2026-10-25 (2.14):
+  - **Maestro flows** in `apps/mobile/maestro/`, on the Android emulator. Maestro 2.11 is installed in `~/.maestro`, outside the repo; it drives the development build.
+    - `main-flow`: sign in, create a class and a student, present, recite now (An-Naba 1–5) with a mark, the month table, and "متصل" in Settings at the end.
+    - `offline`: airplane mode, create a class; the indicator shows "غير متصل" with the change waiting. Back online it syncs; signing out (which wipes the device) and in again brings the class back from the server.
+    - `roles`: the admin creates a class, a student and a teacher assigned to that class with the default permissions, then signs out. The teacher goes through the forced password change, sees only that class, with no "إنشاء حلقة", Users tab or "إضافة طالب", and takes attendance, which syncs.
+    - Subflows open the app from a cleared state on Metro's bundle (a development-client deep link) and sign in.
+  - **The runner,** `pnpm mobile:e2e` (`apps/mobile/scripts/e2e.mts`, run with tsx, now a mobile dev dependency): the web's E2E server, Metro on 8082 with `EXPO_PUBLIC_API_URL` pointing at it (`--clear`, since the value is inlined), `adb reverse` for both ports, builds the bundle, then `maestro test`. It stops the process trees afterwards. The server seeds three more accounts for it (`MOBILE_ACCOUNTS`, one center per flow).
+  - **testIDs** on the fields the flows type into: sign-in, the class and student forms, the ayah range, the surah search, the password form, the user editor, and the two mark pickers (a new `testID` prop on `ScorePicker`).
+  - **Findings while writing them** (in the `plan-step-workflow` skill):
+    - Android's dropdown picker shows only its first items, so the flow picks 5.
+    - Maestro types ASCII only on Android, so the test data is Latin.
+    - Airplane mode doesn't cut `adb reverse`, but the app goes by the device's network state, so it still behaves offline.
+    - Rerunning a flow against the same server finds the records it made before. That's why the runner starts a fresh server every time.
+    - The development client's greeting came up over the sign-in screen after a slow first load; the deep link now passes `disableOnboarding=1`.
+    - An emulator that had run all day wedged adb twice and had Android kill the starting app (ANR). The runner restarts a silent adb server, builds the bundle before the flows start, and times adb calls out. A reboot fixed the ANR.
+
+    No app bug turned up.
+  - **English smoke render** (`src/ltr.test.tsx`): the classes, a class, a student (today, recitations, the month table), the class statistics and Settings render in English with left-to-right layout and no Arabic text or label left. A control case shows the check catches Arabic. `renderWithApp` and `renderArabic` take an optional locale.
+  - **Run:** the three flows pass through `pnpm mobile:e2e` on `qct_phone` in about 8½ minutes.
+  - **README:** the Maestro run and its flows, and a checklist for the iPhone and the iPad (RTL, offline, print, share, iPad layouts, native controls). The iOS checks are the user's, on a development build with 2.12's and 2.13's native modules.
+  - Tests: mobile 71 in 12 (core and web unchanged).
+
+- 2026-10-25 (2.15):
+  - **Agreed with the user:** every user can delete his own account, except the center's last active admin; an admin can delete the center with everything in it (§0 #50).
+  - **API** (`apps/web/src/server/deletion.ts`). Both routes take `{ password }`, checked against the credential account with argon2. Five attempts per user per 15 minutes, then `RATE_LIMITED` (429); a wrong password is `WRONG_PASSWORD` (400, not 401, so the apps don't take it for an ended session).
+    - `DELETE /api/account`: the member document first (no request of his passes after that), then his sessions, accounts and user. The center's records stay: they belong to the center, and only carry his id in `updatedBy`. The last active admin gets `LAST_ADMIN` (409); a disabled admin doesn't count.
+    - `DELETE /api/center` (admins): every user's sessions first, then every synced record (`TenantRepository.deleteAll`, the one hard delete), the version counter, each user with his member document (the admin's own last, so a half-finished run can be repeated after signing in), the records again (in case a request already past its session check wrote one), and the tenant. Password-reset tokens and rate-limit entries aren't tied to a center and expire on their own.
+  - **App:** "حذف الحساب" under Settings → Account, and "حذف المركز" at the bottom of Settings → Center for admins (no heading of its own: it would repeat the button's label). Each opens a page sheet that says what goes, asks for the password, and has a destructive button that stays dimmed until one is typed. The account screen tells admins what to do if they're the only one, and warns about changes not yet synced from this device. Once the server has deleted it, the device signs out (wiping the local database) and an alert says so.
+  - **Web:** the same, as dialogs in the account and center sections of Settings (`DeletionDialog`). Afterwards the device is forgotten and `/login` shows a toast.
+  - **Shared:** `deletionSchema`, the `WRONG_PASSWORD` and `RATE_LIMITED` codes, `deletionErrorKey`, and the `deletion.*` messages in both languages.
+  - **Checked:**
+    - Server integration tests: wrong and right passwords, the last admin (a disabled one doesn't count), the rate limit, admins only, everything of the center gone (records, members, users, sessions, accounts, counter, tenant) and nothing of another center.
+    - Jest: both screens, the entry points, errors, the pending warning; the center screen joins the English smoke test. A Vitest component test for the web dialog.
+    - A new Maestro flow, `deletion`, on `qct_phone`: the only admin is refused, then a wrong password, the center deleted, signed out, and the account no longer signs in.
+    - The web dialogs at 360 px in Chromium: RTL, no horizontal overflow, the same steps.
+    - The whole Maestro suite (four flows) passes through `pnpm mobile:e2e`, in 20½ minutes on an emulator that had run all day.
+  - Tests: core 436 in 28 files, web 287 in 36, mobile 81 in 13. The web's `next build` compiles with the new `DELETE` handlers.
+  - **The Maestro runner,** after more trouble with an emulator that had run all day:
+    - `adb kill-server` hangs as well when adb is wedged, so the runner now ends every adb process and waits for the device to reconnect.
+    - The development client's own menu once opened over the app after the checks that close it; `open-app` now waits for the app or the menu before closing it.
+    - Right after the first sync, each look at the screen took about 8 s, so a scroll to the bottom of Settings ran out of its default 20 s; those scrolls get 60 s.
+

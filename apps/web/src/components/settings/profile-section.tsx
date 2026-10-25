@@ -10,11 +10,11 @@ import type { ApiErrorCode } from "@/client/api";
 import { useApp } from "@/client/app-context";
 import { updateProfile } from "@/client/data/account";
 import { bootstrapSession } from "@/client/session/session";
-import { toWesternDigits } from "@/domain/text/digits";
+import { toWesternDigits } from "@qct/core/domain/text/digits";
 import { useErrorMessage } from "@/i18n/use-error-message";
-import { PHONE_MAX, updateProfileSchema, USERNAME_MAX } from "@/shared/access";
-import { NAME_MAX } from "@/shared/schemas/base";
-import { parseWithCodes, type FieldError as CodedError } from "@/shared/schemas/errors";
+import { PHONE_MAX, updateProfileSchema, USERNAME_MAX } from "@qct/core/shared/access";
+import { NAME_MAX } from "@qct/core/shared/schemas/base";
+import { parseWithCodes, type FieldError as CodedError } from "@qct/core/shared/schemas/errors";
 
 type FieldName = "name" | "username" | "phone" | "email";
 

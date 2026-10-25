@@ -2,10 +2,15 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { todayInTimeZone } from "@/domain/dates/local-date";
-import { monthlyStats } from "@/domain/stats/monthly";
-import { DEFAULT_TIME_ZONE } from "@/i18n/config";
-import { attendanceRecord, homeworkRecord, lessonRecord, studentRecord } from "@/test/records";
+import { todayInTimeZone } from "@qct/core/domain/dates/local-date";
+import { monthlyStats } from "@qct/core/domain/stats/monthly";
+import { DEFAULT_TIME_ZONE } from "@qct/core/i18n/config";
+import {
+  attendanceRecord,
+  homeworkRecord,
+  lessonRecord,
+  studentRecord,
+} from "@qct/core/test/records";
 import { installDomPolyfills, renderArabic } from "@/test/dom";
 import { MonthTable } from "./month-table";
 

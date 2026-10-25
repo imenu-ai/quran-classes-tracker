@@ -1,0 +1,72 @@
+{
+  "expo": {
+    "name": "Quran Memorization",
+    "slug": "quran-classes-tracker",
+    "owner": "imenu",
+    "version": "1.0.0",
+    "scheme": "ai.imenu.quran",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ai.imenu.quran",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDevelopmentRegion": "ar"
+      }
+    },
+    "android": {
+      "package": "ai.imenu.quran",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-localization",
+        {
+          "forcesRTL": true,
+          "supportedLocales": ["ar"]
+        }
+      ],
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "backgroundColor": "#fcfefd",
+          "dark": {
+            "backgroundColor": "#0a110f"
+          }
+        }
+      ],
+      [
+        "./plugins/with-display-name",
+        {
+          "name": "تحفيظ القرآن"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "6a4b2856-cade-4860-8934-52b11f910f83"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/6a4b2856-cade-4860-8934-52b11f910f83"
+    }
+  }
+}

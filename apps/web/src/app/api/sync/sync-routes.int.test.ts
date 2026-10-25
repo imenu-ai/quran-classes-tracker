@@ -1,10 +1,14 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { resetAuthForTests } from "@/server/auth/auth";
 import { ensureIndexes } from "@/server/indexes";
-import { MAX_PUSH_BATCH, type PullResponse, type PushResponse } from "@/shared/sync/protocol";
+import {
+  MAX_PUSH_BATCH,
+  type PullResponse,
+  type PushResponse,
+} from "@qct/core/shared/sync/protocol";
 import { createSignedInMember, createSignedInTeacher } from "@/test/auth";
 import { startTestMongo } from "@/test/mongo";
-import { classRecord } from "@/test/records";
+import { classRecord } from "@qct/core/test/records";
 import { GET as pull } from "./pull/route";
 import { POST as push } from "./push/route";
 

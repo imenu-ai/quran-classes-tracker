@@ -34,3 +34,15 @@ export function centerCodeFor(spec: E2ESpec, project: string): string {
     E2E_PROJECTS.indexOf(project as (typeof E2E_PROJECTS)[number]);
   return String(100_100 + index);
 }
+
+/**
+ * The mobile app's Maestro flows (apps/mobile/maestro), one center each, so
+ * they never meet the web specs' data. Codes stay clear of the web's
+ * 100100… range.
+ */
+export const MOBILE_ACCOUNTS = [
+  { username: "m_main", code: "200001" },
+  { username: "m_offline", code: "200002" },
+  { username: "m_roles", code: "200003" },
+  { username: "m_delete", code: "200004" },
+] as const;

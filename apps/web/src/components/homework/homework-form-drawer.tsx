@@ -16,16 +16,16 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useApp } from "@/client/app-context";
-import { addExam, addHomework, updateHomework } from "@/client/data/homework";
+import { addExam, addHomework, updateHomework } from "@qct/core/data/entities/homework";
 import {
   checkAyahRange,
   type AyahRangeDraft,
   type AyahRangeField,
-} from "@/client/forms/ayah-range";
-import { latestPortion, suggestNextHomework } from "@/domain/homework/suggestion";
-import { NOTE_MAX } from "@/shared/schemas/base";
-import { isExam, type HomeworkRecord } from "@/shared/schemas/homework";
-import type { StudentRecord } from "@/shared/schemas/student";
+} from "@qct/core/forms/ayah-range";
+import { latestPortion, suggestNextHomework } from "@qct/core/domain/homework/suggestion";
+import { NOTE_MAX } from "@qct/core/shared/schemas/base";
+import { isExam, type HomeworkRecord } from "@qct/core/shared/schemas/homework";
+import type { StudentRecord } from "@qct/core/shared/schemas/student";
 
 export type HomeworkFormMode =
   { kind: "next" } | { kind: "recite" } | { kind: "exam" } | { kind: "edit"; item: HomeworkRecord };

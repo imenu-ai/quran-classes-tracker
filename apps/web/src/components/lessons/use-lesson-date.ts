@@ -2,7 +2,7 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import { useCallback } from "react";
-import { localDateToUtcDate, type LocalDate } from "@/domain/dates/local-date";
+import { localDateToUtcDate, type LocalDate } from "@qct/core/domain/dates/local-date";
 
 /** Formats a lesson date as "weekday, day month year" in the active locale. */
 export function useLessonDate() {

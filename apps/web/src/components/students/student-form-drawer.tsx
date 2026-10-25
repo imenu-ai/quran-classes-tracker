@@ -25,17 +25,17 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useApp } from "@/client/app-context";
 import { useActiveClasses, useClass } from "@/client/data/classes";
 import { createStudent, updateStudent, type StudentInput } from "@/client/data/students";
-import { LocalValidationError } from "@/client/db/local-store";
-import { parseIntegerInput } from "@/domain/text/digits";
+import { LocalValidationError } from "@qct/core/data/local-store";
+import { parseIntegerInput } from "@qct/core/domain/text/digits";
 import { useErrorMessage } from "@/i18n/use-error-message";
-import type { FieldError as FieldErrorData } from "@/shared/schemas/errors";
-import { NAME_MAX, NOTE_MAX } from "@/shared/schemas/base";
+import type { FieldError as FieldErrorData } from "@qct/core/shared/schemas/errors";
+import { NAME_MAX, NOTE_MAX } from "@qct/core/shared/schemas/base";
 import {
   MEMORIZATION_DIRECTIONS,
   normalizeParentId,
   type MemorizationDirection,
   type StudentRecord,
-} from "@/shared/schemas/student";
+} from "@qct/core/shared/schemas/student";
 
 type FieldName =
   "fullName" | "birthYear" | "classId" | "memorizationDirection" | "note" | "parentId";

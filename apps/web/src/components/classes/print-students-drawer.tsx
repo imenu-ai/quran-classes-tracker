@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/drawer";
 import { printHref } from "@/client/data/print";
 import { nativeSelectClass } from "@/lib/native-select";
-import type { StudentRecord } from "@/shared/schemas/student";
+import type { StudentRecord } from "@qct/core/shared/schemas/student";
 
 /**
  * Prints several students' month sheets: pick the month and the students

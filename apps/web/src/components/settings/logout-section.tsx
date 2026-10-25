@@ -1,23 +1,30 @@
 "use client";
 
 import { useLiveQuery } from "dexie-react-hooks";
-import { LogOut } from "lucide-react";
+import { LogOut, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { toast } from "sonner";
 import { DirectionalIcon } from "@/components/directional-icon";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/client/app-context";
 import { authClient } from "@/client/auth/auth-client";
+import { deleteOwnAccount } from "@/client/data/account";
 import { forgetDevice } from "@/client/session/session";
+import { DeletionDialog } from "./deletion-dialog";
 
-/** Sign out, warning first when changes haven't been synced (they'd be lost). */
+/**
+ * Sign out, warning first when changes haven't been synced (they'd be lost),
+ * and deleting one's own account (PLAN.md §0 #50).
+ */
 export function LogoutSection() {
   const t = useTranslations();
   const router = useRouter();
   const { session, db } = useApp();
-  const pending = useLiveQuery(() => db.outbox.count(), [db]) ?? 0;
+  const pending = useLiveQuery(() => db.count("outbox"), [db]) ?? 0;
   const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function logout(force: boolean) {
     if (pending > 0 && !force) {
@@ -60,6 +67,31 @@ export function LogoutSection() {
           {t("auth.logout")}
         </Button>
       )}
+      <Button variant="outline" className="text-destructive" onClick={() => setDeleting(true)}>
+        <Trash2 aria-hidden />
+        {t("deletion.accountButton")}
+      </Button>
+      <DeletionDialog
+        open={deleting}
+        onOpenChange={setDeleting}
+        title={t("deletion.accountTitle")}
+        description={t("deletion.accountDescription")}
+        submitLabel={t("deletion.deleteAccount")}
+        onDelete={deleteOwnAccount}
+        onDeleted={async () => {
+          // The server already ended the sessions; this forgets the device.
+          await forgetDevice(db);
+          toast.success(t("deletion.accountDeleted"));
+          router.replace("/login");
+        }}
+      >
+        {session.role === "admin" && (
+          <p className="text-sm text-muted-foreground">{t("deletion.accountAdminHint")}</p>
+        )}
+        {pending > 0 && (
+          <p className="text-sm text-destructive">{t("deletion.pending", { count: pending })}</p>
+        )}
+      </DeletionDialog>
     </section>
   );
 }

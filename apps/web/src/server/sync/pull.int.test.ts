@@ -1,8 +1,8 @@
 import type { Db } from "mongodb";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import type { PullResponse } from "@/shared/sync/protocol";
+import type { PullResponse } from "@qct/core/shared/sync/protocol";
 import { startTestMongo } from "@/test/mongo";
-import { classRecord, lessonRecord, studentRecord } from "@/test/records";
+import { classRecord, lessonRecord, studentRecord } from "@qct/core/test/records";
 import { ensureIndexes } from "../indexes";
 import { pullChanges } from "./pull";
 import { pushChanges } from "./push";

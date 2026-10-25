@@ -1,0 +1,56 @@
+# Offline, like the web's offline spec: a class created in airplane mode
+# waits on the device, goes out once the network is back, and comes back
+# from the server after signing out (which wipes the device) and in again.
+#
+# The app talks to the server through `adb reverse`, which airplane mode
+# doesn't cut; the app goes by the device's network state, as on a phone.
+appId: ai.imenu.quran
+name: Offline
+env:
+  CODE: "200002"
+  USERNAME: m_offline
+---
+- runFlow: subflows/open-app.yaml
+- runFlow: subflows/sign-in.yaml
+- extendedWaitUntil:
+    visible: متصل
+    timeout: 30000
+
+- setAirplaneMode: enabled
+- extendedWaitUntil:
+    visible: غير متصل
+    timeout: 30000
+
+- tapOn: إنشاء حلقة
+- tapOn:
+    id: class.name
+- inputText: Asr
+- hideKeyboard
+- tapOn:
+    text: إنشاء حلقة
+    index: 1
+- extendedWaitUntil:
+    visible: لا يوجد طلاب في هذه الحلقة
+    timeout: 10000
+- back
+- assertVisible: Asr
+- assertVisible: غير متصل · .*بانتظار المزامنة
+
+- setAirplaneMode: disabled
+- extendedWaitUntil:
+    visible: متصل
+    timeout: 60000
+
+# Nothing waits any more, so signing out asks nothing.
+- tapOn: الإعدادات
+- scrollUntilVisible:
+    element: تسجيل الخروج
+    direction: DOWN
+- tapOn: تسجيل الخروج
+- extendedWaitUntil:
+    visible: تسجيل الدخول
+    timeout: 10000
+- runFlow: subflows/sign-in.yaml
+- extendedWaitUntil:
+    visible: Asr
+    timeout: 30000

@@ -6,7 +6,7 @@ import {
   homeworkRecord,
   lessonRecord,
   studentRecord,
-} from "@/test/records";
+} from "@qct/core/test/records";
 import { startTestMongo } from "@/test/mongo";
 import { COLLECTIONS } from "./collections";
 import { ensureIndexes } from "./indexes";

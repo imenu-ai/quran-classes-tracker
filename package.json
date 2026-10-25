@@ -3,12 +3,15 @@
   "private": true,
   "packageManager": "pnpm@10.18.3",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.13.0"
   },
   "scripts": {
     "dev": "pnpm --filter @qct/web dev",
     "build": "pnpm --filter @qct/web build",
     "start": "pnpm --filter @qct/web start",
+    "mobile": "pnpm --filter @qct/mobile start",
+    "mobile:android": "pnpm --filter @qct/mobile android",
+    "mobile:e2e": "pnpm --filter @qct/mobile test:e2e",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",

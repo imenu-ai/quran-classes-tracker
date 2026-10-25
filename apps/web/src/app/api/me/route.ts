@@ -1,11 +1,11 @@
-import { DEFAULT_LOCALE, DEFAULT_TIME_ZONE, isLocale } from "@/i18n/config";
+import { DEFAULT_LOCALE, DEFAULT_TIME_ZONE, isLocale } from "@qct/core/i18n/config";
 import { getAuth } from "@/server/auth/auth";
 import { withTenant } from "@/server/auth/tenant-context";
 import { isPlaceholderEmail } from "@/server/centers";
 import { getDb } from "@/server/db";
 import { jsonResponse } from "@/server/sync/http";
 import { getTenant } from "@/server/tenants";
-import type { MeResponse } from "@/shared/session";
+import type { MeResponse } from "@qct/core/shared/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

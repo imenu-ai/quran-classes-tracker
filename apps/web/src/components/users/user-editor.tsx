@@ -41,7 +41,7 @@ import {
   type UsersErrorCode,
 } from "@/client/data/users";
 import { bootstrapSession } from "@/client/session/session";
-import { toWesternDigits } from "@/domain/text/digits";
+import { toWesternDigits } from "@qct/core/domain/text/digits";
 import { useErrorMessage } from "@/i18n/use-error-message";
 import {
   createMemberSchema,
@@ -52,18 +52,9 @@ import {
   USERNAME_MAX,
   type Permission,
   type Role,
-} from "@/shared/access";
-import { parseWithCodes, type FieldError as CodedError } from "@/shared/schemas/errors";
-
-const PERMISSION_KEY: Record<
-  Permission,
-  "classesManage" | "studentsManage" | "lessonsRun" | "reportsView"
-> = {
-  "classes.manage": "classesManage",
-  "students.manage": "studentsManage",
-  "lessons.run": "lessonsRun",
-  "reports.view": "reportsView",
-};
+} from "@qct/core/shared/access";
+import { PERMISSION_MESSAGE_KEY } from "@qct/core/shared/center-users";
+import { parseWithCodes, type FieldError as CodedError } from "@qct/core/shared/schemas/errors";
 
 type FieldName = "name" | "username" | "phone" | "password";
 
@@ -321,7 +312,7 @@ function UserForm({ user, onSaved }: { user?: CenterUser; onSaved: () => Promise
                     onChange={() => setPermissions((current) => toggle(current, permission))}
                     className="size-5 shrink-0 accent-primary"
                   />
-                  <span>{t(`permissions.${PERMISSION_KEY[permission]}`)}</span>
+                  <span>{t(`permissions.${PERMISSION_MESSAGE_KEY[permission]}`)}</span>
                 </label>
               ))}
             </fieldset>

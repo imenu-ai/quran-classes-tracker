@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { resetAuthForTests } from "@/server/auth/auth";
 import { ensureIndexes } from "@/server/indexes";
-import { meResponseSchema } from "@/shared/session";
-import { PERMISSIONS } from "@/shared/access";
+import { meResponseSchema } from "@qct/core/shared/session";
+import { PERMISSIONS } from "@qct/core/shared/access";
 import { createSignedInMember, createSignedInTeacher } from "@/test/auth";
 import { startTestMongo } from "@/test/mongo";
 import { GET } from "./route";

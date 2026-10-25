@@ -1,7 +1,7 @@
 import { createMember, listMembers } from "@/server/centers";
 import { centerResponse, withAdmin } from "@/server/center-http";
 import { readJsonBody } from "@/server/sync/http";
-import type { CreateMemberInput } from "@/shared/access";
+import type { CreateMemberInput } from "@qct/core/shared/access";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

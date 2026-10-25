@@ -1,0 +1,71 @@
+# Deletion (PLAN.md §0 #50): the admin first tries to delete his own account
+# and is told he's the only admin; then he deletes the center with his
+# password, lands on the sign-in screen, and can't sign in any more.
+appId: ai.imenu.quran
+name: Deletion
+env:
+  CODE: "200004"
+  USERNAME: m_delete
+---
+- runFlow: subflows/open-app.yaml
+- runFlow: subflows/sign-in.yaml
+- extendedWaitUntil:
+    visible: متصل
+    timeout: 30000
+
+# His own account: refused, he's the only admin.
+- tapOn: الإعدادات
+- scrollUntilVisible:
+    element: حذف الحساب
+    direction: DOWN
+    # Right after the first sync each look at the screen takes seconds.
+    timeout: 60000
+- tapOn: حذف الحساب
+- tapOn:
+    id: deletion.password
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn: حذف حسابي نهائيًا
+- extendedWaitUntil:
+    visible: أنت المدير الوحيد للمركز. .*
+    timeout: 10000
+- tapOn: إلغاء
+
+# The center: a wrong password first, then his own.
+- scrollUntilVisible:
+    element: المركز
+    direction: UP
+- tapOn: المركز
+- scrollUntilVisible:
+    element: حذف المركز
+    direction: DOWN
+    # Right after the first sync each look at the screen takes seconds.
+    timeout: 60000
+- tapOn: حذف المركز
+- tapOn:
+    id: deletion.password
+- inputText: wrong-password
+- hideKeyboard
+- tapOn: حذف المركز نهائيًا
+- extendedWaitUntil:
+    visible: كلمة المرور غير صحيحة
+    timeout: 10000
+- tapOn:
+    id: deletion.password
+- eraseText
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn: حذف المركز نهائيًا
+- extendedWaitUntil:
+    visible: تم حذف المركز وكل بياناته
+    timeout: 15000
+- tapOn: إغلاق
+
+# Signed out, and the account is gone.
+- extendedWaitUntil:
+    visible: تسجيل الدخول
+    timeout: 10000
+- runFlow: subflows/sign-in.yaml
+- extendedWaitUntil:
+    visible: اسم المستخدم أو كلمة المرور غير صحيحة
+    timeout: 15000

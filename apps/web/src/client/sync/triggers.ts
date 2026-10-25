@@ -1,4 +1,4 @@
-import type { SyncEngine } from "./engine";
+import type { SyncEngine } from "@qct/core/data/sync/engine";
 
 export const WRITE_DEBOUNCE_MS = 1_500;
 export const PERIODIC_SYNC_MS = 60_000;

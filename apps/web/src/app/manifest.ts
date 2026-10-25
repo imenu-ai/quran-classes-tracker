@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getTranslations } from "next-intl/server";
-import { DEFAULT_LOCALE } from "@/i18n/config";
-import { getDirection } from "@/i18n/direction";
+import { DEFAULT_LOCALE } from "@qct/core/i18n/config";
+import { getDirection } from "@qct/core/i18n/direction";
 
 /** Web app manifest (Add to Home Screen / install). */
 export default async function manifest(): Promise<MetadataRoute.Manifest> {

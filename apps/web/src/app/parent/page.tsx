@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { ParentView } from "@/components/parent/parent-view";
-import { MONTH_PATTERN } from "@/shared/parent";
+import { MONTH_PATTERN } from "@qct/core/shared/parent";
 
 /** /parent?s=<studentId>[&month=YYYY-MM]: a student's month for his parent. */
 function ParentContent() {

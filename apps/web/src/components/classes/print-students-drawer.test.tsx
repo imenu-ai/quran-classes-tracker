@@ -2,7 +2,7 @@
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { classRecord, studentRecord } from "@/test/records";
+import { classRecord, studentRecord } from "@qct/core/test/records";
 import { installDomPolyfills, renderArabic } from "@/test/dom";
 import { PrintStudentsDrawer } from "./print-students-drawer";
 

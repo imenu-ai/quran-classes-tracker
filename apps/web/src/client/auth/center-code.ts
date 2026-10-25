@@ -1,11 +1,6 @@
-import { toWesternDigits } from "@/domain/text/digits";
+export { normalizeCenterCode } from "@qct/core/shared/access";
 
 const KEY = "qct:center-code";
-
-/** The center code as typed: Arabic-Indic digits accepted, spaces removed. */
-export function normalizeCenterCode(raw: string): string {
-  return toWesternDigits(raw).replace(/\s+/g, "");
-}
 
 /**
  * The last center code used on this device, so teachers type it once. Only

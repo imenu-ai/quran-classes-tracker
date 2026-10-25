@@ -1,6 +1,6 @@
 import { test as base, expect, type BrowserContext, type Page } from "@playwright/test";
-import ar from "../messages/ar.json";
-import en from "../messages/en.json";
+import ar from "@qct/core/messages/ar.json";
+import en from "@qct/core/messages/en.json";
 import { E2E_BASE_URL, E2E_PASSWORD } from "./accounts";
 
 export { ar, en, expect };

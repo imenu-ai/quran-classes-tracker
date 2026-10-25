@@ -1,0 +1,125 @@
+# Roles, like the web's roles spec: the admin creates a class, a student and
+# a teacher for that class; the teacher replaces the temporary password on
+# first sign-in, then sees only that class, without the admin's controls,
+# and can still take attendance (the default permissions).
+appId: ai.imenu.quran
+name: Roles
+env:
+  CODE: "200003"
+  USERNAME: m_roles
+---
+- runFlow: subflows/open-app.yaml
+- runFlow: subflows/sign-in.yaml
+- extendedWaitUntil:
+    visible: متصل
+    timeout: 30000
+
+# The class and its student.
+- tapOn: إنشاء حلقة
+- tapOn:
+    id: class.name
+- inputText: Maghrib
+- hideKeyboard
+- tapOn:
+    text: إنشاء حلقة
+    index: 1
+- extendedWaitUntil:
+    visible: لا يوجد طلاب في هذه الحلقة
+    timeout: 10000
+- tapOn: إضافة طالب
+- tapOn:
+    id: student.name
+- inputText: Zaid Hasan
+- tapOn:
+    id: student.birth-year
+- inputText: "2014"
+- hideKeyboard
+- scrollUntilVisible:
+    element: إضافة طالب
+    direction: DOWN
+- tapOn: إضافة طالب
+- extendedWaitUntil:
+    visible: Zaid Hasan
+    timeout: 10000
+- back
+
+# The teacher, with the default permissions and that class.
+- tapOn: المستخدمون
+- tapOn: إضافة مستخدم
+- tapOn:
+    id: user.name
+- inputText: Teacher One
+- tapOn:
+    id: user.username
+- inputText: m_roles_teacher
+- hideKeyboard
+- tapOn:
+    id: user.password
+- inputText: ${PASSWORD}
+- hideKeyboard
+- scrollUntilVisible:
+    element: Maghrib
+    direction: DOWN
+- tapOn: Maghrib
+- scrollUntilVisible:
+    element: إنشاء المستخدم
+    direction: DOWN
+- tapOn: إنشاء المستخدم
+- extendedWaitUntil:
+    visible: Teacher One
+    timeout: 10000
+
+# Everything synced, so signing out asks nothing.
+- tapOn: الإعدادات
+- extendedWaitUntil:
+    visible: متصل
+    timeout: 30000
+- scrollUntilVisible:
+    element: تسجيل الخروج
+    direction: DOWN
+- tapOn: تسجيل الخروج
+- extendedWaitUntil:
+    visible: تسجيل الدخول
+    timeout: 10000
+
+# The teacher's first sign-in.
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      USERNAME: m_roles_teacher
+- extendedWaitUntil:
+    visible: اختر كلمة مرور جديدة
+    timeout: 30000
+- tapOn:
+    id: password.current
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: password.new
+- inputText: teacher-password-456
+- hideKeyboard
+- tapOn:
+    id: password.confirm
+- inputText: teacher-password-456
+- hideKeyboard
+- tapOn: حفظ ومتابعة
+
+# Only the assigned class, and none of the admin's controls.
+- extendedWaitUntil:
+    visible: Maghrib
+    timeout: 30000
+- assertNotVisible: إنشاء حلقة
+- assertNotVisible: المستخدمون
+- tapOn: Maghrib
+- extendedWaitUntil:
+    visible: Zaid Hasan
+    timeout: 10000
+- assertNotVisible: إضافة طالب
+
+# Taking attendance is allowed, and it syncs.
+- tapOn: Zaid Hasan
+- tapOn: حاضر
+- tapOn: الإعدادات
+- extendedWaitUntil:
+    visible: متصل
+    timeout: 30000

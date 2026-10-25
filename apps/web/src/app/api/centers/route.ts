@@ -3,8 +3,8 @@ import { CenterError, createCenter } from "@/server/centers";
 import { getDb } from "@/server/db";
 import { clientIp, consumeRateLimit, REGISTER_RATE_LIMIT } from "@/server/rate-limit";
 import { badRequest, jsonResponse, readJsonBody } from "@/server/sync/http";
-import { composeUsername, registerCenterSchema } from "@/shared/access";
-import { parseWithCodes } from "@/shared/schemas/errors";
+import { composeUsername, registerCenterSchema } from "@qct/core/shared/access";
+import { parseWithCodes } from "@qct/core/shared/schemas/errors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

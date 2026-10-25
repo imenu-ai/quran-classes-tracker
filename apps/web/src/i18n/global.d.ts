@@ -1,5 +1,5 @@
-import type ar from "../../messages/ar.json";
-import type { formats } from "./formats";
+import type ar from "@qct/core/messages/ar.json";
+import type { formats } from "@qct/core/i18n/formats";
 
 declare module "next-intl" {
   interface AppConfig {

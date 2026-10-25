@@ -4,7 +4,7 @@ import { getServerEnv } from "@/server/env";
 import { PARENT_COOKIE_MAX_AGE, parentReport } from "@/server/parent";
 import { clientIp } from "@/server/rate-limit";
 import { badRequest, jsonResponse, readJsonBody } from "@/server/sync/http";
-import { parentCookieName, parentRequestSchema } from "@/shared/parent";
+import { parentCookieName, parentRequestSchema } from "@qct/core/shared/parent";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

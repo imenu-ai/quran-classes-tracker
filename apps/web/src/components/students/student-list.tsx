@@ -10,9 +10,9 @@ import { Button } from "@/components/ui/button";
 import { useAccess } from "@/client/access";
 import { useApp } from "@/client/app-context";
 import { unarchiveStudent } from "@/client/data/students";
-import { ageFromBirthYear, todayInTimeZone } from "@/domain/dates/local-date";
+import { ageFromBirthYear, todayInTimeZone } from "@qct/core/domain/dates/local-date";
 import { cn } from "@/lib/utils";
-import type { StudentRecord } from "@/shared/schemas/student";
+import type { StudentRecord } from "@qct/core/shared/schemas/student";
 
 export function StudentList({ students }: { students: readonly StudentRecord[] }) {
   const t = useTranslations("students");

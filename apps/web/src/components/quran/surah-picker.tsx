@@ -12,9 +12,9 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
-import { searchSurahs } from "@/domain/quran/search";
-import { getSurah, getSurahName } from "@/domain/quran/surahs";
-import { toAppLocale } from "@/i18n/config";
+import { searchSurahs } from "@qct/core/domain/quran/search";
+import { getSurah, getSurahName } from "@qct/core/domain/quran/surahs";
+import { toAppLocale } from "@qct/core/i18n/config";
 import { cn } from "@/lib/utils";
 
 /** "2 · البقرة · 286 آية", from the sura map (never free text). */

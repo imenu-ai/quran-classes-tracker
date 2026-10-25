@@ -1,10 +1,10 @@
 import { cleanup, render } from "@testing-library/react";
 import { afterEach } from "vitest";
 import { NextIntlClientProvider } from "next-intl";
-import ar from "../../messages/ar.json";
-import { DEFAULT_TIME_ZONE, getIntlLocale } from "@/i18n/config";
-import { getDirection } from "@/i18n/direction";
-import { formats } from "@/i18n/formats";
+import ar from "@qct/core/messages/ar.json";
+import { DEFAULT_TIME_ZONE, getIntlLocale } from "@qct/core/i18n/config";
+import { getDirection } from "@qct/core/i18n/direction";
+import { formats } from "@qct/core/i18n/formats";
 
 /**
  * Browser APIs that jsdom lacks but Radix, vaul and cmdk use. Also unmounts

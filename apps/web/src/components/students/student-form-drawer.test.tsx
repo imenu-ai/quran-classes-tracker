@@ -3,9 +3,10 @@ import "fake-indexeddb/auto";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { openLocalDb, type LocalDb } from "@/client/db/dexie";
-import { LocalStore } from "@/client/db/local-store";
-import { classRecord, studentRecord } from "@/test/records";
+import type { LocalDatabase } from "@qct/core/data/database";
+import { LocalStore } from "@qct/core/data/local-store";
+import { openLocalDatabase } from "@/client/db/dexie";
+import { classRecord, studentRecord } from "@qct/core/test/records";
 import { installDomPolyfills, renderArabic } from "@/test/dom";
 import { StudentFormDrawer } from "./student-form-drawer";
 
@@ -16,20 +17,21 @@ vi.mock("sonner", () => ({ toast: { success: vi.fn() } }));
 installDomPolyfills();
 
 describe("StudentFormDrawer: the parent ID", () => {
-  let db: LocalDb;
+  let db: LocalDatabase;
   const cls = classRecord();
   const student = studentRecord(cls.id, { fullName: "أحمد" });
 
   beforeEach(async () => {
-    db = openLocalDb(`student-form-${crypto.randomUUID()}`);
-    await db.classes.put(cls);
-    await db.students.put(student);
+    db = openLocalDatabase(`student-form-${crypto.randomUUID()}`);
+    await db.transaction(async (tx) => {
+      await tx.put("classes", cls);
+      await tx.put("students", student);
+    });
     app.current = { db, store: new LocalStore(db, { tenantId: "t1", deviceId: "d1" }) };
   });
 
   afterEach(async () => {
-    db.close();
-    await db.delete();
+    await db.destroy();
   });
 
   it("saves it normalized, as typed in Arabic digits with separators", async () => {
@@ -44,7 +46,7 @@ describe("StudentFormDrawer: the parent ID", () => {
     await userEvent.click(screen.getByRole("button", { name: "حفظ" }));
 
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
-    expect((await db.students.get(student.id))?.parentId).toBe("401234567");
+    expect((await db.get("students", student.id))?.parentId).toBe("401234567");
   });
 
   it("explains a wrong one under the field", async () => {
@@ -55,6 +57,6 @@ describe("StudentFormDrawer: the parent ID", () => {
     await userEvent.click(screen.getByRole("button", { name: "حفظ" }));
 
     expect(await screen.findByText("الصيغة غير صحيحة")).toBeTruthy();
-    expect((await db.students.get(student.id))?.parentId).toBe("");
+    expect((await db.get("students", student.id))?.parentId).toBe("");
   });
 });

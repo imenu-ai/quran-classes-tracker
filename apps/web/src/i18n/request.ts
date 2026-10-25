@@ -7,11 +7,15 @@ import {
   parseEnabledLocales,
   resolveLocale,
   type Locale,
-} from "./config";
-import { formats } from "./formats";
+} from "@qct/core/i18n/config";
+import { formats } from "@qct/core/i18n/formats";
 
-const loadMessages = async (locale: Locale) =>
-  (await import(`../../messages/${locale}.json`)).default;
+const MESSAGES = {
+  ar: () => import("@qct/core/messages/ar.json"),
+  en: () => import("@qct/core/messages/en.json"),
+} satisfies Record<Locale, unknown>;
+
+const loadMessages = async (locale: Locale) => (await MESSAGES[locale]()).default;
 
 /**
  * Locale resolution (no locale in the URL):

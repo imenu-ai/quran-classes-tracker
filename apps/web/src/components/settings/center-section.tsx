@@ -1,6 +1,7 @@
 "use client";
 
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { toast } from "sonner";
@@ -8,17 +9,19 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useApp } from "@/client/app-context";
-import { updateCenterSettings } from "@/client/data/account";
-import { bootstrapSession } from "@/client/session/session";
-import { timeZoneOptions, type TimeZoneOption } from "@/client/time-zones";
+import { deleteCenter, updateCenterSettings } from "@/client/data/account";
+import { bootstrapSession, forgetDevice } from "@/client/session/session";
+import { timeZoneOptions, type TimeZoneOption } from "@qct/core/i18n/time-zones";
 import { useErrorMessage } from "@/i18n/use-error-message";
-import { updateCenterSchema } from "@/shared/access";
-import { NAME_MAX } from "@/shared/schemas/base";
-import { parseWithCodes } from "@/shared/schemas/errors";
+import { updateCenterSchema } from "@qct/core/shared/access";
+import { NAME_MAX } from "@qct/core/shared/schemas/base";
+import { parseWithCodes } from "@qct/core/shared/schemas/errors";
+import { DeletionDialog } from "./deletion-dialog";
 
 /**
  * The center: its code (everyone may need to share it), and for admins its
- * name and time zone. The time zone decides what "today" is for lessons.
+ * name and time zone, and deleting it. The time zone decides what "today"
+ * is for lessons.
  */
 export function CenterSection() {
   const t = useTranslations("settings");
@@ -147,6 +150,45 @@ export function CenterSection() {
           </span>
         </div>
       )}
+      {isAdmin && <DeleteCenter />}
     </section>
+  );
+}
+
+/** Admins: the center and everything in it (PLAN.md §0 #50). */
+function DeleteCenter() {
+  const t = useTranslations("deletion");
+  const tSettings = useTranslations("settings");
+  const router = useRouter();
+  const { session, db } = useApp();
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="flex flex-col items-start gap-2 border-t pt-4">
+      <p className="text-sm text-muted-foreground">{t("centerPrintHint")}</p>
+      <Button variant="outline" className="h-11 text-destructive" onClick={() => setOpen(true)}>
+        <Trash2 aria-hidden />
+        {t("centerButton")}
+      </Button>
+      <DeletionDialog
+        open={open}
+        onOpenChange={setOpen}
+        title={t("centerTitle")}
+        description={t("centerDescription")}
+        submitLabel={t("deleteCenter")}
+        onDelete={deleteCenter}
+        onDeleted={async () => {
+          await forgetDevice(db);
+          toast.success(t("centerDeleted"));
+          router.replace("/login");
+        }}
+      >
+        <div className="flex flex-col gap-1">
+          <span className="text-sm text-muted-foreground">{tSettings("centerName")}</span>
+          <span dir="auto" className="font-medium">
+            {session.tenantName}
+          </span>
+        </div>
+      </DeletionDialog>
+    </div>
   );
 }

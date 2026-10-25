@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { can, canSeeClass, isAdmin, type Permission } from "@/shared/access";
+import { can, canSeeClass, isAdmin, type Permission } from "@qct/core/shared/access";
 import { useApp } from "./app-context";
 
 /**

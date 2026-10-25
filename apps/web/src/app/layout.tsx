@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Providers } from "@/components/providers";
-import { toAppLocale } from "@/i18n/config";
-import { getDirection } from "@/i18n/direction";
+import { toAppLocale } from "@qct/core/i18n/config";
+import { getDirection } from "@qct/core/i18n/direction";
 import { FONT_BY_LOCALE } from "./fonts";
 import "./globals.css";
 

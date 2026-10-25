@@ -1,10 +1,10 @@
 import { SendEmailCommand, SESv2Client } from "@aws-sdk/client-sesv2";
 import { createTranslator } from "next-intl";
 import { v7 as uuidv7 } from "uuid";
-import ar from "../../messages/ar.json";
-import en from "../../messages/en.json";
-import { DEFAULT_LOCALE, getIntlLocale, isLocale, type Locale } from "@/i18n/config";
-import { getDirection } from "@/i18n/direction";
+import ar from "@qct/core/messages/ar.json";
+import en from "@qct/core/messages/en.json";
+import { DEFAULT_LOCALE, getIntlLocale, isLocale, type Locale } from "@qct/core/i18n/config";
+import { getDirection } from "@qct/core/i18n/direction";
 
 /** Teachers have no email; Better Auth still needs a unique one. */
 export const placeholderEmail = () => `${uuidv7()}@users.invalid`;

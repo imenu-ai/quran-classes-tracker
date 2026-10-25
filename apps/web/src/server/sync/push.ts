@@ -1,15 +1,15 @@
 import type { Db, Filter } from "mongodb";
-import { can, canSeeClass, isAdmin, type Permission } from "@/shared/access";
-import { parseWithCodes } from "@/shared/schemas/errors";
-import { clampUpdatedAt } from "@/shared/sync/lww";
-import type { PushMutation, PushResult } from "@/shared/sync/protocol";
+import { can, canSeeClass, isAdmin, type Permission } from "@qct/core/shared/access";
+import { parseWithCodes } from "@qct/core/shared/schemas/errors";
+import { clampUpdatedAt } from "@qct/core/shared/sync/lww";
+import type { PushMutation, PushResult } from "@qct/core/shared/sync/protocol";
 import {
   RECORD_SCHEMAS,
   REFERENCES,
   SYNC_TABLES,
   type SyncRecord,
   type SyncTable,
-} from "@/shared/sync/tables";
+} from "@qct/core/shared/sync/tables";
 import { actorOf, tenantIdOf, type Actor, type SyncScope } from "../actor";
 import { membersCollection } from "../members";
 import {

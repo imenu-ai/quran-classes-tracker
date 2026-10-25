@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApp } from "@/client/app-context";
 import { useCenterUsers, type CenterUser } from "@/client/data/users";
+import { sortCenterUsers } from "@qct/core/shared/center-users";
 
 /** The admin's list of the center's users (needs a connection). */
 export function UsersView() {
@@ -53,7 +54,7 @@ export function UsersView() {
           <EmptyState icon={Users} title={t("title")} action={addButton} />
         ) : (
           <ul className="flex flex-col gap-2">
-            {sortUsers(state.users, session.userId).map((user) => (
+            {sortCenterUsers(state.users, session.userId).map((user) => (
               <li key={user.id}>
                 <UserRow user={user} isSelf={user.id === session.userId} />
               </li>
@@ -62,12 +63,6 @@ export function UsersView() {
         ))}
     </PageContainer>
   );
-}
-
-/** You first, then admins, then everyone else by name. */
-function sortUsers(users: readonly CenterUser[], selfId: string) {
-  const rank = (user: CenterUser) => (user.id === selfId ? 0 : user.role === "admin" ? 1 : 2);
-  return [...users].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
 }
 
 function UserRow({ user, isSelf }: { user: CenterUser; isSelf: boolean }) {

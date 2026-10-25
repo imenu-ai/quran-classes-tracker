@@ -11,11 +11,11 @@ import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { rememberCenterCode } from "@/client/auth/center-code";
 import { bootstrapSession, startPathFor } from "@/client/session/session";
-import { timeZoneOptions, type TimeZoneOption } from "@/client/time-zones";
-import { DEFAULT_TIME_ZONE, toAppLocale } from "@/i18n/config";
+import { timeZoneOptions, type TimeZoneOption } from "@qct/core/i18n/time-zones";
+import { DEFAULT_TIME_ZONE, toAppLocale } from "@qct/core/i18n/config";
 import { useErrorMessage } from "@/i18n/use-error-message";
-import { PASSWORD_MAX, registerCenterSchema, USERNAME_MAX } from "@/shared/access";
-import { parseWithCodes, type FieldError as CodedError } from "@/shared/schemas/errors";
+import { PASSWORD_MAX, registerCenterSchema, USERNAME_MAX } from "@qct/core/shared/access";
+import { parseWithCodes, type FieldError as CodedError } from "@qct/core/shared/schemas/errors";
 
 const FIELDS = ["centerName", "timezone", "adminName", "email", "username", "password"] as const;
 type FieldName = (typeof FIELDS)[number];

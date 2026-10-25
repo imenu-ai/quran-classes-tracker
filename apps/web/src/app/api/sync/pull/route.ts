@@ -1,4 +1,4 @@
-import { pullQuerySchema } from "@/shared/sync/protocol";
+import { pullQuerySchema } from "@qct/core/shared/sync/protocol";
 import { withTenant } from "@/server/auth/tenant-context";
 import { getDb } from "@/server/db";
 import { badRequest, jsonResponse } from "@/server/sync/http";

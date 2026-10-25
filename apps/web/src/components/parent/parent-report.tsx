@@ -5,10 +5,10 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useId } from "react";
 import { usePortionLabel } from "@/components/homework/use-portion-label";
 import { Badge } from "@/components/ui/badge";
-import { localDateToUtcDate } from "@/domain/dates/local-date";
+import { localDateToUtcDate } from "@qct/core/domain/dates/local-date";
 import { nativeSelectClass } from "@/lib/native-select";
 import { cn } from "@/lib/utils";
-import type { ParentReport as ParentReportData, ParentRow } from "@/shared/parent";
+import type { ParentReport as ParentReportData, ParentRow } from "@qct/core/shared/parent";
 
 /**
  * A student's month for his parent (read-only): the month picker, the

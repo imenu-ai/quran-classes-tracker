@@ -1,4 +1,4 @@
-import type { Access } from "@/shared/access";
+import type { Access } from "@qct/core/shared/access";
 
 /** A signed-in user acting on his center's data, with what he may do. */
 export interface Actor {

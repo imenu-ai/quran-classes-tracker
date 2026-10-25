@@ -3,7 +3,7 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { homeworkRecord } from "@/test/records";
+import { homeworkRecord } from "@qct/core/test/records";
 import { installDomPolyfills, renderArabic } from "@/test/dom";
 import { HomeworkItem } from "./student-today";
 

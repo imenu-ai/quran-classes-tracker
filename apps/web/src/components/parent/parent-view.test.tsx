@@ -2,7 +2,7 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ParentReport } from "@/shared/parent";
+import type { ParentReport } from "@qct/core/shared/parent";
 import { installDomPolyfills, renderArabic } from "@/test/dom";
 import { ParentView } from "./parent-view";
 

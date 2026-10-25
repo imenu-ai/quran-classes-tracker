@@ -30,7 +30,7 @@ import {
   moveStudentsAndArchive,
   useActiveClasses,
 } from "@/client/data/classes";
-import type { ClassRecord } from "@/shared/schemas/class";
+import type { ClassRecord } from "@qct/core/shared/schemas/class";
 
 /**
  * Confirms archiving a class. If it still has active students, the teacher

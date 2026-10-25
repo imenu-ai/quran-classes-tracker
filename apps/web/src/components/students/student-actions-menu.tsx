@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useApp } from "@/client/app-context";
 import { archiveStudent, unarchiveStudent } from "@/client/data/students";
-import type { StudentRecord } from "@/shared/schemas/student";
+import type { StudentRecord } from "@qct/core/shared/schemas/student";
 import { MoveStudentDialog } from "./move-student-dialog";
 import { ParentLinkDrawer } from "./parent-link-drawer";
 import { StudentFormDrawer } from "./student-form-drawer";

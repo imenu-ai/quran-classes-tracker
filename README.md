@@ -21,9 +21,15 @@ The product brief is in [BRIEF.md](BRIEF.md). The full design (decisions, sync p
 | Offline     | Serwist service worker                                                                |
 | Tests       | Vitest (unit, jsdom, mongodb-memory-server), Playwright (E2E)                         |
 
-Node 22 (see `.nvmrc`) and pnpm 10 (pinned in `package.json`; run `corepack enable` once).
+Node 22.13 or later (see `.nvmrc`; the SQLite tests use `node:sqlite`) and pnpm 10 (pinned in `package.json`; run `corepack enable` once).
 
-**Repo layout.** A pnpm workspace: the web app (package `@qct/web`) lives in `apps/web`; the React Native app will join it as `apps/mobile`, with shared code in `packages/` (PLAN.md, Phase 2). Run every command below from the repo root: the root scripts pass them on to the web app. `.npmrc` sets `node-linker=hoisted`, which Amplify needs for a pnpm monorepo.
+**Repo layout.** A pnpm workspace (PLAN.md, Phase 2):
+
+- `apps/web`: the web app (package `@qct/web`).
+- `packages/core`: React-free code shared with the coming mobile app (package `@qct/core`, imported as `@qct/core/…`): domain rules, schemas and the sync protocol, the local data layer and sync engine (each app plugs in its own storage), i18n config and the messages. It's TypeScript source, compiled by the app that imports it.
+- `apps/mobile`: the React Native app for iOS and Android (package `@qct/mobile`, Expo). See [Mobile app](#mobile-app); it's being built in Phase 2.
+
+Run every command below from the repo root: `lint`, `typecheck` and `test` run in every package, and the other scripts pass on to the web app. `.npmrc` sets `node-linker=hoisted`, which Amplify needs for a pnpm monorepo.
 
 ## Local setup
 
@@ -74,8 +80,9 @@ The service worker is **off in development**. To try offline behaviour on your m
 | `pnpm build` / `pnpm start`         | Production build (with the service worker) / serve it                    |
 | `pnpm lint`                         | ESLint, zero warnings allowed. Includes the logical-direction class rule |
 | `pnpm typecheck`                    | Generates route types, then `tsc --noEmit`                               |
-| `pnpm test` / `pnpm test:watch`     | Vitest unit and integration tests                                        |
+| `pnpm test` / `pnpm test:watch`     | Unit and integration tests (Vitest; Jest in the mobile app)              |
 | `pnpm test:e2e`                     | Playwright end-to-end tests (see below)                                  |
+| `pnpm mobile:e2e`                   | Maestro flows for the mobile app on the Android emulator (see below)     |
 | `pnpm format` / `pnpm format:check` | Prettier                                                                 |
 | `pnpm db:indexes`                   | Create or update MongoDB indexes                                         |
 | `pnpm center:create`                | Create a center and its admin (prints the center code)                   |
@@ -98,6 +105,9 @@ The CLI scripts read `apps/web/.env.local` then `apps/web/.env`; variables alrea
 - **Forgotten passwords.**
   - An admin resets his own by email (`/forgot-password`, sent through Amazon SES).
   - A teacher asks his admin, who sets a new one.
+- **Deleting.** Both ask for the password again (5 tries per 15 minutes), in the app and on the web, and need a connection.
+  - **One's own account:** Settings → Account → "حذف الحساب". The user's sign-in and details (name, username, phone, email) are deleted and every device of theirs is signed out; the center's classes, students and records stay. The center's last active admin can't: they make another user an admin first, or delete the center.
+  - **The center** (admins): Settings → Center → "حذف المركز". Every user is signed out, then every user, class, student, lesson, attendance and homework record and the center itself are deleted. Parent links stop working. Print the students' sheets first to keep them.
 - **How access is enforced.** The device hides what a user can't do. The server checks every sync: a teacher's writes need the matching permission and one of his classes, and pulls only return his classes. When an admin changes someone's classes or permissions, that user's devices rebuild their local copy at the next sync.
 
 ## Daily use
@@ -144,16 +154,18 @@ Service worker: cached assets and page shells
 - **Deterministic IDs** for lessons (class + date) and attendance (lesson + student), so two devices offline create the same record instead of duplicates.
 - **Pushes go parents first** (classes, students, lessons, attendance, homework), so a change never reaches the server before a record it refers to.
 - **Routes use query parameters** (`/class?id=…`, `/student?id=…`), so one cached page shell serves every class and student offline. Pages hold no data; only the API checks the session.
-- **Code layout** (under `apps/web`):
-  - `src/domain`: pure logic (sura map and validation, homework suggestion, monthly stats, dates).
-  - `src/shared`: schemas and the sync protocol, used by client and server.
-  - `src/server`: Mongo, auth, sync services.
-  - `src/client`: Dexie, sync engine, PWA helpers.
+- **Code layout:**
+  - `packages/core/src/domain`: pure logic (sura map and validation, homework suggestion, monthly stats, dates).
+  - `packages/core/src/shared`: schemas and the sync protocol, used by client and server.
+  - `packages/core/src/data`: the device's data layer over a storage interface: `LocalStore` and the outbox, the sync engine, and the actions and queries per entity, with tests that run on every storage adapter.
+  - `packages/core/src/i18n` and `packages/core/messages`: locales, direction, formats, error codes to text, and the message files.
+  - `apps/web/src/server`: Mongo, auth, sync services. The other web folders below are under `apps/web` too.
+  - `src/client`: the Dexie storage adapter, live-query hooks, sync triggers, session and PWA helpers.
   - `src/components`, `src/app`: UI and routes.
 
 ## i18n and direction rules
 
-- All text lives in `apps/web/messages/ar.json` (and `en.json`). Domain and server code return error **codes**, never text.
+- All text lives in `packages/core/messages/ar.json` (and `en.json`). Domain and server code return error **codes**, never text.
 - Use **logical** Tailwind classes only (`ms-`, `pe-`, `start-`, `text-start`, …). `pnpm lint` fails on physical ones (`ml-`, `right-`, `text-left`, …) and on literal `dir="rtl"` / `dir="ltr"`.
 - Icons that point a direction (back, next) go through `DirectionalIcon`, which mirrors them in RTL.
 - Numbers use Latin digits and dates the Gregorian calendar, via the locale tag `ar-u-ca-gregory-nu-latn`. Inputs accept Arabic-Indic digits too.
@@ -174,12 +186,13 @@ pnpm test:e2e    # end-to-end
 
 To reuse the last build: `SKIP_E2E_BUILD=1 pnpm test:e2e`.
 
-| Spec        | Covers                                                                                                                                                   | Projects                                                                 |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `main-flow` | class → students → student page: recite and mark, next-day homework, absence; next day: postpone, undo, mark                                             | iPhone 15 (WebKit), Pixel 7, Desktop Chrome                              |
-| `offline`   | offline: mark one student and mark another absent, reload, reconnect; a second fresh login sees both                                                     | Chromium only (Playwright can't drive service workers offline in WebKit) |
-| `roles`     | an admin registers, creates classes and a teacher with limited access; the teacher's forced password change, restricted view, reassignment and disabling | all three                                                                |
-| `ltr-smoke` | every main screen in English: `dir="ltr"` and no horizontal overflow at 360 px                                                                           | all three                                                                |
+| Spec        | Covers                                                                                                                                                                                                                     | Projects                                                                 |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `main-flow` | class → students → student page: recite and mark, next-day homework, absence; next day: postpone, undo, mark                                                                                                               | iPhone 15 (WebKit), Pixel 7, Desktop Chrome                              |
+| `offline`   | offline: mark one student and mark another absent, reload, reconnect; a second fresh login sees both                                                                                                                       | Chromium only (Playwright can't drive service workers offline in WebKit) |
+| `roles`     | an admin registers, creates classes and a teacher with limited access; the teacher's forced password change, restricted view, reassignment and disabling                                                                   | all three                                                                |
+| `parent`    | the teacher sets a parent ID and marks the student; a signed-out phone opens the parent link with the ID, sees the month and is remembered; a student without a parent ID has an invalid link; the printed sheet's QR code | all three                                                                |
+| `ltr-smoke` | every main screen in English: `dir="ltr"` and no horizontal overflow at 360 px                                                                                                                                             | all three                                                                |
 
 The first time, install the browsers with `pnpm --filter @qct/web exec playwright install`. Playwright's WebKit on Windows is close to iOS Safari but not identical, so check on a real iPhone before a release (next section).
 
@@ -218,6 +231,71 @@ On the iPhone:
 - [ ] From the class statistics, print all students: one page each.
 - [ ] Try it offline too (airplane mode).
 
+## Mobile app
+
+`apps/mobile` is an Expo app (SDK 58, React Native 0.88) with native navigation and controls, in Arabic and right to left from the start. It's being built in Phase 2 (PLAN.md): so far the teacher's day, class statistics, settings and user management, printing and the parent link, and tablet layouts. EAS project: `@imenu/quran-classes-tracker`; bundle id and Android package `ai.imenu.quran`.
+
+**Setup (Windows, Android).**
+
+- Android Studio with an emulator (the plan's checks use a Small Phone profile, 360 dp wide), JDK 17 (`JAVA_HOME`), `ANDROID_HOME` set.
+- Windows long paths turned on (`LongPathsEnabled`). The React Native build's paths go past 260 characters.
+- ninja 1.12 or later in the SDK's CMake: the ninja 1.10.2 bundled with CMake 3.22.1 fails on long paths anyway ("Filename longer than 260 characters"). Replace `%LOCALAPPDATA%\Android\Sdk\cmake\3.22.1\bin\ninja.exe` with the official `ninja-win.zip` from the ninja-build GitHub releases (keep the old file). An SDK update can bring the old one back.
+- `pnpm install` from the root, as for the web app.
+
+**Run it on the emulator:**
+
+```sh
+pnpm mobile:android   # builds and installs the development app, then starts Metro
+pnpm mobile           # later: just Metro, for the installed development app
+```
+
+The first build takes 10–20 minutes (Gradle and the Android NDK download once); later ones take about a minute. The app's own code reloads without a rebuild; a new native library or a change to `app.json` needs a new build. (Step 2.8 added `@expo/ui`, step 2.12 `expo-print`, `expo-sharing` and `react-native-svg`, and step 2.13 `expo-screen-orientation`, so builds from before them lack those parts.)
+
+**On an iPhone** (no Mac needed; EAS builds in the cloud):
+
+1. Once: register the iPhone with `npx eas-cli device:create` (from `apps/mobile`) and open the link on the phone.
+2. Build: `npx eas-cli build --profile development --platform ios` (from `apps/mobile`). The first time, it asks for the Apple Developer sign-in to create the certificate and profile.
+3. Install from the link EAS shows, start Metro with `pnpm mobile`, and open the app (same Wi-Fi, or `pnpm mobile -- --tunnel`).
+
+Development builds show two checks in Settings: the local classes with a button that adds one (to see writes sync to the server and the web), and an Intl check (Arabic plurals, dates, direction).
+
+**The server it talks to.** The app uses the web app's `/api` routes (sign-in, `/api/me` and sync), at `EXPO_PUBLIC_API_URL`:
+
+- Copy `apps/mobile/.env.example` to `apps/mobile/.env.local` and set it, then restart Metro (the value is built into the bundle).
+- Emulator against a web server on this PC: `http://localhost:<port>` after `adb reverse tcp:<port> tcp:<port>`.
+- iPhone on the same Wi-Fi: `http://<this PC's LAN IP>:<port>`.
+- Against production, the server must already have the mobile sign-in support (Better Auth's Expo plugin, merged in step 2.6).
+
+Sign-in, registration, "forgot password" (it opens the web page) and the forced password change need that server. A signed-in user's saved session opens the app without it: their data lives on the phone (`qct-<userId>.db`), and changes made offline sync once the server is reachable.
+
+**Tests and checks:** `pnpm lint`, `pnpm typecheck` and `pnpm test` cover the app too (ESLint with the logical-style rule, Jest with `jest-expo`). `npx expo-doctor` (from `apps/mobile`) checks dependency versions.
+
+`src/ltr.test.tsx` renders the main screens in English (the hidden version) and fails on any Arabic left on them.
+
+**End-to-end flows (Maestro, Android).** `pnpm mobile:e2e` runs the flows in `apps/mobile/maestro/` on the emulator, against their own server:
+
+1. Once: install [Maestro](https://maestro.dev) (it goes to `~/.maestro`; set `MAESTRO` if it's elsewhere) and the development build (`pnpm mobile:android`).
+2. Start one emulator, e.g. `qct_phone`. Stop `pnpm mobile` if it's running on port 8082.
+3. `pnpm mobile:e2e` starts the web app's E2E server (as `pnpm test:e2e` does: a fresh in-memory MongoDB, a build in `.next-e2e`, port 3100 or `E2E_PORT`), then Metro on port 8082 (or `METRO_PORT`) pointed at it, reverses both ports into the emulator, and runs every flow. `SKIP_E2E_BUILD=1` reuses the last web build. One flow: `pnpm mobile:e2e maestro/offline.yaml`.
+
+| Flow        | Covers                                                                                                                                                         |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `main-flow` | sign in, create a class and a student, mark him present, recite now with a mark, the month table, everything synced                                            |
+| `offline`   | airplane mode: create a class, the indicator shows it waiting; back online it syncs; after signing out (which wipes the device) and in again, it's still there |
+| `roles`     | the admin creates a class, a student and a teacher for it; the teacher's forced password change, only that class, no admin controls, taking attendance         |
+| `deletion`  | the only admin can't delete their own account; a wrong password, then the center deleted; signed out, and the account no longer signs in                       |
+
+Each flow starts from a cleared app. Flows find fields by their `testID` (`sign-in.code`, `class.name`, `ayah.from`, …); Maestro types ASCII only on Android, so the test data is in Latin letters. If adb stops answering, the runner restarts its server; if every flow fails at the sign-in screen with the emulator's home screen showing, Android killed the app as it started (an emulator that has run for hours): `adb reboot`, then run again.
+
+**Checks on an iPhone and an iPad** (a development build with the current native modules, see above; Maestro doesn't run iOS from Windows):
+
+- [ ] Right to left: the header title, back arrow and tabs on the right; titles readable (not mirrored); Arabic text joined.
+- [ ] Offline: airplane mode, mark a student, add a class; the indicator shows "غير متصل" and the pending count. Close the app fully and reopen: everything is there. Airplane mode off: "متصل", and the web shows the changes.
+- [ ] Print: a student's month ("طباعة الشهر") opens the iOS print sheet with one A4 page; "مشاركة PDF" shares a PDF named after the student and month, with the Arabic font embedded. From the class statistics, print all students: one page each. Also offline.
+- [ ] Share: the parent link ("رابط ولي الأمر") copies, opens the share sheet, and shows a QR code that a phone camera opens.
+- [ ] iPad: the classes in columns (three in landscape), the class page in two; it rotates freely, and forms and sheets stay narrow and centred. The iPhone stays in portrait.
+- [ ] The score wheel and form sheets behave natively; the keyboard doesn't cover the field being typed in.
+
 ## Deployment
 
 Production runs on **AWS Amplify Hosting** (Next.js SSR, region `eu-central-1`) with **MongoDB Atlas**. Amplify supports SSR up to Next.js 15, which is why Next is pinned to 15.
@@ -242,7 +320,7 @@ To change the build, edit `BuildSpec` in `infra/amplify-stack.yml` and merge it 
 
 ### First deployment
 
-Not deployed yet. Do these in order.
+Production was set up with these steps during Phase 1. Follow them in order to set it up again, for example in a new AWS account.
 
 **1. MongoDB Atlas**
 
