@@ -23,6 +23,13 @@
         "EXPO_PUBLIC_API_URL": "https://quran.imenu.ai"
       }
     },
+    "simulator": {
+      "extends": "production",
+      "autoIncrement": false,
+      "ios": {
+        "simulator": true
+      }
+    },
     "android-apk": {
       "extends": "production",
       "distribution": "internal",

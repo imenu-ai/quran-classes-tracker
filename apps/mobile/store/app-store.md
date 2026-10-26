@@ -144,7 +144,7 @@ Not collected: location, health, financial info, contacts, browsing or search hi
 
 ## Screenshots
 
-Apple requires iPhone 6.9" (1320 × 2868 or 1290 × 2796) and iPad 13" (2064 × 2752 or 2048 × 2732) screenshots; one set is reused for the smaller sizes. Take them from the TestFlight build, signed in as `demo_admin` in the demo center, in light mode, with notifications silenced. Screenshots from other device sizes can be fitted to these sizes afterwards.
+Apple requires iPhone 6.9" (1320 × 2868 or 1290 × 2796) and iPad 13" (2064 × 2752 or 2048 × 2732) screenshots; one set is reused for the smaller sizes. Take them from the TestFlight build, signed in as `demo_admin` in the demo center, in light mode, with notifications silenced. Screenshots from other device sizes can be fitted to these sizes afterwards. Without an iPad, take the iPad set in Appetize.io from the `simulator` build profile (README → "Releasing the app").
 
 Shot list, in this order, on both iPhone and iPad (iPad in landscape):
 
