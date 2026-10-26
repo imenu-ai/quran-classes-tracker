@@ -20,13 +20,15 @@ What goes into App Store Connect for "تحفيظ القرآن" (PLAN.md 2.16). P
 | Content rights     | No third-party content                                                   |
 | Export compliance  | Standard encryption only (`ITSAppUsesNonExemptEncryption: false`)        |
 
+The App Store searches the name, subtitle and keywords together, so a word in one of them is never repeated in another (the name already covers تحفيظ/القرآن and Quran/Memorization).
+
 App names are unique across the App Store. If "تحفيظ القرآن" is taken, use "تحفيظ القرآن - متابعة الحلقات" (the app's own name on the phone stays "تحفيظ القرآن").
 
 ## Arabic (primary)
 
 **Name** (30): تحفيظ القرآن
 
-**Subtitle** (30): متابعة حلقات تحفيظ القرآن
+**Subtitle** (30): حضور الطلاب وتسميعهم ودرجاتهم
 
 **Promotional text** (170):
 سجّل الحضور والتسميع والدرجات في الحلقة، حتى دون إنترنت، وتابع تقدّم كل طالب شهرًا بشهر.
@@ -59,7 +61,7 @@ App names are unique across the App Store. If "تحفيظ القرآن" is taken
 لا إعلانات ولا تتبع. يستطيع كل مستخدم حذف حسابه، ويستطيع المدير حذف المركز وكل بياناته من الإعدادات.
 
 **Keywords** (100, no spaces after commas):
-قرآن,تحفيظ,حلقة,حلقات,معلم,طلاب,حضور,تسميع,حفظ,مركز,درجات,مصحف
+حلقة,حلقات,معلم,طلاب,طالب,حضور,تسميع,حفظ,مركز,درجات,مصحف,واجبات,اختبار,متابعة,شيخ,مدرسة
 
 **What's new** (first version): الإصدار الأول.
 
@@ -67,7 +69,7 @@ App names are unique across the App Store. If "تحفيظ القرآن" is taken
 
 **Name** (30): Quran Memorization
 
-**Subtitle** (30): Track memorization classes
+**Subtitle** (30): Attendance, recitation, marks
 
 **Promotional text** (170):
 Record attendance, recitations and marks in class, even offline, and follow each student's progress month by month.
@@ -100,7 +102,7 @@ Privacy
 No ads and no tracking. Every user can delete their account, and an admin can delete the center with all its data, in Settings.
 
 **Keywords** (100):
-quran,memorization,hifz,tahfiz,class,teacher,students,attendance,recitation,marks,islamic,school
+hifz,tahfiz,halaqa,class,teacher,students,homework,progress,islamic,school,madrasa,sheikh,exam
 
 **What's new** (first version): First release.
 
@@ -144,7 +146,7 @@ Not collected: location, health, financial info, contacts, browsing or search hi
 
 ## Screenshots
 
-Apple requires iPhone 6.9" (1320 × 2868 or 1290 × 2796) and iPad 13" (2064 × 2752 or 2048 × 2732) screenshots; one set is reused for the smaller sizes. Take them from the TestFlight build, signed in as `demo_admin` in the demo center, in light mode, with notifications silenced. Screenshots from other device sizes can be fitted to these sizes afterwards.
+Apple requires iPhone 6.9" (1320 × 2868 or 1290 × 2796) and iPad 13" (2064 × 2752 or 2048 × 2732) screenshots; one set is reused for the smaller sizes. Take them from the TestFlight build, signed in as `demo_admin` in the demo center, in light mode, with notifications silenced. Screenshots from other device sizes can be fitted to these sizes afterwards. Without an iPad, take the iPad set in Appetize.io from the `simulator` build profile (README → "Releasing the app").
 
 Shot list, in this order, on both iPhone and iPad (iPad in landscape):
 
