@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "54f1e071-f790-4d07-8c1e-8afcfe26071d"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.mhmdtshref.quranclassestracker",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}
