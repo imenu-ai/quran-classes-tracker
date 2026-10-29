@@ -876,3 +876,11 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
   - **The listing** (Arabic and English texts within Apple's limits, keywords, review notes, privacy "nutrition label" answers, screenshot list) is in `apps/mobile/store/app-store.md`; the release commands are in the README.
   - **Left for the user:** deploy the web app (the pages must be live), run the iOS build and submit, fill in App Store Connect, take the screenshots, and build the APK when Android users need it.
 
+
+- 2026-10-29 (2.16, Google Play's part; the step stays open until the app is on Play):
+  - **The App Store approved version 1.0.0 (build 2)** after two days in review. An earlier submit had already uploaded that build, so App Store Connect refused a second upload of the same number ("already been used"); nothing needed changing.
+  - **The user now has a Google Play developer account** (verified; no Android device of their own, so the emulators stand in).
+  - **The Play listing** is in `apps/mobile/store/play-store.md`: the Arabic and English texts within Play's limits (the App Store's, with "phones and tablets" in place of iPhone and iPad), the App content answers, the Data safety form (the App Store's privacy answers in Google's categories) and the release notes. The 512 px icon and the 1024 × 500 feature graphics (Arabic and English) are in `store/play/`, rendered in Chromium from the web icon with the app's fonts.
+  - **Account deletion URL:** Play asks for a web page where users can delete their account without the app. The support page's deletion section now says how to do it on the website, what's deleted and what stays with the center, and how to ask by email when one can't sign in. The web app must be deployed for Play's reviewers to see it.
+  - **Permissions:** the build declares none that Play makes you justify, and no advertising ID.
+  - **Left for the user:** deploy the web app, run the first Android production build (it creates the keystore), upload the `.aab` by hand, fill in the Play Console, and the closed test if the account is personal.

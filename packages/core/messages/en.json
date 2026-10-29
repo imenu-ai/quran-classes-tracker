@@ -635,7 +635,7 @@
       },
       "deletion": {
         "title": "Deleting your account or the center",
-        "body": "In Settings → Account → \"Delete account\". An admin can delete the whole center in Settings → Center → \"Delete the center\". The privacy policy has the details."
+        "body": "In the app, or on this website without the app: sign in, open Settings → Account → \"Delete account\" and enter your password. Your name, username, phone number and password are deleted at once and for good, and you're signed out on all your devices. The center's classes, students and their records stay with the center.\n\nThe center's only admin can't delete their account alone: make another user an admin first, or delete the whole center with all its data in Settings → Center → \"Delete the center\".\n\nIf you can't sign in, write to {email} with your center code and username, and we'll delete the account. The privacy policy has the details."
       }
     }
   },

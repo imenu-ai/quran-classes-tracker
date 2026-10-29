@@ -298,7 +298,7 @@ Each flow starts from a cleared app. Flows find fields by their `testID` (`sign-
 
 ### Releasing the app
 
-The listing texts, App Review notes, privacy answers and the screenshot list are in `apps/mobile/store/app-store.md`. The release builds talk to `https://quran.imenu.ai` (`EXPO_PUBLIC_API_URL` in `apps/mobile/eas.json`), and the store listing links to its `/privacy` and `/support` pages, so the web app must be deployed first.
+The App Store listing texts, App Review notes, privacy answers and the screenshot list are in `apps/mobile/store/app-store.md`; Google Play's are in `apps/mobile/store/play-store.md`. The release builds talk to `https://quran.imenu.ai` (`EXPO_PUBLIC_API_URL` in `apps/mobile/eas.json`), and the store listing links to its `/privacy` and `/support` pages, so the web app must be deployed first.
 
 **iOS** (from `apps/mobile`; asks for the Apple ID sign-in and its two-factor code):
 
@@ -312,6 +312,14 @@ Then, in App Store Connect: test in TestFlight, fill in the listing from `store/
 **iPad screenshots without an iPad:** `npx eas-cli build --profile simulator --platform ios` makes a simulator build (a `.tar.gz` with the `.app`, no signing). Upload it to [Appetize.io](https://appetize.io/upload), run it on a 13" iPad Pro and take the shots there.
 
 **JavaScript-only fixes** to a released version go out without a new build: `npx eas-cli update --channel production --message "…"`. A new native module or an `app.json` change needs a new build and a new version (`version` in `app.json`; the runtime version follows it).
+
+**Android (Google Play)** (from `apps/mobile`; the listing, graphics, App content and Data safety answers are in `store/play-store.md` and `store/play/`):
+
+```sh
+npx eas-cli build --profile production --platform android   # an .aab; the version code goes up by itself
+```
+
+The first build asks to generate the Android keystore: say yes, and EAS keeps it (it's the upload key; Google re-signs the app with its own key). Google's API can't create an app's first release, so the first `.aab` is uploaded by hand: download it from the build page and upload it in the Play Console (Testing → Internal testing, or Closed testing). For later builds, create a Google Cloud service account with access to the app in the Play Console, upload its JSON key under `npx eas-cli credentials` → Android → Google Service Account, and run `npx eas-cli submit --profile production --platform android --latest`.
 
 **Android without Google Play:** `npx eas-cli build --profile android-apk --platform android` makes an APK and prints a link to its download page. People open it on their phone and allow installing from that source when Android asks; Play Protect may warn about an unknown developer. JavaScript fixes reach it through EAS Update like the iOS app; native changes need a new APK. EAS keeps the signing key, and the same key will sign the Play Store version later, so installed copies can update to it.
 
