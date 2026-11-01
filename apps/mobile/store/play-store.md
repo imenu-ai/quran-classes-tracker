@@ -4,18 +4,18 @@ What goes into the Play Console for "تحفيظ القرآن" (PLAN.md 2.16). De
 
 ## Create the app
 
-| Field              | Value                                                     |
-| ------------------ | --------------------------------------------------------- |
-| App name           | تحفيظ القرآن                                              |
-| Default language   | Arabic – ar                                               |
-| App or game        | App                                                       |
-| Free or paid       | Free (can't be changed to paid later)                     |
-| Package name       | `ai.imenu.quran` (set by the first uploaded build)        |
-| Category           | Education                                                 |
-| Contact email      | mhmdtshref@gmail.com                                      |
-| Website            | https://quran.imenu.ai                                    |
-| Privacy policy     | https://quran.imenu.ai/privacy                            |
-| Countries          | All countries and regions                                 |
+| Field            | Value                                              |
+| ---------------- | -------------------------------------------------- |
+| App name         | تحفيظ القرآن                                       |
+| Default language | Arabic – ar                                        |
+| App or game      | App                                                |
+| Free or paid     | Free (can't be changed to paid later)              |
+| Package name     | `ai.imenu.quran` (set by the first uploaded build) |
+| Category         | Education                                          |
+| Contact email    | mhmdtshref@gmail.com                               |
+| Website          | https://quran.imenu.ai                             |
+| Privacy policy   | https://quran.imenu.ai/privacy                     |
+| Countries        | All countries and regions                          |
 
 Play app names don't have to be unique, so the English title can stay "Quran Memorization".
 
@@ -91,29 +91,31 @@ No ads and no tracking. Every user can delete their account, and an admin can de
 
 In `store/play/`:
 
-| Asset                       | File                     | Play's rule                                |
-| --------------------------- | ------------------------ | ------------------------------------------ |
-| App icon                    | `icon-512.png`           | 512 × 512 PNG; Play rounds the corners     |
-| Feature graphic, Arabic     | `feature-graphic-ar.png` | 1024 × 500 PNG or JPEG, no transparency    |
-| Feature graphic, English    | `feature-graphic-en.png` | the same                                   |
+| Asset                    | File                     | Play's rule                             |
+| ------------------------ | ------------------------ | --------------------------------------- |
+| App icon                 | `icon-512.png`           | 512 × 512 PNG; Play rounds the corners  |
+| Feature graphic, Arabic  | `feature-graphic-ar.png` | 1024 × 500 PNG or JPEG, no transparency |
+| Feature graphic, English | `feature-graphic-en.png` | the same                                |
 
-Screenshots: 2–8 per device type, PNG or JPEG, each side 320–3840 px, the long side at most twice the short one (a 1080 × 2400 phone screen must be cropped to 1080 × 2160 or less). Phone shots are required; 7" and 10" tablet shots let Play show the app as tablet-ready. The shot list is the one in `app-store.md`, taken on the Android emulators (`qct_phone`, `qct_tablet`) signed in as `demo_admin`.
+Screenshots: 2–8 per device type, PNG or JPEG, each side 320–3840 px, the long side at most twice the short one (a 1080 × 2400 phone screen must be cropped to 1080 × 2160 or less). Phone shots are required; 7" and 10" tablet shots let Play show the app as tablet-ready.
+
+The shots are in `store/play/screenshots/`: `phone/` (1080 × 1920, `qct_phone` at 360 dp) and `tablet/` (2560 × 1600, `qct_tablet`; the same set fits both tablet slots). They follow the shot list in `app-store.md`, without the parent link: they were taken against a local copy of the demo center (same `center:create` and `dev:seed` data), and that screen prints the server's address, which would read `localhost`. The print preview's small QR code points to `localhost` too, and its system dialog is in English, the emulator's language.
 
 ## App content (Policy and programs → App content)
 
-| Declaration          | Answer                                                                                                                              |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Privacy policy       | https://quran.imenu.ai/privacy                                                                                                      |
-| Ads                  | No ads                                                                                                                              |
-| App access           | All or some functionality is restricted. Add the demo admin (and teacher) with the instructions below                               |
-| Content rating       | Category "Reference, news, or educational"; No to every question. Expected: Everyone / PEGI 3                                       |
-| Target audience      | 18 and over only (teachers and admins use the app, not students); doesn't appeal to children                                         |
-| News app             | No                                                                                                                                  |
-| Data safety          | See below                                                                                                                           |
-| Government app       | No                                                                                                                                  |
-| Financial features   | None                                                                                                                                |
-| Health               | None                                                                                                                                |
-| Advertising ID       | No (the app doesn't declare `AD_ID`)                                                                                                |
+| Declaration        | Answer                                                                                                |
+| ------------------ | ----------------------------------------------------------------------------------------------------- |
+| Privacy policy     | https://quran.imenu.ai/privacy                                                                        |
+| Ads                | No ads                                                                                                |
+| App access         | All or some functionality is restricted. Add the demo admin (and teacher) with the instructions below |
+| Content rating     | Category "Reference, news, or educational"; No to every question. Expected: Everyone / PEGI 3         |
+| Target audience    | 18 and over only (teachers and admins use the app, not students); doesn't appeal to children          |
+| News app           | No                                                                                                    |
+| Data safety        | See below                                                                                             |
+| Government app     | No                                                                                                    |
+| Financial features | None                                                                                                  |
+| Health             | None                                                                                                  |
+| Advertising ID     | No (the app doesn't declare `AD_ID`)                                                                  |
 
 **App access instructions** (the form has a username, a password and "any other information"):
 
@@ -126,15 +128,15 @@ The build asks for no permission that needs a declaration (no location, SMS, cal
 
 Collects data: **Yes**. Shares data with third parties: **No** (the hosting providers process it for us, which isn't sharing). Nothing is processed ephemerally.
 
-| Category            | Data type                    | Required or optional | Purposes                                   | What it is                                                           |
-| ------------------- | ---------------------------- | -------------------- | ------------------------------------------ | -------------------------------------------------------------------- |
-| Personal info       | Name                         | Required             | App functionality, Account management      | Users' names; students' names entered by the center                  |
-| Personal info       | Email address                | Required             | App functionality, Account management      | Admins' email, for password reset                                    |
-| Personal info       | Phone number                 | Optional             | App functionality                          | Optional user phone numbers                                          |
-| Personal info       | User IDs                     | Required             | App functionality, Account management      | The account id                                                       |
-| Personal info       | Other info                   | Required             | App functionality                          | Students' birth years and parents' ID numbers, entered by the center |
-| App activity        | Other user-generated content | Required             | App functionality                          | Classes, attendance, recitations, marks, homework, notes             |
-| Device or other IDs | Device or other IDs          | Required             | App functionality                          | A random id the app creates per install, used for syncing            |
+| Category            | Data type                    | Required or optional | Purposes                              | What it is                                                           |
+| ------------------- | ---------------------------- | -------------------- | ------------------------------------- | -------------------------------------------------------------------- |
+| Personal info       | Name                         | Required             | App functionality, Account management | Users' names; students' names entered by the center                  |
+| Personal info       | Email address                | Required             | App functionality, Account management | Admins' email, for password reset                                    |
+| Personal info       | Phone number                 | Optional             | App functionality                     | Optional user phone numbers                                          |
+| Personal info       | User IDs                     | Required             | App functionality, Account management | The account id                                                       |
+| Personal info       | Other info                   | Required             | App functionality                     | Students' birth years and parents' ID numbers, entered by the center |
+| App activity        | Other user-generated content | Required             | App functionality                     | Classes, attendance, recitations, marks, homework, notes             |
+| Device or other IDs | Device or other IDs          | Required             | App functionality                     | A random id the app creates per install, used for syncing            |
 
 Security practices:
 
