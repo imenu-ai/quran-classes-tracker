@@ -1,6 +1,6 @@
 # Implementation Plan: Quran Memorization (تحفيظ القرآن)
 
-Status: **Phase 1 done (the PWA, deployed on Amplify). Phase 2 done (the app, released on the App Store and Google Play).** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-11-07
+Status: **Phase 1 done (the PWA, deployed on Amplify). Phase 2 done (the app, released on the App Store and Google Play). Phase 3 (marking and homework improvements) planned.** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-11-07
 
 Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bottom)
 
@@ -65,6 +65,11 @@ Agreed with the user from 2026-10-05 on; the date marks when a group was added.
 | 51 | Builds and stores | **EAS Build** in the cloud (iOS builds from Windows) and **EAS Submit**; **EAS Update** for JS-only fixes. App Store first (account exists); Google Play when its developer account is created. |
 | 52 | Older app versions | Installed apps update slowly, so the API stays backward-compatible with every released app version: new fields are optional with server-side defaults (as in §4), and endpoints aren't renamed or removed. |
 | 53 | Direction on mobile | React Native sets direction when the app starts (`I18nManager`), not per screen. The app starts in RTL (only `ar` is enabled); a language change reloads the app. Styles use `start`/`end` only. |
+| 54 | Marks (2026-11-07) | Every mark (memorization, behavior, exam) is **0–10 in steps of 0.5**. 0 is a real mark: it counts in the averages and closes the homework. Replaces the 1–10 of #32 and #37. |
+| 55 | Not memorized | "لم يحفظ" is the **first entry of the memorization mark picker** and replaces the postpone button (#29). Like a postponement, the homework stays pending for the next session, the student counts as present and the memorization averages aren't affected; each failed session is its own row in the month table. The teacher can still give a **behavior mark** that day, which counts in the behavior average, and with it the student counts as evaluated. Existing postponements show as "لم يحفظ" without a behavior mark. Exams don't get it. |
+| 56 | Several suras | A homework item or exam holds **one or more suras**, each with its own ayah range or "السورة كاملة", and gets **one** memorization and one behavior mark. The next-homework suggestion continues after the last sura in the list, with that sura's size. |
+| 57 | Pages | Homework and exams can be entered as **whole pages** of the Madinah Mushaf (King Fahd Complex, Hafs, 604 pages): from page X to page Y. They're stored as the suras and ayahs those pages hold, plus the page range, and shown as pages with the ayahs beneath. Editing the ayahs afterwards turns it into an ayah homework. After a page homework, the form opens on pages and suggests the next pages of the same count. |
+| 58 | Session on a chosen date | An "إضافة جلسة" button with the month table picks a **past day or today** and opens that day for the student: attendance, due homework (assigned before that day and still pending), marks, "not memorized", recite now, exams and homework for the next session. It creates the class's lesson for that day if there is none; the other students show as not marked. Replaces "marking applies to today" in #31; editing a row of the month table stays. |
 
 ---
 
@@ -429,6 +434,7 @@ Fonts: IBM Plex Sans Arabic (`ar`) and IBM Plex Sans (`en`), self-hosted with `n
 |---|---|
 | 1. The PWA: offline-first web app for centers, teachers and parents | [x] Done |
 | 2. React Native app: iOS and Android, phones and tablets | [x] Done |
+| 3. Marking and homework improvements: half and zero marks, "not memorized", several suras, pages, sessions on a chosen date | [ ] Planned |
 
 Every step ends with `pnpm lint && pnpm typecheck && pnpm test`, then one Conventional Commit on `dev`, then a tick in this file. Stop at the end of each phase for the go-ahead.
 
@@ -525,6 +531,33 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
   - App icon, splash screen, a privacy policy page on the web, a demo center for App Review.
   - App Store: listing in Arabic and English, EAS production build, TestFlight, then submission. EAS Update channel for JS fixes.
   - Google Play: production build and internal testing once the account exists. A new *personal* Play account must run a closed test with 12 testers for 14 days before publishing; an organization account (D-U-N-S number) doesn't. If the account isn't ready, the Android part stays open (`[~]`) and the phase closes without it.
+
+### [ ] Phase 3: Marking and homework improvements
+
+Five features asked for by the user on 2026-11-07 (§0 #54–58), each built in `packages/core`, the web app and the mobile app in the same step. No version of the app before this phase is in use, so records change shape without keeping older apps working (#52 doesn't apply here). Records already on the server and on devices are read through helpers that fill in the new shape, as with `postponedLessonsOf()` and `kindOf()`.
+
+- [ ] **3.1 Marks 0–10 in halves (#54).**
+  - `rateSchema`: 0–10, multiple of 0.5. The picker (web native select, mobile wheel): 0, 0.5 … 10.
+  - Marks shown with the half in every place: today card, month table, statistics, printed sheet, parent page (`Intl` number format, Arabic digits and decimal separator; the Hermes polyfills already cover it). Averages keep one decimal.
+  - Tests: schema bounds and steps, averages with 0 and halves, a 0 that isn't "no mark".
+- [ ] **3.2 "Not memorized" replaces postponing (#55).**
+  - Data: `postponedLessonIds` becomes `notMemorized: { lessonId, behaviorRate }[]`; old records read as entries with no behavior mark.
+  - Actions: choosing "لم يحفظ" adds the lesson's entry (clearing a mark given in that lesson); choosing a mark replaces it; clearing the picker undoes it; a behavior mark on that day goes into the entry. Absent or excused still cancels it.
+  - Derived: the behavior average and "تم تقييم X من Y" count these behavior marks; memorization averages don't. Month sheet, print, parent page and counts say "لم يحفظ" instead of "مؤجل".
+  - UI: the postpone and undo buttons go away on both platforms; messages updated in `ar` and `en`.
+- [ ] **3.3 Several suras in one homework (#56).**
+  - Data: `surah`/`fromAyah`/`toAyah` become `portions: { surah, fromAyah, toAyah }[]` (1–114 items, each checked by `validateAyahRange`); old records read as one portion.
+  - Form: a list of suras, each with the searchable sura sheet, its ayah fields or "السورة كاملة", add and remove; the same for exams and for editing.
+  - Suggestion: continues after the last portion. Labels list the suras ("الملك ١–٣٠، القلم ١–١٥", a whole sura by its name) everywhere a portion is shown.
+- [ ] **3.4 Pages (#57).**
+  - Core: the 604-page map (each page's first sura and ayah, from Tanzil's quran-data metadata, CC BY 3.0, credited in the README), with `pagesToPortions()` and `portionsToPages()` and tests against the sura map (every ayah on exactly one page).
+  - Data: an optional `pages: { from, to } | null`, checked against the portions; cleared when the ayahs are edited.
+  - Form: an "آيات / صفحات" switch; page mode has from and to page (1–604) and a preview of the suras and ayahs. Labels show "ص ١٢–١٣" with the ayahs beneath. The suggestion continues with the next (or, backward, previous) pages.
+- [ ] **3.5 A session on a chosen date (#58).**
+  - "إضافة جلسة" with the month table on both platforms: the system date picker (no future dates), then that day's screen, built from the today card with the date as a parameter. Today opens the today card.
+  - Core: the day's due homework and the next-homework suggestion as of that date (items created later are left out); the lesson created on the first thing recorded, as today.
+  - Access: `lessons.run`, as for today.
+- [ ] **3.6 Tests and release.** Web E2E and Maestro flows updated (half marks, "لم يحفظ", several suras, pages, a past session); the README checklist; app version 1.1.0 with release notes in both store listings. The user deploys the web app and submits the builds.
 
 ---
 
