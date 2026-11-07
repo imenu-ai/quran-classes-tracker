@@ -1,6 +1,6 @@
 # Implementation Plan: Quran Memorization (تحفيظ القرآن)
 
-Status: **Phase 1 done (the PWA, deployed on Amplify). Phase 2 (React Native app) in progress: 2.1–2.6 done.** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-10-24
+Status: **Phase 1 done (the PWA, deployed on Amplify). Phase 2 done (the app, released on the App Store and Google Play).** · Brief: [BRIEF.md](BRIEF.md) · Last updated: 2026-11-07
 
 Legend: `[ ]` to do · `[x]` done · `[~]` changed (see the change log at the bottom)
 
@@ -428,7 +428,7 @@ Fonts: IBM Plex Sans Arabic (`ar`) and IBM Plex Sans (`en`), self-hosted with `n
 | Phase | Status |
 |---|---|
 | 1. The PWA: offline-first web app for centers, teachers and parents | [x] Done |
-| 2. React Native app: iOS and Android, phones and tablets | [ ] In progress |
+| 2. React Native app: iOS and Android, phones and tablets | [x] Done |
 
 Every step ends with `pnpm lint && pnpm typecheck && pnpm test`, then one Conventional Commit on `dev`, then a tick in this file. Stop at the end of each phase for the go-ahead.
 
@@ -451,7 +451,7 @@ Built in 14 parts, in this order. Each part was planned, verified (unit, integra
 - [x] **1.13 Printable month sheets.** Shared sheet builders, `/print` with the A4 sheet, preview and print CSS, and both entry points (§0 #38, §2.11).
 - [x] **1.14 Parent link.** `Student.parentId`, the parent API with its checks, cookie and rate limits, the `/parent` page, the share drawer with QR, and a QR on every printed sheet; the `parent` E2E spec (§0 #39–42, §2.12).
 
-### [ ] Phase 2: React Native app
+### [x] Phase 2: React Native app
 
 An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's features, native navigation and native controls (§0 #43–53, §2.13). Steps 2.1–2.4 prepare the repo and keep the web app unchanged; 2.5–2.13 build the app; 2.14–2.16 test, add account deletion and release.
 
@@ -521,7 +521,7 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
 - [x] **2.13 Tablets.** iPad and Android tablet layouts: multi-column grids and readable content widths where the web uses two columns; phones portrait, tablets in all orientations (iPad multitasking needs it). Checked on your iPad and an Android tablet emulator.
 - [x] **2.14 Mobile E2E and device checks.** Maestro flows on the Android emulator (main flow, offline, roles) with their own seeded server; an `en` LTR smoke render in Jest; a README checklist for iPhone and iPad (offline, print, share, RTL).
 - [x] **2.15 Account deletion (#50).** Every user deletes his own account, except the last active admin; an admin deletes the center and all its data (agreed with you). The API, the app screens, and the same option on the web.
-- [ ] **2.16 Release.**
+- [x] **2.16 Release.**
   - App icon, splash screen, a privacy policy page on the web, a demo center for App Review.
   - App Store: listing in Arabic and English, EAS production build, TestFlight, then submission. EAS Update channel for JS fixes.
   - Google Play: production build and internal testing once the account exists. A new *personal* Play account must run a closed test with 12 testers for 14 days before publishing; an organization account (D-U-N-S number) doesn't. If the account isn't ready, the Android part stays open (`[~]`) and the phase closes without it.
@@ -886,3 +886,5 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
   - **Left for the user:** deploy the web app, run the first Android production build (it creates the keystore), upload the `.aab` by hand, fill in the Play Console, and the closed test if the account is personal.
 
 - 2026-11-01 (2.16, Play screenshots): six phone and six tablet shots are in `apps/mobile/store/play/screenshots/`. The demo admin's password is in no file, so they were taken against a throwaway in-memory database with the same `center:create` and `dev:seed` data, using the development build with the dev client's tools button turned off and Android's demo-mode status bar. The phone was set to 1080 × 1920 at density 480 (still 360 dp) to reach Play's size for promotion. The parent link shot is left out because that screen would show a `localhost` address.
+
+- 2026-11-07 (2.16 done, Phase 2 closed): the user confirmed the app is released on the App Store and Google Play.
