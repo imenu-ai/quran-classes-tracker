@@ -1,4 +1,5 @@
 import { portionsOf } from "../../shared/schemas/homework";
+import { PAGE_COUNT } from "../quran/pages";
 import { getAyahCount, SURAH_COUNT } from "../quran/surahs";
 
 export type Direction = "forward" | "backward";
@@ -80,4 +81,22 @@ export function latestHomework<T extends HistoryItem>(homework: readonly T[]): T
 export function latestPortion(homework: readonly HistoryItem[]): Portion | null {
   const latest = latestHomework(homework);
   return latest ? (portionsOf(latest).at(-1) ?? null) : null;
+}
+
+/**
+ * The next pages after a page homework: as many pages as before, right
+ * after it (forward) or right before it (backward), within 1–604. Null past
+ * either end of the mushaf.
+ */
+export function suggestNextPages(
+  previous: { from: number; to: number },
+  direction: Direction,
+): { from: number; to: number } | null {
+  const size = Math.max(1, previous.to - previous.from + 1);
+  if (direction === "forward") {
+    if (previous.to >= PAGE_COUNT) return null;
+    return { from: previous.to + 1, to: Math.min(PAGE_COUNT, previous.to + size) };
+  }
+  if (previous.from <= 1) return null;
+  return { from: Math.max(1, previous.from - size), to: previous.from - 1 };
 }

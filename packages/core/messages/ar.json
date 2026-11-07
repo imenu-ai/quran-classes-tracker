@@ -52,7 +52,8 @@
       "INVALID_FORMAT": "الصيغة غير صحيحة",
       "INVALID_VALUE": "القيمة غير مسموحة",
       "RATES_REQUIRE_EVALUATION": "لا يمكن إدخال التقييم قبل تسميع الواجب",
-      "INVALID": "القيمة غير صحيحة"
+      "INVALID": "القيمة غير صحيحة",
+      "PAGE_FROM_AFTER_TO": "صفحة البداية يجب أن تكون قبل أو تساوي صفحة النهاية"
     }
   },
   "common": {
@@ -319,7 +320,10 @@
     "deleteHomework": "حذف الواجب",
     "range": "{surah} {from}–{to}",
     "wholeSurah": "{surah} كاملة",
-    "portionSeparator": "، "
+    "portionSeparator": "، ",
+    "page": "ص {page}",
+    "pageRange": "ص {from}–{to}",
+    "withPages": "{pages} · {portions}"
   },
   "homework": {
     "addTitle": "واجب الدرس القادم",
@@ -333,7 +337,14 @@
     "suggested": "مقترح بعد آخر واجب، ويمكنك تغييره",
     "wholeSurah": "السورة كاملة",
     "addSurah": "إضافة سورة",
-    "removeSurah": "حذف هذه السورة"
+    "removeSurah": "حذف هذه السورة",
+    "entryMode": "طريقة الإدخال",
+    "byAyahs": "آيات",
+    "byPages": "صفحات",
+    "fromPage": "من صفحة",
+    "toPage": "إلى صفحة",
+    "pagesHint": "صفحات المصحف من 1 إلى {pageCount}",
+    "pagesPreview": "تشمل: {portions}"
   },
   "profile": {
     "month": "الشهر",

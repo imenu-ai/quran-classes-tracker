@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PAGE_COUNT, portionsMatchPages } from "../../domain/quran/pages";
 import { validateAyahRange } from "../../domain/quran/validation";
 import { idSchema, noteSchema, NOTE_MAX, syncableBaseSchema } from "./base";
 
@@ -59,6 +60,13 @@ export type HomeworkPortion = z.infer<typeof ayahRangeSchema>;
 /** At most one portion per sura of the Quran. */
 export const PORTIONS_MAX = 114;
 
+const pageSchema = z.number().int().min(1).max(PAGE_COUNT);
+
+/** Whole pages of the Madinah Mushaf, from page to page (the same for one). */
+export const pageRangeSchema = z.object({ from: pageSchema, to: pageSchema });
+
+export type PageRange = z.infer<typeof pageRangeSchema>;
+
 export const notMemorizedEntrySchema = z.object({
   lessonId: idSchema,
   behaviorRate: rateSchema.nullable(),
@@ -74,6 +82,12 @@ export const homeworkFieldsSchema = z.object({
    * Phase 3 have surah/fromAyah/toAyah instead.
    */
   portions: z.array(ayahRangeSchema).min(1).max(PORTIONS_MAX),
+  /**
+   * Set when it was given as whole pages: the portions are then exactly those
+   * pages' suras and ayahs, and it shows as pages. Null for ayah ranges, and
+   * after the ayahs are edited. Defaults to null for records from before Phase 3.
+   */
+  pages: pageRangeSchema.nullable().default(null),
   note: noteSchema(NOTE_MAX),
   assignedLessonId: idSchema.nullable(),
   /** Pending while null. */
@@ -131,6 +145,14 @@ const currentHomeworkRecordSchema = syncableBaseSchema
     if (homework.kind === "exam" && homework.behaviorRate !== null) {
       ctx.addIssue({ code: "custom", message: "INVALID_VALUE", path: ["behaviorRate"] });
     }
+    // The pages hold exactly these portions.
+    if (
+      homework.pages !== null &&
+      (homework.pages.from > homework.pages.to ||
+        !portionsMatchPages(homework.portions, homework.pages.from, homework.pages.to))
+    ) {
+      ctx.addIssue({ code: "custom", message: "INVALID_VALUE", path: ["pages"] });
+    }
     // An exam is only marked; one lesson can't be both "not memorized" and marked.
     const lessons = homework.notMemorized.map((entry) => entry.lessonId);
     if (
@@ -168,6 +190,9 @@ export function portionsOf(item: {
   }
   return [{ surah: item.surah, fromAyah: item.fromAyah, toAyah: item.toAyah }];
 }
+
+/** The page range it was given as (records from before Phase 3 lack the field). */
+export const pagesOf = (item: { pages?: PageRange | null }): PageRange | null => item.pages ?? null;
 
 /** The value a memorization picker sets for "لم يحفظ". */
 export const NOT_MEMORIZED = "notMemorized";

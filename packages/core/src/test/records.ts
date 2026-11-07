@@ -80,6 +80,7 @@ export const homeworkRecord = (
     ...base(rest),
     studentId,
     portions: [{ surah, fromAyah, toAyah }],
+    pages: null,
     note: "",
     assignedLessonId: null,
     evaluatedLessonId: null,

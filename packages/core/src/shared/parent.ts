@@ -27,6 +27,8 @@ export interface ParentRow {
   kind: ParentRowKind;
   /** The suras and ayahs (empty on an absence). */
   portions: { surah: number; fromAyah: number; toAyah: number }[];
+  /** When it was given as whole pages. */
+  pages: { from: number; to: number } | null;
   /** An exam's one mark is `memorization`. */
   memorization: number | null;
   behavior: number | null;

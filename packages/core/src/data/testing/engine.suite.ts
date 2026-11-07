@@ -122,6 +122,7 @@ export function engineSuite(factory: StorageFactory) {
       const homework = await store.create("homework", {
         studentId: student.id,
         portions: [{ surah: 112, fromAyah: 1, toAyah: 4 }],
+        pages: null,
         note: "",
         assignedLessonId: null,
         evaluatedLessonId: null,

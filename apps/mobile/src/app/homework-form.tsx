@@ -5,11 +5,20 @@ import { useTranslations } from "use-intl";
 import { addExam, addHomework, updateHomework } from "@qct/core/data/entities/homework";
 import { todayLessonId } from "@qct/core/data/entities/today";
 import { todayInTimeZone } from "@qct/core/domain/dates/local-date";
-import { latestPortion, suggestNextHomework } from "@qct/core/domain/homework/suggestion";
-import { checkPortions, portionDrafts, type PortionDraft } from "@qct/core/forms/portions";
+import {
+  checkHomeworkDraft,
+  startHomeworkDraft,
+  switchEntryMode,
+  type EntryMode,
+  type HomeworkDraft,
+} from "@qct/core/forms/homework-draft";
+import { checkPageRange, type PageRangeField } from "@qct/core/forms/pages";
+import { checkPortions } from "@qct/core/forms/portions";
 import { NOTE_MAX } from "@qct/core/shared/schemas/base";
-import { isExam, portionsOf, type HomeworkRecord } from "@qct/core/shared/schemas/homework";
+import { isExam, type HomeworkRecord } from "@qct/core/shared/schemas/homework";
 import type { StudentRecord } from "@qct/core/shared/schemas/student";
+import { ChoiceList } from "@/components/choice-list";
+import { PageRangeFields } from "@/components/page-range-fields";
 import { allTouched, PortionsFields } from "@/components/portions-fields";
 import { Button } from "@/components/button";
 import { Loading } from "@/components/loading";
@@ -63,27 +72,6 @@ function Gone() {
   );
 }
 
-function initialDraft(
-  kind: Kind,
-  history: readonly HomeworkRecord[],
-  student: StudentRecord,
-  item?: HomeworkRecord,
-): { drafts: PortionDraft[]; note: string; suggested: boolean } {
-  if (item) {
-    return { drafts: portionDrafts(portionsOf(item)), note: item.note, suggested: false };
-  }
-  // An exam reviews any part: nothing is suggested for it.
-  const suggestion =
-    kind === "exam"
-      ? null
-      : suggestNextHomework(latestPortion(history), student.memorizationDirection);
-  return {
-    drafts: portionDrafts(suggestion ? [suggestion] : []),
-    note: "",
-    suggested: suggestion !== null,
-  };
-}
-
 function HomeworkForm({
   kind,
   student,
@@ -101,14 +89,18 @@ function HomeworkForm({
   const { store, session } = useApp();
   const { colors } = useTheme();
   // Only from what was there when the form opened; later changes must not reset typing.
-  const [initial] = useState(() => initialDraft(kind, history, student, item));
-  const [drafts, setDrafts] = useState(initial.drafts);
-  const [note, setNote] = useState(initial.note);
-  const [suggested, setSuggested] = useState(initial.suggested);
+  const [draft, setDraft] = useState<HomeworkDraft>(() =>
+    startHomeworkDraft({ kind, item, history, direction: student.memorizationDirection }),
+  );
+  const [note, setNote] = useState(item?.note ?? "");
   const [touched, setTouched] = useState<ReadonlySet<string>>(new Set());
+  const [touchedPages, setTouchedPages] = useState<ReadonlySet<PageRangeField>>(new Set());
   const [busy, setBusy] = useState(false);
 
-  const check = checkPortions(drafts);
+  const portionsCheck = checkPortions(draft.portions);
+  const pagesCheck = checkPageRange(draft.pages);
+  const change = (next: Partial<HomeworkDraft>) =>
+    setDraft((current) => ({ ...current, ...next, suggested: false }));
   const exam = kind === "exam" || (item !== undefined && isExam(item));
   const title = item
     ? exam
@@ -121,14 +113,16 @@ function HomeworkForm({
         : t("homework.addTitle");
 
   async function save() {
+    const check = checkHomeworkDraft(draft);
     if (!check.ok) {
-      setTouched(allTouched(drafts));
+      setTouched(allTouched(draft.portions));
+      setTouchedPages(new Set(["fromPage", "toPage"]));
       return;
     }
     setBusy(true);
     try {
       if (item) {
-        await updateHomework(store, item.id, check.value, note);
+        await updateHomework(store, item.id, check.portions, note, check.pages);
       } else {
         const lesson =
           lessonId ??
@@ -138,13 +132,15 @@ function HomeworkForm({
             ? await addExam(store, {
                 studentId: student.id,
                 lessonId: lesson,
-                portions: check.value,
+                portions: check.portions,
+                pages: check.pages,
                 note,
               })
             : await addHomework(store, {
                 studentId: student.id,
                 lessonId: lesson,
-                portions: check.value,
+                portions: check.portions,
+                pages: check.pages,
                 note,
                 evaluateNow: kind === "recite",
               });
@@ -160,23 +156,43 @@ function HomeworkForm({
     <Screen width="form">
       <Stack.Screen options={{ title }} />
       <Text tone="muted">{student.fullName}</Text>
-      {suggested ? (
+      {draft.suggested ? (
         <View style={[styles.suggested, { backgroundColor: colors.accent }]}>
           <Text size={14} style={{ color: colors.accentForeground }}>
             {t("homework.suggested")}
           </Text>
         </View>
       ) : null}
-      <PortionsFields
-        value={drafts}
-        errors={check.errors}
-        visibleErrors={touched}
-        onChange={(next, field) => {
-          setDrafts(next);
-          setSuggested(false);
-          if (field) setTouched((current) => new Set(current).add(field));
-        }}
+      <ChoiceList
+        label={t("homework.entryMode")}
+        value={draft.mode}
+        options={[
+          { value: "ayahs", label: t("homework.byAyahs") },
+          { value: "pages", label: t("homework.byPages") },
+        ]}
+        onChange={(mode: EntryMode) => setDraft((current) => switchEntryMode(current, mode))}
       />
+      {draft.mode === "pages" ? (
+        <PageRangeFields
+          value={draft.pages}
+          check={pagesCheck}
+          visibleErrors={touchedPages}
+          onChange={(pages, field) => {
+            change({ pages });
+            setTouchedPages((current) => new Set(current).add(field));
+          }}
+        />
+      ) : (
+        <PortionsFields
+          value={draft.portions}
+          errors={portionsCheck.errors}
+          visibleErrors={touched}
+          onChange={(portions, field) => {
+            change({ portions });
+            if (field) setTouched((current) => new Set(current).add(field));
+          }}
+        />
+      )}
       <TextField
         label={t("glossary.notes")}
         value={note}

@@ -117,6 +117,16 @@ test("class → students → student page: mark, next-day homework, absence, not
   await expect(examRow).toHaveClass(/bg-exam/);
   await expect(table.locator("tfoot")).toContainText("8.5");
   await expect(table.locator("tfoot")).toContainText("9.5");
+
+  // Homework for the next day as a whole page: the last page holds three suras.
+  await today.getByRole("button", { name: ar.today.addNext }).click();
+  const pagesSheet = page.getByRole("dialog");
+  await pagesSheet.getByRole("radio", { name: ar.homework.byPages }).click();
+  await pagesSheet.getByRole("textbox", { name: ar.homework.fromPage }).fill("604");
+  await pagesSheet.getByRole("textbox", { name: ar.homework.toPage }).fill("604");
+  await expect(pagesSheet).toContainText("الإخلاص كاملة، الفلق كاملة، الناس كاملة");
+  await pagesSheet.getByRole("button", { name: ar.common.save }).click();
+  await expect(today.getByText("ص 604 · الإخلاص كاملة، الفلق كاملة، الناس كاملة")).toBeVisible();
   await waitForSynced(page);
 
   // Print his month: an A4 sheet naming the center, class, student and the

@@ -7,6 +7,7 @@ import {
   notMemorizedOf,
   type HomeworkRecord,
   type MemorizationChoice,
+  type PageRange,
 } from "../../shared/schemas/homework";
 import type { DataWriter } from "../local-store";
 import { findAttendance, setAttendance } from "./attendance";
@@ -137,6 +138,8 @@ export function addHomework(
     studentId: string;
     lessonId: string;
     portions: readonly Portion[];
+    /** When given as whole pages (the portions are then those pages'). */
+    pages?: PageRange | null;
     note: string;
     evaluateNow: boolean;
   },
@@ -146,6 +149,7 @@ export function addHomework(
     return tx.create("homework", {
       studentId: input.studentId,
       portions: [...input.portions],
+      pages: input.pages ?? null,
       note: input.note,
       assignedLessonId: input.lessonId,
       evaluatedLessonId: input.evaluateNow ? input.lessonId : null,
@@ -164,13 +168,20 @@ export function addHomework(
  */
 export function addExam(
   store: DataWriter,
-  input: { studentId: string; lessonId: string; portions: readonly Portion[]; note: string },
+  input: {
+    studentId: string;
+    lessonId: string;
+    portions: readonly Portion[];
+    pages?: PageRange | null;
+    note: string;
+  },
 ) {
   return store.transaction(async (tx) => {
     await ensurePresent(tx, input.lessonId, input.studentId);
     return tx.create("homework", {
       studentId: input.studentId,
       portions: [...input.portions],
+      pages: input.pages ?? null,
       note: input.note,
       assignedLessonId: input.lessonId,
       evaluatedLessonId: input.lessonId,
@@ -182,14 +193,18 @@ export function addExam(
   });
 }
 
-/** Edits the suras and ayahs (e.g. the student recited only part of it). */
+/**
+ * Edits the suras and ayahs (e.g. the student recited only part of it).
+ * `pages` is the page range when saved as pages; edited as ayahs, it's null.
+ */
 export function updateHomework(
   store: DataWriter,
   id: string,
   portions: readonly Portion[],
   note: string,
+  pages: PageRange | null = null,
 ) {
-  return store.update("homework", id, { portions: [...portions], note });
+  return store.update("homework", id, { portions: [...portions], pages, note });
 }
 
 export function deleteHomework(store: DataWriter, id: string) {

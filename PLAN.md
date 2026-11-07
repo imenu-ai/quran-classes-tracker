@@ -333,6 +333,7 @@ Tests sit next to the code as `*.test.ts(x)`; each package runs its own with Vit
 - `studentId`, `portions: { surah, fromAyah, toAyah }[]` (1–114 of them, in the order given, each validated by `validateAyahRange`; one mark covers them all), `note`. Replaced the single `surah`/`fromAyah`/`toAyah` (Phase 3): `homeworkRecordSchema` converts an old record on parse, and `portionsOf()` reads either form
 - `assignedLessonId | null`, `evaluatedLessonId | null`; pending = `evaluatedLessonId == null`
 - `memorizationRate`, `behaviorRate`: 0–10 in steps of 0.5 (`RATE_VALUES`), or null; 0 is a mark
+- `pages: { from, to } | null` (default `null`): set when given as whole pages of the Madinah Mushaf (1–604); the portions must then be exactly those pages' (`portionsMatchPages`). Read through `pagesOf()`
 - `notMemorized: { lessonId, behaviorRate }[]` (default `[]`): lessons where he hadn't memorized it (لم يحفظ), each with that day's behavior mark or null. Never on an exam, never twice for a lesson, never for the lesson it was evaluated in. Replaced `postponedLessonIds` (Phase 3): `homeworkRecordSchema` converts an old record's postponements on parse, and `notMemorizedOf()` reads either form
 - `kind: 'homework' | 'exam'` (default `'homework'`). An exam's mark is in `memorizationRate`; its `behaviorRate` stays null.
 
@@ -351,6 +352,7 @@ Records pulled from the server aren't re-validated on the device, so newer field
 - Continues from that item's **last sura** (`latestPortion`): the same size as it, at `toAyah + 1`, clamped to the end of the sura.
 - At the end of a sura, moves to the next one (`+1` forward, `−1` backward) from ayah 1; `null` after sura 114 (forward) or 1 (backward).
 - With no history: nothing, or sura 114 if the student is set to backward.
+- When that latest item was given as pages: the next pages of the same count (`suggestNextPages`; the previous ones when backward), and the form opens on pages.
 
 **Lesson deletion.** Deletes its attendance and the homework assigned in it; homework evaluated in it goes back to pending; homework assigned in it but evaluated later keeps its history with `assignedLessonId` cleared.
 
@@ -549,7 +551,7 @@ Five features asked for by the user on 2026-11-07 (§0 #54–58), each built in 
   - Data: `surah`/`fromAyah`/`toAyah` become `portions: { surah, fromAyah, toAyah }[]` (1–114 items, each checked by `validateAyahRange`); old records read as one portion.
   - Form: a list of suras, each with the searchable sura sheet, its ayah fields or "السورة كاملة", add and remove; the same for exams and for editing.
   - Suggestion: continues after the last portion. Labels list the suras ("الملك ١–٣٠، القلم ١–١٥", a whole sura by its name) everywhere a portion is shown.
-- [ ] **3.4 Pages (#57).**
+- [x] **3.4 Pages (#57).**
   - Core: the 604-page map (each page's first sura and ayah, from Tanzil's quran-data metadata, CC BY 3.0, credited in the README), with `pagesToPortions()` and `portionsToPages()` and tests against the sura map (every ayah on exactly one page).
   - Data: an optional `pages: { from, to } | null`, checked against the portions; cleared when the ayahs are edited.
   - Form: an "آيات / صفحات" switch; page mode has from and to page (1–604) and a preview of the suras and ayahs. Labels show "ص ١٢–١٣" with the ayahs beneath. The suggestion continues with the next (or, backward, previous) pages.
@@ -945,3 +947,12 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
   - **E2E:** the exam in the main flow now has two suras, the second whole ("الملك 1–10، القلم كاملة"). A first run failed because `{ name: "السورة" }` also matched "حذف هذه السورة", so the step clicked a remove button; the step matches exactly now. All 10 tests pass on Desktop Chrome and Pixel 7; the iPhone project still can't launch WebKit in this session (see 3.2).
   - Not checked on the Android emulator in this step; the Jest test drives the switch, add and remove, and 3.6 runs the Maestro flows.
   - Tests: core 456, web 297, mobile 84.
+
+- 2026-11-07 (3.4):
+  - **The page map** (`packages/core/src/domain/quran/pages.ts`): the 604 page starts of the Madinah Mushaf, generated from Tanzil's `quran-data.js` (its `QuranData.Page` table, read as text, never run), credited in the README and the file. Checked against the sura map: every page starts on an existing ayah in order, every one of the 6,236 ayahs is on exactly one page and `pageOf` finds it, and known pages match the printed mushaf (Al-Kahf starts mid-page 293, Al-Mulk on 562, Juz ʿAmma on 582, page 604 is the last three suras). `pagesToPortions()` gives a range's suras and ayahs; `portionsMatchPages()` checks a record.
+  - **Data:** `pages: { from, to } | null` beside the portions, which stay the real data; the schema rejects pages that don't match them. A page homework edited as ayahs is saved with `pages: null`.
+  - **The form** (both platforms): "آيات / صفحات" (a toggle group on the web, `ChoiceList` in the app) above the fields; page mode has from/to page with the 1–604 hint and a preview of what the pages hold. The shared `startHomeworkDraft()`, `switchEntryMode()` and `checkHomeworkDraft()` (`packages/core/src/forms/homework-draft.ts`) decide how it opens (as given, by pages after a page homework, by ayahs otherwise, an exam empty), carry the pages' suras over when switching to ayahs, and what's saved. Page errors use the generic codes plus `PAGE_FROM_AFTER_TO`.
+  - **Labels:** "ص 12–13 · البقرة 77–88" (one page: "ص 604 · …"). The plan said the ayahs go beneath the pages; they follow on the same line instead, so every place a portion is shown (today, the month table, the printout, the parent page) needed no layout change. Table cells wrap; the today card's one-line header truncates, keeping the pages visible. The parent API's rows carry `pages`.
+  - **Checked:** core tests for the map, the form helpers and the schema; a web label test; a mobile Jest test that saves page 582 (النبأ 1–30) and then suggests page 583; the E2E main flow adds page 604 as next-day homework ("ص 604 · الإخلاص كاملة، الفلق كاملة، الناس كاملة"). E2E: 10 of 10 on Desktop Chrome and Pixel 7; the iPhone project still can't launch WebKit here.
+  - A new mobile test left its first render mounted (`unmount()` is async in this Testing Library version) and broke the next tests; it awaits the unmount now.
+  - Tests: core 470, web 299, mobile 85.

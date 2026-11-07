@@ -101,6 +101,7 @@ export function localStoreSuite(factory: StorageFactory) {
         .create("homework", {
           studentId: CLASS_ID,
           portions: [{ surah: 108, fromAyah: 1, toAyah: 4 }],
+          pages: null,
           note: "",
           assignedLessonId: null,
           evaluatedLessonId: null,

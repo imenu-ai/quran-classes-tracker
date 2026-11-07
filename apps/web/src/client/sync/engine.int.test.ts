@@ -123,6 +123,7 @@ describe("two devices syncing through the real server", () => {
       serverVersion: 0,
       studentId: student!.id,
       portions: [{ surah: 108, fromAyah: 1, toAyah: 5 }],
+      pages: null,
       note: "",
       assignedLessonId: null,
       evaluatedLessonId: null,

@@ -183,6 +183,29 @@ describe("the homework form", () => {
     });
   });
 
+  it("saves whole pages, and the next homework continues by pages", async () => {
+    const { services, student } = await setup();
+    params.mockReturnValue({ studentId: student.id, kind: "next" });
+    const view = await renderWithApp(<HomeworkFormScreen />, services);
+    await fireEvent.press(screen.getByRole("radio", { name: ar.homework.byPages }));
+    await fireEvent.changeText(screen.getByTestId("page.from"), "582");
+    await fireEvent.changeText(screen.getByTestId("page.to"), "582");
+    expect(await screen.findByText(/النبأ 1–30/)).toBeOnTheScreen();
+    await fireEvent.press(button(ar.common.save));
+    await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
+    const [saved] = await services.db.all("homework");
+    expect(saved).toMatchObject({
+      pages: { from: 582, to: 582 },
+      portions: [{ surah: 78, fromAyah: 1, toAyah: 30 }],
+    });
+    await view.unmount();
+
+    await renderWithApp(<HomeworkFormScreen />, services);
+    expect(await screen.findByText(ar.homework.suggested)).toBeOnTheScreen();
+    expect(screen.getByTestId("page.from")).toHaveDisplayValue("583");
+    expect(screen.getByTestId("page.to")).toHaveDisplayValue("583");
+  });
+
   it("saves several suras, one of them whole", async () => {
     const { services, student, cls } = await setup();
     await homeworkDue(services, cls.id, student.id);

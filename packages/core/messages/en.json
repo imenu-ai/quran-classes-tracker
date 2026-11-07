@@ -52,7 +52,8 @@
       "INVALID_FORMAT": "Invalid format",
       "INVALID_VALUE": "Value not allowed",
       "RATES_REQUIRE_EVALUATION": "Scores can only be entered when the homework is evaluated",
-      "INVALID": "Invalid value"
+      "INVALID": "Invalid value",
+      "PAGE_FROM_AFTER_TO": "The first page must be before or the same as the last page"
     }
   },
   "common": {
@@ -319,7 +320,10 @@
     "deleteHomework": "Delete homework",
     "range": "{surah} {from}–{to}",
     "wholeSurah": "{surah} (whole)",
-    "portionSeparator": ", "
+    "portionSeparator": ", ",
+    "page": "p. {page}",
+    "pageRange": "pp. {from}–{to}",
+    "withPages": "{pages} · {portions}"
   },
   "homework": {
     "addTitle": "Homework for next lesson",
@@ -333,7 +337,14 @@
     "suggested": "Suggested after the last homework; change it if needed",
     "wholeSurah": "Whole sura",
     "addSurah": "Add a sura",
-    "removeSurah": "Remove this sura"
+    "removeSurah": "Remove this sura",
+    "entryMode": "Enter as",
+    "byAyahs": "Ayahs",
+    "byPages": "Pages",
+    "fromPage": "From page",
+    "toPage": "To page",
+    "pagesHint": "Mushaf pages 1 to {pageCount}",
+    "pagesPreview": "Covers: {portions}"
   },
   "profile": {
     "month": "Month",

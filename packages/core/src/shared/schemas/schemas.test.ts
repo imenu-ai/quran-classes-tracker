@@ -253,6 +253,34 @@ describe("homeworkRecordSchema", () => {
     ]);
   });
 
+  it("keeps the page range only when the portions are exactly those pages", () => {
+    const { surah: _s, fromAyah: _f, toAyah: _t, ...rest } = validHomework;
+    const page293 = [
+      { surah: 17, fromAyah: 105, toAyah: 111 },
+      { surah: 18, fromAyah: 1, toAyah: 4 },
+    ];
+    const ok = parseWithCodes(homeworkRecordSchema, {
+      ...rest,
+      portions: page293,
+      pages: { from: 293, to: 293 },
+    });
+    expect(ok.success && ok.data.pages).toEqual({ from: 293, to: 293 });
+    // Records from before Phase 3 have no pages.
+    const older = parseWithCodes(homeworkRecordSchema, validHomework);
+    expect(older.success && older.data.pages).toBeNull();
+    const invalid = [{ path: "pages", code: "INVALID_VALUE", params: {} }];
+    expect(
+      errorsOf(homeworkRecordSchema, {
+        ...rest,
+        portions: [page293[1]],
+        pages: { from: 293, to: 293 },
+      }),
+    ).toEqual(invalid);
+    expect(
+      errorsOf(homeworkRecordSchema, { ...rest, portions: page293, pages: { from: 294, to: 293 } }),
+    ).toEqual(invalid);
+  });
+
   it("accepts a pending homework item", () => {
     expect(parseWithCodes(homeworkRecordSchema, validHomework).success).toBe(true);
   });

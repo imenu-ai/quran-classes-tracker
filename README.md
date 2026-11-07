@@ -113,28 +113,31 @@ The CLI scripts read `apps/web/.env.local` then `apps/web/.env`; variables alrea
 ## Daily use
 
 - **Opening a class** lists its students.
-- **A student's page** shows his month as a simple table: one row per day with the portion and the memorization and behavior marks, "مؤجل" or "غائب", and the month's averages. It starts closed, showing just the month, its averages and the days attended; tap it to open the table. Earlier months are one tap away, and tapping a row corrects it (for users who can run lessons).
+- **A student's page** shows his month as a simple table: one row per day with the portion and the memorization and behavior marks, "لم يحفظ" or "غائب", and the month's averages. It starts closed, showing just the month, its averages and the days attended; tap it to open the table. Earlier months are one tap away, and tapping a row corrects it (for users who can run lessons).
 - **Under the table, "اليوم" (today):**
   - attendance (present, absent, excused with a note);
-  - each due homework item as a collapsible section (sura and ayat; tap to open), with two mark pickers (0–10 in halves, the phone's own wheel on iPhone);
-  - "تأجيل التسميع" (postpone the recitation) when he isn't ready: the homework stays for the next day and his averages aren't affected;
+  - each due homework item as a collapsible section (its suras and ayat, or its pages; tap to open), with two mark pickers (0–10 in halves, the phone's own wheel on iPhone);
+  - "لم يحفظ" (not memorized), the memorization picker's first entry, when he isn't ready: the homework stays for the next day, his memorization average isn't affected, and he can still get a behavior mark that day;
   - "تسميع الآن" when nothing is due;
   - "إضافة اختبار" (add an exam): any portion, added and marked on the spot with one mark (0–10 in halves). Exams show in violet with an "اختبار" badge, in today's list and in the month table. They're left out of every average (the student's and the class statistics) and don't move the next-homework suggestion;
   - "إضافة واجب لليوم التالي", pre-filled with the next portion.
+  - **A homework or exam** holds one or more suras ("إضافة سورة"), each with its ayah range or "السورة كاملة", and gets one mark. Or switch to "صفحات" and give whole pages of the Madinah Mushaf (1–604): the form shows which suras and ayahs they hold, and it's shown as "ص 12–13 · …". After a page homework, the next one is suggested as the next pages.
 - **Class statistics** ("الإحصائيات" next to "إضافة طالب"):
   - the class's attendance rate (present, absent, excused) and average marks;
   - its students ranked by attendance rate, then memorization average, then behavior average. An excused absence counts as attended here, and a student's rate counts the lesson days since he joined.
   - All time by default; pick a year, or a year and a month, to narrow it.
-- **Printing** (needs "view reports"): a student's month prints on one A4 sheet. It shows the center, class, student and the user who printed it; the month's table (oldest day first) with its averages; and counts of days present, absent and excused, homework recited, exams and postponements.
+- **Printing** (needs "view reports"): a student's month prints on one A4 sheet. It shows the center, class, student and the user who printed it; the month's table (oldest day first) with its averages; and counts of days present, absent and excused, homework recited, exams and "لم يحفظ".
   - From the student page: open the month table, then "طباعة الشهر" (the month shown).
   - From the class statistics: "طباعة كشوف الطلاب", then pick the month (the one shown there, else the current month) and the students ("تحديد الكل" selects or clears them all). It makes one document with a page per student.
   - The print page shows the sheets; "طباعة / حفظ PDF" opens the device's print dialog, which prints them or saves a PDF ("Save as PDF", or Share → Save to Files on iPhone). It works offline.
 - **The parent link.** Each student has a link for his parent, who opens it with his **ID number** (رقم الهوية); no account needed.
   - Set the parent's ID number in the student's "تعديل البيانات" (users who can manage students). Digits only, 5–20; Arabic digits are fine. Siblings can share the same number.
   - Hand the link out from the student menu, "رابط ولي الأمر" (copy, share or its QR code), or print the month: every printed sheet carries the link as a QR code.
-  - The parent sees what the printed sheet shows, for the current month or any other: homework and exams with their marks, absences and postponements, the averages and counts.
+  - The parent sees what the printed sheet shows, for the current month or any other: homework and exams with their marks, absences and "لم يحفظ", the averages and counts.
   - The phone is remembered for 30 days; "خروج من هذا الجهاز" forgets it. Without a parent ID, the link says it isn't valid. The page needs a connection (it reads from the server).
 - **Lessons** still exist in the data (one per class per day), but the teacher never manages them: today's is created the first time something is recorded.
+
+**Page map.** The Mushaf's page starts (`packages/core/src/domain/quran/pages.ts`) come from Tanzil's Quran metadata, [tanzil.net](https://tanzil.net), `quran-data.js` 1.0, © Tanzil, licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
 
 ## Architecture in short
 
