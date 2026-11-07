@@ -4,7 +4,7 @@ import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useTranslations } from "use-intl";
 import { addExam, addHomework, updateHomework } from "@qct/core/data/entities/homework";
 import { todayLessonId } from "@qct/core/data/entities/today";
-import { todayInTimeZone } from "@qct/core/domain/dates/local-date";
+import { isLocalDate, todayInTimeZone, type LocalDate } from "@qct/core/domain/dates/local-date";
 import {
   checkHomeworkDraft,
   startHomeworkDraft,
@@ -27,7 +27,7 @@ import { Text } from "@/components/text";
 import { TextField } from "@/components/text-field";
 import { useApp } from "@/data/app-data";
 import { emitHomeworkCreated } from "@/data/homework-events";
-import { useStudent, useStudentHomework } from "@/data/queries";
+import { useStudent, useStudentHomework, useStudentToday } from "@/data/queries";
 import { useTheme } from "@/theme/theme";
 
 type Kind = "next" | "recite" | "exam" | "edit";
@@ -36,30 +36,42 @@ type Kind = "next" | "recite" | "exam" | "edit";
  * Homework for the next lesson, "recite now", an exam, or a portion's edit
  * (`?kind=` and, to edit, `?itemId=`), like the web's homework drawer. New
  * homework starts from the suggestion after the student's latest portion.
- * `?lessonId=` attaches it to that lesson; otherwise to today's, created
- * on save.
+ * `?lessonId=` attaches it to that lesson; `?date=` to that past day's
+ * (from "إضافة جلسة", suggesting from his homework up to that day);
+ * otherwise to today's, created on save.
  */
 export default function HomeworkFormScreen() {
-  const { studentId, kind, itemId, lessonId } = useLocalSearchParams<{
+  const { studentId, kind, itemId, lessonId, date } = useLocalSearchParams<{
     studentId: string;
     kind: Kind;
     itemId?: string;
     lessonId?: string;
+    date?: string;
   }>();
   const student = useStudent(studentId);
-  const history = useStudentHomework(studentId);
-  if (!student || !history) {
+  const allHomework = useStudentHomework(studentId);
+  const day = isLocalDate(date) ? date : undefined;
+  const pastDay = useStudentToday(day ? (student ?? null) : null, day);
+  const history = day ? pastDay?.history : allHomework;
+  if (!student || !history || !allHomework) {
     return (
       <Screen width="form">
         <Loading />
       </Screen>
     );
   }
-  const item = itemId ? history.find((h) => h.id === itemId) : undefined;
+  const item = itemId ? allHomework.find((h) => h.id === itemId) : undefined;
   // The portion was deleted meanwhile (another device): nothing to edit.
   if (kind === "edit" && !item) return <Gone />;
   return (
-    <HomeworkForm kind={kind} student={student} history={history} item={item} lessonId={lessonId} />
+    <HomeworkForm
+      kind={kind}
+      student={student}
+      history={history}
+      item={item}
+      lessonId={lessonId}
+      date={day}
+    />
   );
 }
 
@@ -78,12 +90,14 @@ function HomeworkForm({
   history,
   item,
   lessonId,
+  date,
 }: Readonly<{
   kind: Kind;
   student: StudentRecord;
   history: readonly HomeworkRecord[];
   item?: HomeworkRecord;
   lessonId?: string;
+  date?: LocalDate;
 }>) {
   const t = useTranslations();
   const { store, session } = useApp();
@@ -126,7 +140,7 @@ function HomeworkForm({
       } else {
         const lesson =
           lessonId ??
-          (await todayLessonId(store, student.classId, todayInTimeZone(session.timezone)));
+          (await todayLessonId(store, student.classId, date ?? todayInTimeZone(session.timezone)));
         const created =
           kind === "exam"
             ? await addExam(store, {

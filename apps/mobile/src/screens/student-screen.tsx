@@ -2,6 +2,7 @@ import { Alert } from "react-native";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useTranslations } from "use-intl";
 import { archiveStudent, unarchiveStudent } from "@qct/core/data/entities/students";
+import { AddSession } from "@/components/add-session";
 import { Button } from "@/components/button";
 import { EmptyState } from "@/components/empty-state";
 import { useToolbarIcon } from "@/components/icons";
@@ -100,6 +101,7 @@ export default function StudentScreen() {
           // Without lessons.run the table is shown, not edited.
           <MonthTable profile={profile} student={student} editable={access.can("lessons.run")} />
         ) : null}
+        {!archived && access.can("lessons.run") ? <AddSession studentId={student.id} /> : null}
         {/* Today: attendance, marks and the next day's homework. */}
         {!archived ? <TodayCard student={student} /> : null}
       </Screen>

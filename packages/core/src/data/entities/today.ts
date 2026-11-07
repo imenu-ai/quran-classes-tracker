@@ -10,6 +10,7 @@ import type { StorageReader } from "../storage";
 import { findAttendance } from "./attendance";
 import { findLiveLesson, startLesson } from "./lessons";
 
+/** One day of a student's: today, or a past day picked with "إضافة جلسة". */
 export interface StudentToday {
   date: LocalDate;
   /**
@@ -21,17 +22,31 @@ export interface StudentToday {
   lessonId: string;
   attendance: AttendanceRecord | null;
   homework: StudentLessonHomework<HomeworkRecord>;
-  /** All of the student's live homework (for the next-homework suggestion). */
+  /** His live homework up to that day (for the next-homework suggestion). */
   history: HomeworkRecord[];
 }
 
 /** What the student page shows for today ("today" in the center's time zone). */
-export async function loadStudentToday(
+export function loadStudentToday(
   db: StorageReader,
   student: Pick<StudentRecord, "id" | "classId">,
   timeZone: string,
 ): Promise<StudentToday> {
-  const date = todayInTimeZone(timeZone);
+  return loadStudentDay(db, student, todayInTimeZone(timeZone));
+}
+
+/**
+ * One day for a student, today or a past day the teacher picked ("إضافة
+ * جلسة"): that day's lesson if the class has one, his attendance, the
+ * homework due then (assigned before it and still pending), what was
+ * evaluated and assigned in it, and his homework up to that day for the
+ * suggestion (later homework is left out).
+ */
+export async function loadStudentDay(
+  db: StorageReader,
+  student: Pick<StudentRecord, "id" | "classId">,
+  date: LocalDate,
+): Promise<StudentToday> {
   const lesson = (await findLiveLesson(db, student.classId, date)) ?? null;
   const lessonId = lesson?.id ?? lessonIdFor(student.classId, date);
 
@@ -47,13 +62,17 @@ export async function loadStudentToday(
       .map((l) => [l.id, l.date] as const),
   );
   const attendance = lesson ? await findAttendance(db, lesson.id, student.id) : undefined;
+  const assignedBy = (item: HomeworkRecord) => {
+    const assigned = item.assignedLessonId ? lessonDates.get(item.assignedLessonId) : undefined;
+    return assigned === undefined || assigned <= date;
+  };
   return {
     date,
     lesson,
     lessonId,
     attendance: attendance && attendance.deletedAt === null ? attendance : null,
     homework: splitLessonHomework(homework, { id: lessonId, date }, lessonDates),
-    history: homework,
+    history: homework.filter(assignedBy),
   };
 }
 

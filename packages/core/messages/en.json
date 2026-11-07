@@ -467,6 +467,15 @@
     "addNext": "Add homework for the next day",
     "marks": "{memorization} · {behavior}"
   },
+  "day": {
+    "title": "Session",
+    "add": "Add a session",
+    "pickTitle": "A session on an earlier day",
+    "pickHint": "Pick an earlier day to record his attendance, recitation and marks on it.",
+    "open": "Open the session",
+    "backToToday": "Back to today",
+    "futureNotAllowed": "A day in the future can't be picked"
+  },
   "classStats": {
     "button": "Statistics",
     "title": "Class statistics",

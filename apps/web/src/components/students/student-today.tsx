@@ -23,7 +23,7 @@ import {
   undoEvaluation,
 } from "@qct/core/data/entities/homework";
 import { todayLessonId, useStudentToday } from "@/client/data/today";
-import { localDateToUtcDate } from "@qct/core/domain/dates/local-date";
+import { localDateToUtcDate, type LocalDate } from "@qct/core/domain/dates/local-date";
 import {
   isExam,
   marksIn,
@@ -39,15 +39,23 @@ import { AttendanceToggle, ExcuseNoteInput } from "./attendance-controls";
 /**
  * Today, for one student: attendance, his homework with the two mark pickers
  * (memorization can be "لم يحفظ"), and homework for the next day. Today's
- * lesson is created behind the scenes on the first thing recorded.
+ * lesson is created behind the scenes on the first thing recorded. With
+ * `date`, the same for a past day ("إضافة جلسة") and that day's lesson.
  */
-export function StudentToday({ student }: { student: StudentRecord }) {
+export function StudentToday({
+  student,
+  date: day,
+}: {
+  student: StudentRecord;
+  /** A past day picked with "إضافة جلسة"; today without it. */
+  date?: LocalDate;
+}) {
   const t = useTranslations();
   const format = useFormatter();
   const { store } = useApp();
   const canRun = useAccess().can("lessons.run");
   const label = usePortionLabel();
-  const today = useStudentToday(student);
+  const today = useStudentToday(student, day);
   const [form, setForm] = useState<HomeworkFormMode | null>(null);
   // Items start closed; this holds the ones the teacher opened, by id.
   const [openIds, setOpenIds] = useState<ReadonlySet<string>>(new Set());
@@ -74,7 +82,7 @@ export function StudentToday({ student }: { student: StudentRecord }) {
     >
       <header className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="today-title" className="text-2xl font-bold">
-          {t("today.title")}
+          {day ? t("day.title") : t("today.title")}
         </h2>
         <span className="text-base text-muted-foreground">
           {format.dateTime(localDateToUtcDate(date), "lessonDate")}

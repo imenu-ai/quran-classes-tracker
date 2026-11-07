@@ -73,6 +73,7 @@ function GatedStack() {
   const tSync = useTranslations("sync");
   const tStudents = useTranslations("students");
   const tHomework = useTranslations("homework");
+  const tDay = useTranslations("day");
   const tPrint = useTranslations("print");
   const tParent = useTranslations("parentLink");
   const tDeletion = useTranslations("deletion");
@@ -112,6 +113,10 @@ function GatedStack() {
           <Stack.Screen
             name="homework-form"
             options={{ ...withHeader(tHomework("addTitle")), presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="student-day"
+            options={{ ...withHeader(tDay("title")), presentation: "modal" }}
           />
           <Stack.Screen
             name="delete-account"

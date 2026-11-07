@@ -42,7 +42,7 @@ Agreed with the user from 2026-10-05 on; the date marks when a group was added.
 | 28 | Student-centred screens (2026-10-10) | Opening a class shows only its students. The student's page shows his month in a table, and his homework with the marks and "add homework for the next day". There are no lesson screens; lessons still exist in the data, and today's lesson is created automatically on the first thing recorded for a student today. |
 | 29 | Postponed recitation | "تأجيل التسميع": when a student isn't ready, the teacher postpones instead of giving a bad mark. The homework stays pending for the next day, the day shows "مؤجل", the student counts as present, and averages aren't affected. It can be undone the same day. **Replaced by #55 (2026-11-07).** |
 | 30 | Absence | Marked on the student's page for today (present / absent / excused, with the excuse note). |
-| 31 | Past days | Marking applies to today; a past day is corrected by tapping its row in the month table. |
+| 31 | Past days | Marking applies to today; a past day is corrected by tapping its row in the month table. Since #58, "إضافة جلسة" also opens a whole past day. |
 | 32 | Mark input (2026-10-11) | A mark (1–10; 0–10 in halves since #54) is chosen with the phone's own number wheel (a native select). |
 | 33 | Homework list | On the student page, each due homework item is a collapsible section showing its sura and ayat (and its marks or "مؤجل" when closed). All start closed, except an item just added with "recite now". |
 | 34 | Class statistics (2026-10-11) | A "الإحصائيات" button next to "إضافة طالب" opens the class's statistics: its attendance rate (present / absent / excused) and average marks, then its students ranked best first. All time by default; a year, or a year and a month, narrows it. |
@@ -555,7 +555,7 @@ Five features asked for by the user on 2026-11-07 (§0 #54–58), each built in 
   - Core: the 604-page map (each page's first sura and ayah, from Tanzil's quran-data metadata, CC BY 3.0, credited in the README), with `pagesToPortions()` and `portionsToPages()` and tests against the sura map (every ayah on exactly one page).
   - Data: an optional `pages: { from, to } | null`, checked against the portions; cleared when the ayahs are edited.
   - Form: an "آيات / صفحات" switch; page mode has from and to page (1–604) and a preview of the suras and ayahs. Labels show "ص ١٢–١٣" with the ayahs beneath. The suggestion continues with the next (or, backward, previous) pages.
-- [ ] **3.5 A session on a chosen date (#58).**
+- [x] **3.5 A session on a chosen date (#58).**
   - "إضافة جلسة" with the month table on both platforms: the system date picker (no future dates), then that day's screen, built from the today card with the date as a parameter. Today opens the today card.
   - Core: the day's due homework and the next-homework suggestion as of that date (items created later are left out); the lesson created on the first thing recorded, as today.
   - Access: `lessons.run`, as for today.
@@ -956,3 +956,11 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
   - **Checked:** core tests for the map, the form helpers and the schema; a web label test; a mobile Jest test that saves page 582 (النبأ 1–30) and then suggests page 583; the E2E main flow adds page 604 as next-day homework ("ص 604 · الإخلاص كاملة، الفلق كاملة، الناس كاملة"). E2E: 10 of 10 on Desktop Chrome and Pixel 7; the iPhone project still can't launch WebKit here.
   - A new mobile test left its first render mounted (`unmount()` is async in this Testing Library version) and broke the next tests; it awaits the unmount now.
   - Tests: core 470, web 299, mobile 85.
+
+- 2026-11-07 (3.5):
+  - **Core:** `loadStudentDay(db, student, date)` is the today card's data for any day (`loadStudentToday` calls it with today): that day's lesson if the class has one, his attendance, the homework due then (assigned before it and still pending, as `splitLessonHomework` already worked it out), and his homework up to that day, so the suggestion continues from what was given by then. The lesson is created on the first thing recorded, as today (`todayLessonId` already took a date).
+  - **Web:** "إضافة جلسة" under the month table (with `lessons.run`) opens a drawer with the browser's date input (`max` = today; a later day is refused with "لا يمكن اختيار يوم قادم") and goes to `/student?id=…&date=…`. That page shows the card titled "الجلسة" with its date, and "العودة إلى اليوم". Today, a bad date or a later one shows today.
+  - **App:** the same button opens the system date picker from `@expo/ui/community/datetime-picker` (already a dependency, so no new native module): the compact date button on iOS, the Material date dialog on Android. A past day opens `student-day`, a page sheet with the today card for that day; its homework form gets `?date=` for the lesson and the suggestion. Today does nothing (today's card is already there). Expo's typed routes are generated by the dev server, so it ran once on a spare port to add `/student-day`.
+  - **Checked:** a core suite test (due homework, history and the lesson for a past day), mobile Jest tests (the picker's day, today or later ignored; the day screen's lesson, due homework and suggestion), and the E2E main flow (a session ten days back, marked absent, then back to today). E2E: 10 of 10 on Desktop Chrome and Pixel 7. The first run failed because `{ name: "اليوم" }` also matched "واجب اليوم التالي"; the step matches exactly.
+  - **For you on a device:** the date picker hasn't been seen on the emulator or the iPhone yet (it needs the development build to include `@expo/ui`'s date picker, which 58.0.23 has).
+  - Tests: core 472, web 300, mobile 87.

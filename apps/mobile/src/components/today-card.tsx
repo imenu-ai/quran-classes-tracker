@@ -10,7 +10,7 @@ import {
   undoEvaluation,
 } from "@qct/core/data/entities/homework";
 import { todayLessonId } from "@qct/core/data/entities/today";
-import { localDateToUtcDate } from "@qct/core/domain/dates/local-date";
+import { localDateToUtcDate, type LocalDate } from "@qct/core/domain/dates/local-date";
 import {
   isExam,
   marksIn,
@@ -38,16 +38,24 @@ const NO_MARKS = { memorization: null, behavior: null } as const;
  * Today, for one student (the web's StudentToday): attendance, the homework
  * due with its marks (or "لم يحفظ"), exams, and homework for the next day.
  * Today's lesson is created behind the scenes on the first thing recorded.
+ * With `date`, the same for a past day ("إضافة جلسة") and that day's lesson.
  * Without `lessons.run` everything is shown, not changed.
  */
-export function TodayCard({ student }: Readonly<{ student: StudentRecord }>) {
+export function TodayCard({
+  student,
+  date: day,
+}: Readonly<{
+  student: StudentRecord;
+  /** A past day picked with "إضافة جلسة"; today without it. */
+  date?: LocalDate;
+}>) {
   const t = useTranslations();
   const format = useFormatter();
   const { store } = useApp();
   const { colors } = useTheme();
   const canRun = useAccess().can("lessons.run");
   const label = usePortionLabel();
-  const today = useStudentToday(student);
+  const today = useStudentToday(student, day);
   // Items start closed; this holds the ones the teacher opened, by id.
   const [openIds, setOpenIds] = useState<ReadonlySet<string>>(new Set());
   const setOpen = (id: string, open: boolean) =>
@@ -77,7 +85,10 @@ export function TodayCard({ student }: Readonly<{ student: StudentRecord }>) {
   const absent = attendance !== null && attendance.status !== "present";
   const items = [...homework.evaluatedHere, ...homework.toRecite];
   const openForm = (kind: HomeworkFormKind) =>
-    router.push({ pathname: "/homework-form", params: { studentId: student.id, kind } });
+    router.push({
+      pathname: "/homework-form",
+      params: { studentId: student.id, kind, ...(day ? { date: day } : {}) },
+    });
   const editItem = (item: HomeworkRecord) =>
     router.push({
       pathname: "/homework-form",
@@ -88,7 +99,7 @@ export function TodayCard({ student }: Readonly<{ student: StudentRecord }>) {
     <View style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }]}>
       <View style={styles.titleRow}>
         <Text weight="bold" size={22} accessibilityRole="header">
-          {t("today.title")}
+          {day ? t("day.title") : t("today.title")}
         </Text>
         <Text tone="muted">{format.dateTime(localDateToUtcDate(date), "lessonDate")}</Text>
       </View>

@@ -3,7 +3,8 @@ import { loadActiveClasses, loadClass, loadClassList } from "@qct/core/data/enti
 import { loadStudentProfile } from "@qct/core/data/entities/profile";
 import { loadStudentSearch } from "@qct/core/data/entities/search";
 import { loadClassStudents, loadStudent } from "@qct/core/data/entities/students";
-import { loadStudentToday } from "@qct/core/data/entities/today";
+import { loadStudentDay, loadStudentToday } from "@qct/core/data/entities/today";
+import type { LocalDate } from "@qct/core/domain/dates/local-date";
 import type { StatsPeriod } from "@qct/core/domain/stats/class";
 import type { StudentRecord } from "@qct/core/shared/schemas/student";
 import { useAppLocale } from "@/i18n/locale";
@@ -53,13 +54,22 @@ export function useStudentSearch(query: string) {
 }
 
 /** Today for one student: the lesson (if started), attendance and homework. */
-export function useStudentToday(student: Pick<StudentRecord, "id" | "classId"> | null) {
+export function useStudentToday(
+  student: Pick<StudentRecord, "id" | "classId"> | null,
+  /** A past day picked with "إضافة جلسة"; today without it. */
+  date?: LocalDate,
+) {
   const { session } = useApp();
   const id = student?.id;
   const classId = student?.classId;
   return useLocalQuery(
-    async (db) => (id && classId ? loadStudentToday(db, { id, classId }, session.timezone) : null),
-    [id, classId, session.timezone],
+    async (db) => {
+      if (!id || !classId) return null;
+      return date
+        ? loadStudentDay(db, { id, classId }, date)
+        : loadStudentToday(db, { id, classId }, session.timezone);
+    },
+    [id, classId, session.timezone, date],
     ["lessons", "attendance", "homework"],
   );
 }

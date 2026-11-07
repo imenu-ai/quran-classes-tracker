@@ -190,4 +190,26 @@ test("class → students → student page: mark, next-day homework, absence, not
     await page.addStyleTag({ content: "@page { size: letter; margin: 12mm !important; }" });
     expect(await pages()).toBe(2);
   }
+
+  // A session on an earlier day ("إضافة جلسة"): ten days back, he was absent.
+  await page.goto(classUrl);
+  await page.getByRole("link", { name: /أحمد التجريبي/ }).click();
+  await page.waitForURL(/\/student\?id=/);
+  await page.getByRole("button", { name: ar.day.add }).click();
+  const earlier = new Date(Date.now() - 10 * DAY_MS).toISOString().slice(0, 10);
+  const picker = page.getByRole("dialog");
+  await picker.getByLabel(ar.glossary.date).fill(earlier);
+  await picker.getByRole("button", { name: ar.day.open }).click();
+  await page.waitForURL(new RegExp(`date=${earlier}`));
+  const pastDay = page.locator("section[aria-labelledby=today-title]");
+  await expect(pastDay.getByRole("heading", { name: ar.day.title })).toBeVisible();
+  await pastDay.getByRole("radio", { name: ar.glossary.absent, exact: true }).click();
+  await expect(pastDay.getByText(ar.today.absentNote)).toBeVisible();
+  await page.getByRole("link", { name: ar.day.backToToday }).click();
+  await expect(
+    page.locator("section[aria-labelledby=today-title]").getByRole("heading", {
+      name: ar.today.title,
+      exact: true,
+    }),
+  ).toBeVisible();
 });
