@@ -964,3 +964,11 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
   - **Checked:** a core suite test (due homework, history and the lesson for a past day), mobile Jest tests (the picker's day, today or later ignored; the day screen's lesson, due homework and suggestion), and the E2E main flow (a session ten days back, marked absent, then back to today). E2E: 10 of 10 on Desktop Chrome and Pixel 7. The first run failed because `{ name: "اليوم" }` also matched "واجب اليوم التالي"; the step matches exactly.
   - **For you on a device:** the date picker hasn't been seen on the emulator or the iPhone yet (it needs the development build to include `@expo/ui`'s date picker, which 58.0.23 has).
   - Tests: core 472, web 300, mobile 87.
+
+- 2026-11-07 (3.6, the repo's part; the step stays open until the Maestro flows and the device checks have run):
+  - **Version 1.1.0** in `app.json` and `package.json` (`runtimeVersion` follows the app version, so EAS Update builds for 1.0.0 don't receive this JS, which needs the new data shapes).
+  - **Store texts:** the feature list in both listings drops postponing and says what's new (several suras, pages, marks in halves, "لم يحفظ", a session on an earlier day); "What's new" for the App Store and Play's release notes for 1.1.0 (236 and 273 characters, under Play's 500).
+  - **Maestro `main-flow`:** taps the month heading by pattern instead of "أكتوبر 2026" (it would have failed from November), and adds next-day homework as page 604. The past-session picker isn't in a flow: Android shows it as a system dialog.
+  - **README:** the flow table, and checks on an iPhone for the marks wheel, several suras, pages and "إضافة جلسة".
+  - **Not run here:** `qct_phone` stayed `offline` in adb for over ten minutes (an adb restart didn't help), like WebKit for the iPhone E2E project, so neither the Maestro flows nor the iPhone E2E project ran in this session. Web E2E passes on Desktop Chrome and Pixel 7.
+  - **Left for you:** run `pnpm mobile:e2e` and the iPhone E2E project (`pnpm --filter @qct/web test:e2e --project=iphone`) on a working emulator and WebKit, the README iPhone checks on a development build, deploy the web app, and build and submit 1.1.0.

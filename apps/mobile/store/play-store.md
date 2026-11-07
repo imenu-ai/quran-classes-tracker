@@ -32,8 +32,9 @@ Play app names don't have to be unique, so the English title can stay "Quran Mem
 
 للمعلم
 • حضور الطالب أو غيابه بلمسة، مع العذر عند الحاجة.
-• التسميع من أي سورة وآية، مع درجة الحفظ ودرجة السلوك.
-• تأجيل التسميع إلى الدرس التالي دون أن يتأثر معدّل الطالب.
+• التسميع من سورة أو أكثر، بالآيات أو بصفحات المصحف، مع درجة الحفظ ودرجة السلوك من 0 إلى 10 بأنصاف الدرجات.
+• «لم يحفظ» حين لا يحفظ الطالب واجبه: يبقى الواجب للدرس التالي دون أن يتأثر معدّل حفظه، مع درجة السلوك.
+• تسجيل جلسة في يوم سابق.
 • الواجب التالي مقترح تلقائيًا من آخر ما حفظه الطالب.
 • الاختبارات بدرجة واحدة، منفصلة عن المعدّلات.
 • جدول شهري لكل طالب بالحضور والمقاطع والدرجات والمعدّلات.
@@ -66,8 +67,9 @@ An app for Quran memorization centers: teachers record their students' attendanc
 
 For teachers
 • Mark a student present or absent with one tap, with an excuse when needed.
-• Record a recitation from any sura and ayah, with a memorization mark and a behavior mark.
-• Postpone a recitation to the next lesson without affecting the student's average.
+• Record a recitation of one or more suras, by ayahs or by mushaf pages, with a memorization mark and a behavior mark from 0 to 10 in halves.
+• "Not memorized" when a student isn't ready: the homework stays for the next lesson without affecting his memorization average, and he still gets a behavior mark.
+• Record a session on an earlier day.
 • The next homework is suggested from what the student memorized last.
 • Exams with a single mark, kept out of the averages.
 • A monthly table per student with attendance, portions, marks and averages.
@@ -151,13 +153,21 @@ Security practices:
 - **The first upload is manual.** Google's API can't create an app's first release, so download the `.aab` from the EAS build page and upload it in the Play Console. Later builds can go through `eas submit` once a Google service account is set up (README → "Releasing the app").
 - **A new personal developer account** must run a closed test with at least 12 testers, opted in for 14 days in a row, before it can apply for production. An organization account goes straight to production.
 
-**Release notes** (Play's format):
+**Release notes** (Play's format, 500 characters per language). 1.0.0 had "الإصدار الأول." / "First release."; 1.1.0:
 
 ```
 <ar>
-الإصدار الأول.
+• الدرجات من 0 إلى 10 بأنصاف الدرجات (مثل 9.5).
+• «لم يحفظ» في قائمة درجة الحفظ بدل تأجيل التسميع، مع درجة السلوك في ذلك اليوم.
+• الواجب أو الاختبار من أكثر من سورة، أو سورة كاملة.
+• إدخال الواجب بصفحات المصحف.
+• إضافة جلسة في يوم سابق.
 </ar>
 <en-US>
-First release.
+• Marks from 0 to 10 in halves (such as 9.5).
+• "Not memorized" in the memorization mark list instead of postponing, with that day's behavior mark.
+• Homework or an exam of several suras, or a whole sura.
+• Homework given as mushaf pages.
+• Add a session on an earlier day.
 </en-US>
 ```

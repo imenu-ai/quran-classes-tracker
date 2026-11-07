@@ -283,7 +283,7 @@ Sign-in, registration, "forgot password" (it opens the web page) and the forced 
 
 | Flow        | Covers                                                                                                                                                         |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `main-flow` | sign in, create a class and a student, mark him present, recite now with a mark, the month table, everything synced                                            |
+| `main-flow` | sign in, create a class and a student, mark him present, recite now with a half mark, the month table, next-day homework as a page, everything synced          |
 | `offline`   | airplane mode: create a class, the indicator shows it waiting; back online it syncs; after signing out (which wipes the device) and in again, it's still there |
 | `roles`     | the admin creates a class, a student and a teacher for it; the teacher's forced password change, only that class, no admin controls, taking attendance         |
 | `deletion`  | the only admin can't delete their own account; a wrong password, then the center deleted; signed out, and the account no longer signs in                       |
@@ -298,6 +298,9 @@ Each flow starts from a cleared app. Flows find fields by their `testID` (`sign-
 - [ ] Share: the parent link ("رابط ولي الأمر") copies, opens the share sheet, and shows a QR code that a phone camera opens.
 - [ ] iPad: the classes in columns (three in landscape), the class page in two; it rotates freely, and forms and sheets stay narrow and centred. The iPhone stays in portrait.
 - [ ] The score wheel and form sheets behave natively; the keyboard doesn't cover the field being typed in.
+- [ ] Marks (Phase 3): the wheel offers —, لم يحفظ, 0, 0.5 … 10. "لم يحفظ" turns the item amber with "لم يحفظ" on its closed line, a behavior mark still goes in, and the homework is due again the next day.
+- [ ] Several suras and pages: "إضافة سورة" and "السورة كاملة" in the homework form; "صفحات" with from/to page shows the suras the pages hold, and the item shows "ص … · …".
+- [ ] "إضافة جلسة" under the month table: the compact date button opens the calendar (no later than today); a past day opens its session sheet, and recording there shows on that day in the month table.
 
 ### Releasing the app
 
