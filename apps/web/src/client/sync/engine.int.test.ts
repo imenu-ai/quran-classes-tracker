@@ -130,7 +130,7 @@ describe("two devices syncing through the real server", () => {
       evaluatedLessonId: null,
       memorizationRate: null,
       behaviorRate: null,
-      postponedLessonIds: [],
+      notMemorized: [],
       kind: "homework" as const,
     };
     // Write straight to the database, bypassing LocalStore validation.

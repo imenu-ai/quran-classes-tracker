@@ -1,4 +1,5 @@
 import { monthKey } from "../dates/local-date";
+import { notMemorizedOf, type NotMemorizedEntry } from "../../shared/schemas/homework";
 
 interface StatsLesson {
   id: string;
@@ -12,6 +13,9 @@ interface StatsHomework {
   evaluatedLessonId: string | null;
   memorizationRate: number | null;
   behaviorRate: number | null;
+  /** "لم يحفظ" entries: their behavior marks count; read via notMemorizedOf. */
+  notMemorized?: readonly NotMemorizedEntry[];
+  postponedLessonIds?: readonly string[];
   deletedAt: number | null;
 }
 
@@ -79,8 +83,13 @@ export function monthlyStats(
   };
 
   for (const item of homework) {
-    if (item.deletedAt !== null || item.evaluatedLessonId === null) continue;
-    if (item.kind === "exam") continue;
+    if (item.deletedAt !== null || item.kind === "exam") continue;
+    // A "not memorized" day's behavior mark counts in that day's month.
+    for (const { lessonId, behaviorRate } of notMemorizedOf(item)) {
+      const month = lessonMonth.get(lessonId);
+      if (month && behaviorRate !== null) bucket(month).behavior.push(behaviorRate);
+    }
+    if (item.evaluatedLessonId === null) continue;
     const month = lessonMonth.get(item.evaluatedLessonId);
     if (!month) continue;
     const b = bucket(month);

@@ -39,11 +39,11 @@ export function printSuite(factory: StorageFactory) {
       evaluatedLessonId: oct5.id,
       memorizationRate: 3,
     }),
-    // Postponed on 5 Oct, recited later (still pending).
+    // Not memorized on 5 Oct (still pending); that day's behavior mark counts.
     homeworkRecord(ahmad.id, {
       surah: 113,
       assignedLessonId: oct2.id,
-      postponedLessonIds: [oct5.id],
+      notMemorized: [{ lessonId: oct5.id, behaviorRate: 8 }],
     }),
     // Another month.
     homeworkRecord(ahmad.id, {
@@ -70,16 +70,17 @@ export function printSuite(factory: StorageFactory) {
         ["2026-10-01", "evaluation"],
         ["2026-10-02", "absence"],
         ["2026-10-05", "evaluation"],
-        ["2026-10-05", "postponed"],
+        ["2026-10-05", "notMemorized"],
       ]);
-      expect(sheet).toMatchObject({ memorizationAverage: 9, behaviorAverage: 10 });
+      // Behavior: (10 + the "not memorized" day's 8) / 2.
+      expect(sheet).toMatchObject({ memorizationAverage: 9, behaviorAverage: 9 });
       expect(sheet.counts).toEqual({
         present: 2,
         absent: 0,
         excused: 1,
         evaluated: 1,
         exams: 1,
-        postponed: 1,
+        notMemorized: 1,
       });
     });
 
@@ -93,7 +94,7 @@ export function printSuite(factory: StorageFactory) {
         rows: [],
         memorizationAverage: null,
         behaviorAverage: null,
-        counts: { present: 0, absent: 0, excused: 0, evaluated: 0, exams: 0, postponed: 0 },
+        counts: { present: 0, absent: 0, excused: 0, evaluated: 0, exams: 0, notMemorized: 0 },
       });
     });
   });
@@ -126,7 +127,7 @@ export function printSuite(factory: StorageFactory) {
       expect(result?.cls.id).toBe(cls.id);
       expect(result?.sheets.map((sheet) => sheet.student.fullName)).toEqual(["سالم", "أحمد"]);
       expect(result?.sheets[0]?.rows).toEqual([]);
-      expect(result?.sheets[1]?.counts).toMatchObject({ evaluated: 1, exams: 1, postponed: 1 });
+      expect(result?.sheets[1]?.counts).toMatchObject({ evaluated: 1, exams: 1, notMemorized: 1 });
     });
 
     it("returns null for a class that doesn't exist", async () => {

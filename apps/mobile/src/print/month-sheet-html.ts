@@ -74,6 +74,7 @@ th, td { border: 1px solid #a3a3a3; padding: 0.5mm 2mm; text-align: start; verti
 thead, tfoot { background: #f5f5f5; }
 tfoot { font-weight: 700; }
 .mid { text-align: center; }
+.small { font-size: 0.85em; }
 .strong { font-weight: 700; }
 tr { break-inside: avoid; page-break-inside: avoid; }
 tr.exam { background: #f5f3ff; }
@@ -102,8 +103,8 @@ function rowHtml(row: HistoryRow, text: SheetText): string {
   const portion = `<td>${bdi(text.portion(row.item))}${exam ? `<span class="exam-badge">${escape(t("exam.badge"))}</span>` : ""}</td>`;
   const marks = exam
     ? `<td colspan="2" class="mid exam-mark">${score(row.item.memorizationRate)}</td>`
-    : row.kind === "postponed"
-      ? `<td colspan="2" class="mid">${escape(t("today.postponed"))}</td>`
+    : row.kind === "notMemorized"
+      ? `<td class="mid small strong">${escape(t("glossary.notMemorized"))}</td><td class="mid strong">${score(row.behaviorRate)}</td>`
       : `<td class="mid strong">${score(row.item.memorizationRate)}</td><td class="mid strong">${score(row.item.behaviorRate)}</td>`;
   return `<tr${exam ? ' class="exam"' : ""}>${day}${portion}${marks}</tr>`;
 }
@@ -119,7 +120,7 @@ function sheetHtml(sheet: MonthSheet, input: SheetsInput): string {
     [t("print.excused"), sheet.counts.excused],
     [t("print.evaluated"), sheet.counts.evaluated],
     [t("print.exams"), sheet.counts.exams],
-    [t("print.postponed"), sheet.counts.postponed],
+    [t("print.notMemorized"), sheet.counts.notMemorized],
   ];
   const rows =
     sheet.rows.length === 0

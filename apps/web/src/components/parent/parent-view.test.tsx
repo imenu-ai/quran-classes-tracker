@@ -52,18 +52,18 @@ const report: ParentReport = {
     },
     {
       date: "2026-10-05",
-      kind: "postponed",
+      kind: "notMemorized",
       surah: 113,
       fromAyah: 1,
       toAyah: 5,
       memorization: null,
-      behavior: null,
+      behavior: 7,
       excuseNote: "",
     },
   ],
   memorizationAverage: 9,
   behaviorAverage: 8,
-  counts: { present: 2, absent: 0, excused: 1, evaluated: 1, exams: 1, postponed: 1 },
+  counts: { present: 2, absent: 0, excused: 1, evaluated: 1, exams: 1, notMemorized: 1 },
 };
 
 const json = (status: number, body: unknown) =>
@@ -123,7 +123,8 @@ describe("ParentView", () => {
     expect(rows[2]?.textContent).toContain("مريض");
     expect(rows[3]?.textContent).toContain("اختبار");
     expect(rows[3]?.className).toContain("bg-exam");
-    expect(rows[4]?.textContent).toContain("مؤجل");
+    expect(rows[4]?.textContent).toContain("لم يحفظ");
+    expect(rows[4]?.textContent).toContain("7");
 
     const summary = screen.getByRole("region", { name: "المعدل" });
     expect(summary.textContent).toContain("9.0");
@@ -132,6 +133,7 @@ describe("ParentView", () => {
       within(summary).getByText(name).closest("div")?.querySelector("dd")?.textContent;
     expect(count("الاختبارات")).toBe("1");
     expect(count("الغياب بعذر")).toBe("1");
+    expect(count("لم يحفظ")).toBe("1");
   });
 
   it("keeps a picked month in the URL, and asks for it", async () => {

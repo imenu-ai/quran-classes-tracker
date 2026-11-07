@@ -61,11 +61,19 @@ export async function openHomework(scope: import("@playwright/test").Locator, po
   return item;
 }
 
-/** Chooses a mark (1–10) in one of the labelled mark pickers inside `scope`. */
+/** Chooses a mark (0–10 in halves) in one of the labelled mark pickers inside `scope`. */
 export async function setScore(
   scope: import("@playwright/test").Locator,
   label: string,
   score: number,
 ) {
   await scope.getByRole("combobox", { name: label }).first().selectOption(String(score));
+}
+
+/** Chooses "لم يحفظ" in the memorization picker inside `scope`. */
+export async function setNotMemorized(scope: import("@playwright/test").Locator) {
+  await scope
+    .getByRole("combobox", { name: ar.glossary.memorizationRate })
+    .first()
+    .selectOption({ label: ar.glossary.notMemorized });
 }

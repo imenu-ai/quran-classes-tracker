@@ -1,6 +1,5 @@
 "use client";
 
-import { Clock } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useId } from "react";
 import { usePortionLabel } from "@/components/homework/use-portion-label";
@@ -12,7 +11,7 @@ import type { ParentReport as ParentReportData, ParentRow } from "@qct/core/shar
 
 /**
  * A student's month for his parent (read-only): the month picker, the
- * averages and counts, then each day's homework, exam, postponement or
+ * averages and counts, then each day's homework, exam, "لم يحفظ" or
  * absence with its marks.
  */
 export function ParentReport({
@@ -42,7 +41,7 @@ export function ParentReport({
     [t("print.excused"), report.counts.excused],
     [t("print.evaluated"), report.counts.evaluated],
     [t("print.exams"), report.counts.exams],
-    [t("print.postponed"), report.counts.postponed],
+    [t("print.notMemorized"), report.counts.notMemorized],
   ];
 
   return (
@@ -158,6 +157,11 @@ export function ParentReport({
                         {row.kind === "exam" && (
                           <Badge className="bg-exam text-exam-foreground">{t("exam.badge")}</Badge>
                         )}
+                        {row.kind === "notMemorized" && (
+                          <Badge className="bg-warning text-warning-foreground">
+                            {t("glossary.notMemorized")}
+                          </Badge>
+                        )}
                       </span>
                     </td>
                     {row.kind === "exam" ? (
@@ -167,16 +171,14 @@ export function ParentReport({
                       >
                         {score(row.memorization)}
                       </td>
-                    ) : row.kind === "postponed" ? (
-                      <td colSpan={2} className="px-1 py-2.5 text-center">
-                        <Badge className="bg-warning text-warning-foreground">
-                          <Clock aria-hidden />
-                          {t("today.postponed")}
-                        </Badge>
-                      </td>
                     ) : (
                       <>
-                        <td className="px-1 py-2.5 text-center font-semibold tabular-nums">
+                        <td
+                          className={cn(
+                            "px-1 py-2.5 text-center font-semibold tabular-nums",
+                            row.kind === "notMemorized" && "font-normal text-muted-foreground",
+                          )}
+                        >
                           {score(row.memorization)}
                         </td>
                         <td className="px-1 py-2.5 text-center font-semibold tabular-nums">

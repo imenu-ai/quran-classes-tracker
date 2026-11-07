@@ -1,9 +1,14 @@
 import { StyleSheet, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useTranslations } from "use-intl";
-import { rateHomework, setStudentAttendance, undoPostpone } from "@qct/core/data/entities/homework";
+import { rateHomework, setStudentAttendance } from "@qct/core/data/entities/homework";
 import type { HistoryRow, StudentProfile } from "@qct/core/domain/stats/month-sheet";
-import { isExam } from "@qct/core/shared/schemas/homework";
+import {
+  isExam,
+  marksIn,
+  memorizationChoices,
+  notMemorizedIn,
+} from "@qct/core/shared/schemas/homework";
 import { AttendanceToggle, ExcuseNoteInput } from "@/components/attendance";
 import { Button } from "@/components/button";
 import { Loading } from "@/components/loading";
@@ -34,12 +39,17 @@ function resolveTarget(target: EditTarget, profile: StudentProfile): HistoryRow 
     return record ? { kind: "absence", lesson, record } : null;
   }
   const item = profile.homework.find((h) => h.id === target.id);
-  return item ? { kind: target.kind, lesson, item } : null;
+  if (!item) return null;
+  if (target.kind === "notMemorized") {
+    const behaviorRate = notMemorizedIn(item, lesson.id)?.behaviorRate ?? null;
+    return { kind: "notMemorized", lesson, item, behaviorRate };
+  }
+  return { kind: "evaluation", lesson, item };
 }
 
 /**
  * Form sheet correcting one past day from the month table: the marks of an
- * evaluation, a postponement, or an absence. Changes save as they're made.
+ * evaluation or a "لم يحفظ", or an absence. Changes save as they're made.
  */
 export default function EditDaySheet() {
   const t = useTranslations();
@@ -66,12 +76,21 @@ export default function EditDaySheet() {
   }
 
   const exam = row.kind !== "absence" && isExam(row.item);
+  // The pickers of a homework row (unused on an absence).
+  const marks =
+    row.kind === "absence"
+      ? { memorization: null, behavior: null }
+      : marksIn(row.item, row.lesson.id);
+  const choices =
+    row.kind === "absence"
+      ? { marks: false, notMemorized: false }
+      : memorizationChoices(row.item, row.lesson.id);
   const title = exam
     ? t("exam.editTitle")
     : row.kind === "evaluation"
       ? t("profile.editEvaluationTitle")
-      : row.kind === "postponed"
-        ? t("profile.editPostponedTitle")
+      : row.kind === "notMemorized"
+        ? t("profile.editNotMemorizedTitle")
         : t("profile.editAttendanceTitle");
 
   return (
@@ -116,36 +135,28 @@ export default function EditDaySheet() {
               })
             }
           />
-          {row.kind === "postponed" ? (
-            <Button
-              variant="plain"
-              label={t("today.undoPostpone")}
-              onPress={() =>
-                void undoPostpone(store, row.item, row.lesson.id).then(() => router.back())
+          <View style={styles.pickers}>
+            <ScorePicker
+              label={exam ? t("exam.mark") : t("glossary.memorizationRate")}
+              value={marks.memorization}
+              notMemorized={choices.notMemorized}
+              marks={choices.marks}
+              onChange={(value) =>
+                rateHomework(store, row.item, row.lesson.id, "memorizationRate", value)
               }
             />
-          ) : (
-            <View style={styles.pickers}>
+            {exam ? (
+              <View style={styles.spacer} />
+            ) : (
               <ScorePicker
-                label={exam ? t("exam.mark") : t("glossary.memorizationRate")}
-                value={row.item.memorizationRate}
+                label={t("glossary.behaviorRate")}
+                value={marks.behavior}
                 onChange={(value) =>
-                  rateHomework(store, row.item, row.lesson.id, "memorizationRate", value)
+                  rateHomework(store, row.item, row.lesson.id, "behaviorRate", value)
                 }
               />
-              {exam ? (
-                <View style={styles.spacer} />
-              ) : (
-                <ScorePicker
-                  label={t("glossary.behaviorRate")}
-                  value={row.item.behaviorRate}
-                  onChange={(value) =>
-                    rateHomework(store, row.item, row.lesson.id, "behaviorRate", value)
-                  }
-                />
-              )}
-            </View>
-          )}
+            )}
+          </View>
         </>
       )}
       <Button variant="plain" label={t("common.close")} onPress={() => router.back()} />

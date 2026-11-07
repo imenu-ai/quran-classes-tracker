@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ClipboardCheck, Clock, Mic, Pencil, Plus, Trash2, Undo2 } from "lucide-react";
+import { ChevronDown, ClipboardCheck, Mic, Pencil, Plus, Trash2, Undo2 } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useId, useState } from "react";
 import { toast } from "sonner";
@@ -18,22 +18,27 @@ import { useApp } from "@/client/app-context";
 import { clearAttendance } from "@qct/core/data/entities/attendance";
 import {
   deleteHomework,
-  postponeHomework,
   rateHomework,
   setStudentAttendance,
   undoEvaluation,
-  undoPostpone,
 } from "@qct/core/data/entities/homework";
 import { todayLessonId, useStudentToday } from "@/client/data/today";
 import { localDateToUtcDate } from "@qct/core/domain/dates/local-date";
-import { isExam, postponedLessonsOf, type HomeworkRecord } from "@qct/core/shared/schemas/homework";
+import {
+  isExam,
+  marksIn,
+  memorizationChoices,
+  NOT_MEMORIZED,
+  type HomeworkRecord,
+  type MemorizationChoice,
+} from "@qct/core/shared/schemas/homework";
 import { cn } from "@/lib/utils";
 import type { StudentRecord } from "@qct/core/shared/schemas/student";
 import { AttendanceToggle, ExcuseNoteInput } from "./attendance-controls";
 
 /**
- * Today, for one student: attendance, his homework with the two score grids
- * (or postpone the recitation), and homework for the next day. Today's
+ * Today, for one student: attendance, his homework with the two mark pickers
+ * (memorization can be "لم يحفظ"), and homework for the next day. Today's
  * lesson is created behind the scenes on the first thing recorded.
  */
 export function StudentToday({ student }: { student: StudentRecord }) {
@@ -61,8 +66,6 @@ export function StudentToday({ student }: { student: StudentRecord }) {
   const lessonId = () => todayLessonId(store, student.classId, date);
   const absent = attendance !== null && attendance.status !== "present";
   const items = [...homework.evaluatedHere, ...homework.toRecite];
-  const postponedToday = (item: HomeworkRecord) =>
-    lesson !== null && postponedLessonsOf(item).includes(lesson.id);
 
   return (
     <section
@@ -138,20 +141,19 @@ export function StudentToday({ student }: { student: StudentRecord }) {
                       onToggle={() => toggle(item.id)}
                       exam={isExam(item)}
                       evaluated={lesson !== null && item.evaluatedLessonId === lesson.id}
-                      postponed={postponedToday(item)}
+                      marks={lesson ? marksIn(item, lesson.id) : NO_MARKS}
+                      // Before today's lesson exists, nothing ties the item to it.
+                      choices={
+                        lesson
+                          ? memorizationChoices(item, lesson.id)
+                          : { marks: true, notMemorized: !isExam(item) }
+                      }
                       onEdit={() => setForm({ kind: "edit", item })}
                       onRate={async (field, score) =>
                         rateHomework(store, item, await lessonId(), field, score)
                       }
                       onUndo={async () => {
                         if (lesson) await undoEvaluation(store, item, lesson.id);
-                      }}
-                      onPostpone={async () => {
-                        await postponeHomework(store, item, await lessonId());
-                        toast.success(t("today.postponedToast"));
-                      }}
-                      onUndoPostpone={async () => {
-                        if (lesson) await undoPostpone(store, item, lesson.id);
                       }}
                     />
                   ))}
@@ -230,10 +232,12 @@ export function StudentToday({ student }: { student: StudentRecord }) {
   );
 }
 
+const NO_MARKS = { memorization: null, behavior: null } as const;
+
 /**
  * One due homework item today, as a collapsible section. Closed, it's one
- * line: the portion, then its marks ("9 · 10") or "مؤجل". Open, the pickers,
- * postpone and the portion's edit and undo buttons.
+ * line: the portion, then its marks ("9 · 10") or "لم يحفظ". Open, the
+ * pickers and the portion's edit and undo buttons.
  */
 export function HomeworkItem({
   item,
@@ -242,30 +246,34 @@ export function HomeworkItem({
   onToggle,
   exam = false,
   evaluated,
-  postponed,
+  marks,
+  choices,
   onEdit,
   onRate,
   onUndo,
-  onPostpone,
-  onUndoPostpone,
 }: {
   item: HomeworkRecord;
   label: string;
   open: boolean;
   onToggle: () => void;
-  /** An exam: its own colour and badge, one mark, never postponed. */
+  /** An exam: its own colour and badge, one mark, never "not memorized". */
   exam?: boolean;
   evaluated: boolean;
-  postponed: boolean;
+  /** What the pickers show today (marksIn). */
+  marks: { memorization: MemorizationChoice; behavior: number | null };
+  /** What the memorization picker offers today (memorizationChoices). */
+  choices: { marks: boolean; notMemorized: boolean };
   onEdit: () => void;
-  onRate: (field: "memorizationRate" | "behaviorRate", score: number | null) => Promise<unknown>;
+  onRate: (
+    field: "memorizationRate" | "behaviorRate",
+    score: MemorizationChoice,
+  ) => Promise<unknown>;
   onUndo: () => Promise<void>;
-  onPostpone: () => Promise<void>;
-  onUndoPostpone: () => Promise<void>;
 }) {
   const t = useTranslations();
   const panelId = useId();
   const mark = (value: number | null) => (value === null ? t("common.noValue") : String(value));
+  const failed = marks.memorization === NOT_MEMORIZED;
 
   return (
     <li className={cn("rounded-xl border bg-background", exam && "border-exam/40 bg-exam/5")}>
@@ -284,10 +292,14 @@ export function HomeworkItem({
               {item.memorizationRate}
             </span>
           )
-        ) : postponed ? (
-          <Badge className="bg-warning text-warning-foreground">
-            <Clock aria-hidden />
-            {t("today.postponed")}
+        ) : failed ? (
+          <Badge className="bg-warning text-warning-foreground tabular-nums">
+            {marks.behavior === null
+              ? t("glossary.notMemorized")
+              : t("today.marks", {
+                  memorization: t("glossary.notMemorized"),
+                  behavior: mark(marks.behavior),
+                })}
           </Badge>
         ) : (
           evaluated && (
@@ -323,15 +335,7 @@ export function HomeworkItem({
             )}
           </div>
 
-          {postponed ? (
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/50 p-3">
-              <span className="text-sm text-muted-foreground">{t("today.postponedHint")}</span>
-              <Button variant="outline" className="h-11" onClick={() => void onUndoPostpone()}>
-                <DirectionalIcon icon={Undo2} />
-                {t("today.undoPostpone")}
-              </Button>
-            </div>
-          ) : exam ? (
+          {exam ? (
             <div className="grid grid-cols-2 gap-3">
               <ScorePicker
                 label={t("exam.mark")}
@@ -344,24 +348,19 @@ export function HomeworkItem({
               <div className="grid grid-cols-2 gap-3">
                 <ScorePicker
                   label={t("glossary.memorizationRate")}
-                  value={item.memorizationRate}
+                  value={marks.memorization}
+                  notMemorized={choices.notMemorized}
+                  marks={choices.marks}
                   onChange={(score) => onRate("memorizationRate", score)}
                 />
                 <ScorePicker
                   label={t("glossary.behaviorRate")}
-                  value={item.behaviorRate}
+                  value={marks.behavior}
                   onChange={(score) => onRate("behaviorRate", score)}
                 />
               </div>
-              {!evaluated && (
-                <Button
-                  variant="outline"
-                  className="h-11 self-start"
-                  onClick={() => void onPostpone()}
-                >
-                  <Clock aria-hidden />
-                  {t("today.postpone")}
-                </Button>
+              {failed && (
+                <p className="text-sm text-muted-foreground">{t("today.notMemorizedHint")}</p>
               )}
             </>
           )}

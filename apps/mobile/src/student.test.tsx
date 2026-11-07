@@ -104,17 +104,32 @@ describe("homework due today", () => {
     expect(await screen.findByText("9 · —")).toBeOnTheScreen();
   });
 
-  it("postpones the recitation, and undoes it", async () => {
+  it("marks it not memorized with a behavior mark, and undoes it", async () => {
     const { services, student, cls } = await setup();
     const item = await homeworkDue(services, cls.id, student.id);
     await renderWithApp(<TodayCard student={student} />, services);
     await fireEvent.press(await screen.findByText("النبأ 1–10"));
-    await fireEvent.press(button(ar.today.postpone));
-    expect(await screen.findByText(ar.today.postponed)).toBeOnTheScreen();
-    expect((await services.db.get("homework", item.id))?.postponedLessonIds).toHaveLength(1);
-    await fireEvent.press(button(ar.today.undoPostpone));
+    expect(screen.queryByRole("button", { name: "تأجيل التسميع" })).toBeNull();
+    await act(async () => {
+      fireEvent(screen.getByLabelText(ar.glossary.memorizationRate), "valueChange", "notMemorized");
+    });
+    expect(await screen.findByText(ar.glossary.notMemorized)).toBeOnTheScreen();
+    expect(screen.getByText(ar.today.notMemorizedHint)).toBeOnTheScreen();
+    await act(async () => {
+      fireEvent(screen.getByLabelText(ar.glossary.behaviorRate), "valueChange", "7.5");
+    });
+    expect(await screen.findByText(`${ar.glossary.notMemorized} · 7.5`)).toBeOnTheScreen();
+    expect(await services.db.get("homework", item.id)).toMatchObject({
+      evaluatedLessonId: null,
+      notMemorized: [{ behaviorRate: 7.5 }],
+    });
+
+    // Clearing the memorization wheel undoes it.
+    await act(async () => {
+      fireEvent(screen.getByLabelText(ar.glossary.memorizationRate), "valueChange", "");
+    });
     await waitFor(async () =>
-      expect((await services.db.get("homework", item.id))?.postponedLessonIds).toHaveLength(0),
+      expect((await services.db.get("homework", item.id))?.notMemorized).toHaveLength(0),
     );
   });
 
@@ -144,7 +159,7 @@ describe("homework due today", () => {
     expect(screen.queryByRole("button", { name: ar.exam.add })).toBeNull();
     expect(screen.queryByRole("button", { name: ar.today.addNext })).toBeNull();
     await fireEvent.press(screen.getByText("النبأ 1–10"));
-    expect(screen.queryByRole("button", { name: ar.today.postpone })).toBeNull();
+    expect(screen.queryByRole("button", { name: ar.evaluation.editRange })).toBeNull();
   });
 });
 

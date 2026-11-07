@@ -40,10 +40,10 @@ Agreed with the user from 2026-10-05 on; the date marks when a group was added.
 | 26 | First login | A teacher must replace the password the admin set before using the app. |
 | 27 | Own profile | A user can edit his display name, username, phone (optional) and password. |
 | 28 | Student-centred screens (2026-10-10) | Opening a class shows only its students. The student's page shows his month in a table, and his homework with the marks and "add homework for the next day". There are no lesson screens; lessons still exist in the data, and today's lesson is created automatically on the first thing recorded for a student today. |
-| 29 | Postponed recitation | "تأجيل التسميع": when a student isn't ready, the teacher postpones instead of giving a bad mark. The homework stays pending for the next day, the day shows "مؤجل", the student counts as present, and averages aren't affected. It can be undone the same day. |
+| 29 | Postponed recitation | "تأجيل التسميع": when a student isn't ready, the teacher postpones instead of giving a bad mark. The homework stays pending for the next day, the day shows "مؤجل", the student counts as present, and averages aren't affected. It can be undone the same day. **Replaced by #55 (2026-11-07).** |
 | 30 | Absence | Marked on the student's page for today (present / absent / excused, with the excuse note). |
 | 31 | Past days | Marking applies to today; a past day is corrected by tapping its row in the month table. |
-| 32 | Mark input (2026-10-11) | A mark (1–10) is chosen with the phone's own number wheel (a native select). |
+| 32 | Mark input (2026-10-11) | A mark (1–10; 0–10 in halves since #54) is chosen with the phone's own number wheel (a native select). |
 | 33 | Homework list | On the student page, each due homework item is a collapsible section showing its sura and ayat (and its marks or "مؤجل" when closed). All start closed, except an item just added with "recite now". |
 | 34 | Class statistics (2026-10-11) | A "الإحصائيات" button next to "إضافة طالب" opens the class's statistics: its attendance rate (present / absent / excused) and average marks, then its students ranked best first. All time by default; a year, or a year and a month, narrows it. |
 | 35 | Ranking | 1) attendance rate, where an excused absence counts as attended (in the ranking only); 2) average memorization mark; 3) average behavior mark; then name. |
@@ -333,16 +333,16 @@ Tests sit next to the code as `*.test.ts(x)`; each package runs its own with Vit
 - `studentId`, `surah` (1–114), `fromAyah`, `toAyah` (validated by `validateAyahRange`), `note`
 - `assignedLessonId | null`, `evaluatedLessonId | null`; pending = `evaluatedLessonId == null`
 - `memorizationRate`, `behaviorRate`: 0–10 in steps of 0.5 (`RATE_VALUES`), or null; 0 is a mark
-- `postponedLessonIds: string[]` (default `[]`): lessons in which the recitation was postponed
+- `notMemorized: { lessonId, behaviorRate }[]` (default `[]`): lessons where he hadn't memorized it (لم يحفظ), each with that day's behavior mark or null. Never on an exam, never twice for a lesson, never for the lesson it was evaluated in. Replaced `postponedLessonIds` (Phase 3): `homeworkRecordSchema` converts an old record's postponements on parse, and `notMemorizedOf()` reads either form
 - `kind: 'homework' | 'exam'` (default `'homework'`). An exam's mark is in `memorizationRate`; its `behaviorRate` stays null.
 
-Records pulled from the server aren't re-validated on the device, so newer fields are read through helpers that supply the default (`postponedLessonsOf()`, `kindOf()`); the server fills defaults when an older device pushes without them.
+Records pulled from the server aren't re-validated on the device, so newer fields are read through helpers that supply the default (`notMemorizedOf()`, `kindOf()`); the server fills defaults when an older device pushes without them.
 
 ### Derived rules (computed, never stored)
 
-**Monthly stats.** The month comes from `lessons[evaluatedLessonId].date`. Averages ignore nulls, postponements and exams, rounded to 1 decimal ("—" with no data). Attendance counts come from that month's lessons. Soft-deleted records and children of deleted lessons are excluded.
+**Monthly stats.** The month comes from `lessons[evaluatedLessonId].date`. Averages ignore nulls and exams, rounded to 1 decimal; a "not memorized" day adds only its behavior mark (in that day's month) ("—" with no data). Attendance counts come from that month's lessons. Soft-deleted records and children of deleted lessons are excluded.
 
-**Month table and sheet** (`src/domain/stats/month-sheet.ts`). One row per recorded thing (a mark, a postponement, an exam, an absence), not per calendar day; averages and counts in the footer. Shared by the student page, the printout and the parent page.
+**Month table and sheet** (`src/domain/stats/month-sheet.ts`). One row per recorded thing (a mark, a "not memorized", an exam, an absence), not per calendar day; averages and counts in the footer. Shared by the student page, the printout and the parent page.
 
 **Class statistics** (`src/domain/stats/class.ts`). A student's possible days are the class's lesson days since he joined plus any day he has a record for, so the rate never exceeds 100%. Ranking per decision #35.
 
@@ -354,7 +354,7 @@ Records pulled from the server aren't re-validated on the device, so newer field
 
 **Lesson deletion.** Deletes its attendance and the homework assigned in it; homework evaluated in it goes back to pending; homework assigned in it but evaluated later keeps its history with `assignedLessonId` cleared.
 
-**Attendance and postponing.** Marking absent or excused cancels that lesson's postponements; postponing or scoring marks the student present; scoring removes a postponement for that lesson.
+**Attendance and "not memorized".** Marking absent or excused removes that lesson's "not memorized" entries; any mark or "not memorized" marks the student present; a memorization mark replaces that lesson's "not memorized" (keeping its behavior mark), and "not memorized" takes back that lesson's marks (keeping behavior). In a lesson where he failed it, after he recited it in a later one, only the behavior mark can change (`memorizationChoices()`).
 
 ### Indexes (`pnpm db:indexes`, idempotent)
 
@@ -540,7 +540,7 @@ Five features asked for by the user on 2026-11-07 (§0 #54–58), each built in 
   - `rateSchema`: 0–10, multiple of 0.5. The picker (web native select, mobile wheel): 0, 0.5 … 10.
   - Marks shown with the half in every place: today card, month table, statistics, printed sheet, parent page (`Intl` number format, Arabic digits and decimal separator; the Hermes polyfills already cover it). Averages keep one decimal.
   - Tests: schema bounds and steps, averages with 0 and halves, a 0 that isn't "no mark".
-- [ ] **3.2 "Not memorized" replaces postponing (#55).**
+- [x] **3.2 "Not memorized" replaces postponing (#55).**
   - Data: `postponedLessonIds` becomes `notMemorized: { lessonId, behaviorRate }[]`; old records read as entries with no behavior mark.
   - Actions: choosing "لم يحفظ" adds the lesson's entry (clearing a mark given in that lesson); choosing a mark replaces it; clearing the picker undoes it; a behavior mark on that day goes into the entry. Absent or excused still cancels it.
   - Derived: the behavior average and "تم تقييم X من Y" count these behavior marks; memorization averages don't. Month sheet, print, parent page and counts say "لم يحفظ" instead of "مؤجل".
@@ -927,3 +927,12 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
   - No display change was needed: marks were already shown with `String(value)`, and `ar-u-nu-latn` writes "9.5" with a full stop, the same as Intl. Nothing in the code treated 0 as "no mark" (every check is `!== null`).
   - The Maestro main flow picks 2.5: Android's dropdown now starts at 0, 0.5, 1 …, so 5 would be off screen. Sample data (`dev:seed`) uses half marks.
   - Tests: core 439, web 290, mobile 83.
+
+- 2026-11-07 (3.2):
+  - **Data:** `postponedLessonIds` became `notMemorized: { lessonId, behaviorRate }[]`. `homeworkRecordSchema` is now a `z.preprocess` that turns an old record's `postponedLessonIds` into entries without a behavior mark, so the first write of an old record (on a device, or pushed by one) keeps them; `notMemorizedOf()` reads either form for records pulled unparsed. The server's parent page reads Mongo documents unparsed, so it goes through the same helper (an integration test stores an old-form document).
+  - **One action:** `postponeHomework` and `undoPostpone` are gone; `rateHomework` takes `NOT_MEMORIZED` for memorization and handles every case (a behavior mark into the entry, a mark replacing it, clearing it). `marksIn()` and `memorizationChoices()` (in the shared schema module) tell both apps what the two pickers show and offer, so the today card and the edit sheets don't each work it out.
+  - **Where it's not offered:** exams; items added in that lesson (recite now), since they'd turn into next-day homework; and a past lesson where he failed it if he recited it in a later one, where only the behavior mark can change (a mark there would move the later evaluation).
+  - **UI:** "لم يحفظ" is the memorization picker's entry after "—" (amber when chosen). The closed item shows "لم يحفظ" or "لم يحفظ · 8". In the month table, printed sheet and parent page the row has a "لم يحفظ" badge by the portion, "—" for memorization and the behavior mark; the counts say "لم يحفظ". The postpone keys left the messages.
+  - **Checked:** core suites on all three adapters (memory, SQLite, Dexie), push and parent integration tests with old-form records, the web `HomeworkItem` and parent view, the mobile today card, and the web E2E suite (main flow now "not memorized", then a mark): all 10 tests pass on Desktop Chrome and Pixel 7. The iPhone (WebKit) project couldn't run: in this session WebKit closes before opening even a blank page (a standalone launch fails the same way), so it needs a rerun on a working WebKit.
+  - `student-form-drawer.test.tsx` failed once while all three packages ran their tests at once, and passed alone and in the web suite: a timing flake, not this change.
+  - Tests: core 449, web 295, mobile 83.

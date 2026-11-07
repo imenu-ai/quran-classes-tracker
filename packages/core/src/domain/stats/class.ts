@@ -1,5 +1,6 @@
 import { localDateOf, type LocalDate } from "../dates/local-date";
 import { average } from "./monthly";
+import { notMemorizedOf, type NotMemorizedEntry } from "../../shared/schemas/homework";
 
 /** All time (year null), a whole year (month null), or one month of a year. */
 export interface StatsPeriod {
@@ -43,6 +44,9 @@ interface StatsHomework {
   evaluatedLessonId: string | null;
   memorizationRate: number | null;
   behaviorRate: number | null;
+  /** "لم يحفظ" entries: their behavior marks count; read via notMemorizedOf. */
+  notMemorized?: readonly NotMemorizedEntry[];
+  postponedLessonIds?: readonly string[];
   deletedAt: number | null;
 }
 
@@ -106,7 +110,7 @@ export function rankStudents(
  * A class's statistics for a period, computed from its records (never
  * stored): the attendance and average marks of the class, and each student's
  * standing, ranked best first. Deleted lessons and records don't count, and
- * neither do postponed recitations (they have no marks).
+ * neither do "not memorized" days, except for their behavior marks.
  */
 export function classStatistics(input: {
   students: readonly StatsStudent[];
@@ -136,10 +140,17 @@ export function classStatistics(input: {
   const allMemorization: number[] = [];
   const allBehavior: number[] = [];
   for (const item of input.homework) {
-    if (item.deletedAt !== null || item.evaluatedLessonId === null) continue;
-    if (item.kind === "exam") continue;
-    if (!lessonDate.has(item.evaluatedLessonId) || !studentIds.has(item.studentId)) continue;
+    if (item.deletedAt !== null || item.kind === "exam" || !studentIds.has(item.studentId)) {
+      continue;
+    }
     const scores = scoresOf.get(item.studentId) ?? { memorization: [], behavior: [] };
+    scoresOf.set(item.studentId, scores);
+    for (const entry of notMemorizedOf(item)) {
+      if (entry.behaviorRate === null || !lessonDate.has(entry.lessonId)) continue;
+      scores.behavior.push(entry.behaviorRate);
+      allBehavior.push(entry.behaviorRate);
+    }
+    if (item.evaluatedLessonId === null || !lessonDate.has(item.evaluatedLessonId)) continue;
     if (item.memorizationRate !== null) {
       scores.memorization.push(item.memorizationRate);
       allMemorization.push(item.memorizationRate);
@@ -148,7 +159,6 @@ export function classStatistics(input: {
       scores.behavior.push(item.behaviorRate);
       allBehavior.push(item.behaviorRate);
     }
-    scoresOf.set(item.studentId, scores);
   }
 
   const standings = input.students.map((student): StudentStanding => {

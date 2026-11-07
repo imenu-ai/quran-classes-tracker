@@ -54,6 +54,13 @@ const ayahRangeFields = {
 /** Sura + ayah range alone, for the form's instant feedback. */
 export const ayahRangeSchema = z.object(ayahRangeFields).superRefine(refineAyahRange);
 
+export const notMemorizedEntrySchema = z.object({
+  lessonId: idSchema,
+  behaviorRate: rateSchema.nullable(),
+});
+
+export type NotMemorizedEntry = z.infer<typeof notMemorizedEntrySchema>;
+
 export const homeworkFieldsSchema = z.object({
   studentId: idSchema,
   ...ayahRangeFields,
@@ -64,16 +71,35 @@ export const homeworkFieldsSchema = z.object({
   memorizationRate: rateSchema.nullable(),
   behaviorRate: rateSchema.nullable(),
   /**
-   * Lessons in which the recitation was postponed ("تأجيل التسميع"): the
-   * student wasn't ready, so it stays pending instead of getting a bad mark.
-   * Defaults to [] so records from before Phase 9 stay valid.
+   * Lessons in which the student hadn't memorized it ("لم يحفظ"): it stays
+   * pending, with that day's behavior mark if he got one. Read through
+   * notMemorizedOf(): records from before Phase 3 have postponedLessonIds.
    */
-  postponedLessonIds: z.array(idSchema).max(200).default([]),
+  notMemorized: z.array(notMemorizedEntrySchema).max(200).default([]),
   /** Defaults to "homework" so records from before Phase 12 stay valid. */
   kind: z.enum(HOMEWORK_KINDS).default("homework"),
 });
 
-export const homeworkRecordSchema = syncableBaseSchema
+/**
+ * A record from before Phase 3 lists its postponements in postponedLessonIds
+ * (they became "not memorized" without a behavior mark). Parsing converts
+ * it, so the first write of an old record keeps them.
+ */
+function fromPostponed(input: unknown): unknown {
+  if (typeof input !== "object" || input === null) return input;
+  const record = input as Record<string, unknown>;
+  if (record.notMemorized !== undefined || !Array.isArray(record.postponedLessonIds)) return input;
+  const { postponedLessonIds, ...rest } = record;
+  return {
+    ...rest,
+    notMemorized: (postponedLessonIds as unknown[]).map((lessonId) => ({
+      lessonId,
+      behaviorRate: null,
+    })),
+  };
+}
+
+const currentHomeworkRecordSchema = syncableBaseSchema
   .extend(homeworkFieldsSchema.shape)
   .superRefine((homework, ctx) => {
     refineAyahRange(homework, ctx);
@@ -89,15 +115,84 @@ export const homeworkRecordSchema = syncableBaseSchema
     if (homework.kind === "exam" && homework.behaviorRate !== null) {
       ctx.addIssue({ code: "custom", message: "INVALID_VALUE", path: ["behaviorRate"] });
     }
+    // An exam is only marked; one lesson can't be both "not memorized" and marked.
+    const lessons = homework.notMemorized.map((entry) => entry.lessonId);
+    if (
+      (homework.kind === "exam" && lessons.length > 0) ||
+      new Set(lessons).size !== lessons.length ||
+      (homework.evaluatedLessonId !== null && lessons.includes(homework.evaluatedLessonId))
+    ) {
+      ctx.addIssue({ code: "custom", message: "INVALID_VALUE", path: ["notMemorized"] });
+    }
   });
 
-export type HomeworkRecord = z.infer<typeof homeworkRecordSchema>;
+export const homeworkRecordSchema = z.preprocess(fromPostponed, currentHomeworkRecordSchema);
+
+export type HomeworkRecord = z.infer<typeof currentHomeworkRecordSchema>;
 
 /** "homework" or "exam" (records pulled from before Phase 12 lack the field). */
 export const kindOf = (item: { kind?: HomeworkKind }): HomeworkKind => item.kind ?? "homework";
 
 export const isExam = (item: { kind?: HomeworkKind }) => kindOf(item) === "exam";
 
-/** The lessons where this item was postponed (records pulled before Phase 9 lack the field). */
-export const postponedLessonsOf = (item: Pick<HomeworkRecord, "postponedLessonIds">): string[] =>
-  item.postponedLessonIds ?? [];
+/** The value a memorization picker sets for "لم يحفظ". */
+export const NOT_MEMORIZED = "notMemorized";
+
+/** A memorization picker's value: a mark, no mark, or "not memorized". */
+export type MemorizationChoice = number | null | typeof NOT_MEMORIZED;
+
+/**
+ * The lessons where he hadn't memorized it. Records pulled from the server
+ * aren't re-validated, so an older one may still have postponedLessonIds
+ * (read as entries without a behavior mark), or neither field.
+ */
+export function notMemorizedOf(item: {
+  notMemorized?: readonly NotMemorizedEntry[];
+  postponedLessonIds?: readonly string[];
+}): readonly NotMemorizedEntry[] {
+  if (item.notMemorized) return item.notMemorized;
+  return (item.postponedLessonIds ?? []).map((lessonId) => ({ lessonId, behaviorRate: null }));
+}
+
+/** His "not memorized" entry in this lesson, if any. */
+export const notMemorizedIn = (
+  item: Parameters<typeof notMemorizedOf>[0],
+  lessonId: string,
+): NotMemorizedEntry | null =>
+  notMemorizedOf(item).find((entry) => entry.lessonId === lessonId) ?? null;
+
+type MarkedItem = Pick<
+  HomeworkRecord,
+  "kind" | "assignedLessonId" | "evaluatedLessonId" | "memorizationRate" | "behaviorRate"
+> &
+  Parameters<typeof notMemorizedOf>[0];
+
+/** What the two pickers show for this item in this lesson. */
+export function marksIn(
+  item: MarkedItem,
+  lessonId: string,
+): { memorization: MemorizationChoice; behavior: number | null } {
+  const entry = notMemorizedIn(item, lessonId);
+  if (entry) return { memorization: NOT_MEMORIZED, behavior: entry.behaviorRate };
+  if (item.evaluatedLessonId === lessonId) {
+    return { memorization: item.memorizationRate, behavior: item.behaviorRate };
+  }
+  return { memorization: null, behavior: null };
+}
+
+/**
+ * Which memorization choices this item takes in this lesson. "Not memorized"
+ * is for due homework: never an exam, nor an item added in this lesson
+ * (recited on the spot), nor one already recited in another lesson. Marks
+ * can't be given in a lesson where he failed it if he recited it later.
+ */
+export function memorizationChoices(
+  item: MarkedItem,
+  lessonId: string,
+): { marks: boolean; notMemorized: boolean } {
+  const elsewhere = item.evaluatedLessonId !== null && item.evaluatedLessonId !== lessonId;
+  return {
+    marks: !elsewhere,
+    notMemorized: !isExam(item) && item.assignedLessonId !== lessonId && !elsewhere,
+  };
+}

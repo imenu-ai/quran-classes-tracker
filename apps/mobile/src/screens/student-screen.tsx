@@ -16,7 +16,7 @@ import { useStudent, useStudentProfile } from "@/data/queries";
 /**
  * A student's page, opened from a class or from search (both stacks route
  * here), like the web's: their month as a table, then today (attendance,
- * marks, postponing, the next day's homework). Their details are in the
+ * marks, the next day's homework). Their details are in the
  * actions menu (edit student).
  */
 export default function StudentScreen() {
@@ -100,7 +100,7 @@ export default function StudentScreen() {
           // Without lessons.run the table is shown, not edited.
           <MonthTable profile={profile} student={student} editable={access.can("lessons.run")} />
         ) : null}
-        {/* Today: attendance, marks, postponing and the next day's homework. */}
+        {/* Today: attendance, marks and the next day's homework. */}
         {!archived ? <TodayCard student={student} /> : null}
       </Screen>
     </>

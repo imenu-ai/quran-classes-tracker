@@ -18,7 +18,7 @@ export const parentRequestSchema = z.object({
 
 export type ParentRequest = z.infer<typeof parentRequestSchema>;
 
-export type ParentRowKind = "homework" | "exam" | "postponed" | "absent" | "excused";
+export type ParentRowKind = "homework" | "exam" | "notMemorized" | "absent" | "excused";
 
 /** One row of the month, without any internal id or teacher's note. */
 export interface ParentRow {
@@ -54,7 +54,7 @@ export interface ParentReport {
     excused: number;
     evaluated: number;
     exams: number;
-    postponed: number;
+    notMemorized: number;
   };
 }
 

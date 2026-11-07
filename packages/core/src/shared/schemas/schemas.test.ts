@@ -184,13 +184,42 @@ describe("homeworkRecordSchema", () => {
     ]);
   });
 
-  it("fills in postponedLessonIds for a record from before Phase 9", () => {
+  it("fills in notMemorized, turning an older record's postponements into entries", () => {
     const result = parseWithCodes(homeworkRecordSchema, validHomework);
-    expect(result.success && result.data.postponedLessonIds).toEqual([]);
+    expect(result.success && result.data.notMemorized).toEqual([]);
+    const legacy = parseWithCodes(homeworkRecordSchema, {
+      ...validHomework,
+      postponedLessonIds: [ID2],
+    });
+    expect(legacy.success && legacy.data.notMemorized).toEqual([
+      { lessonId: ID2, behaviorRate: null },
+    ]);
+    expect(legacy.success && "postponedLessonIds" in legacy.data).toBe(false);
     expect(
       parseWithCodes(homeworkRecordSchema, { ...validHomework, postponedLessonIds: ["nope"] })
         .success,
     ).toBe(false);
+  });
+
+  it("rejects not memorized on an exam, twice in a lesson, or where it was marked", () => {
+    const entry = { lessonId: ID2, behaviorRate: 9.5 };
+    expect(
+      parseWithCodes(homeworkRecordSchema, { ...validHomework, notMemorized: [entry] }).success,
+    ).toBe(true);
+    const invalid = { path: "notMemorized", code: "INVALID_VALUE", params: {} };
+    expect(
+      errorsOf(homeworkRecordSchema, { ...validHomework, kind: "exam", notMemorized: [entry] }),
+    ).toEqual([invalid]);
+    expect(
+      errorsOf(homeworkRecordSchema, { ...validHomework, notMemorized: [entry, entry] }),
+    ).toEqual([invalid]);
+    expect(
+      errorsOf(homeworkRecordSchema, {
+        ...validHomework,
+        evaluatedLessonId: ID2,
+        notMemorized: [entry],
+      }),
+    ).toEqual([invalid]);
   });
 
   it("accepts a pending homework item", () => {

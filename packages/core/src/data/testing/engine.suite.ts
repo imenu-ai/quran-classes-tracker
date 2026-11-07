@@ -129,7 +129,7 @@ export function engineSuite(factory: StorageFactory) {
         evaluatedLessonId: null,
         memorizationRate: null,
         behaviorRate: null,
-        postponedLessonIds: [],
+        notMemorized: [],
         kind: "homework",
       });
       // Later: today's lesson is created and the (still unsynced) homework scored in it.

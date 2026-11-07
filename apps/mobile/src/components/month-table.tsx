@@ -24,7 +24,7 @@ const rowKey = (row: HistoryRow) =>
 
 /**
  * The student's month as a simple table (the web's MonthTable): one row per
- * recorded day (a mark, a postponement or an absence), the month's averages
+ * recorded day (a mark, "لم يحفظ" or an absence), the month's averages
  * at the bottom, and arrows for other months. It starts closed, showing the
  * month and its averages; tapping that opens the table. When `editable`,
  * tapping a row opens the edit sheet for that day.
@@ -212,6 +212,13 @@ export function MonthTable({
                             color={colors.examForeground}
                           />
                         ) : null}
+                        {row.kind === "notMemorized" ? (
+                          <Badge
+                            label={t("glossary.notMemorized")}
+                            background={colors.warning}
+                            color={colors.warningForeground}
+                          />
+                        ) : null}
                       </View>
                     </Cell>
                     {exam ? (
@@ -221,14 +228,16 @@ export function MonthTable({
                           {score(row.item.memorizationRate)}
                         </Text>
                       </Cell>
-                    ) : row.kind === "postponed" ? (
-                      <Cell width={MARK_WIDTH * 2} center>
-                        <Badge
-                          label={t("today.postponed")}
-                          background={colors.warning}
-                          color={colors.warningForeground}
-                        />
-                      </Cell>
+                    ) : row.kind === "notMemorized" ? (
+                      // No memorization mark that day; the behavior mark, if any.
+                      <>
+                        <Cell width={MARK_WIDTH} center>
+                          <Text tone="muted">{t("common.noValue")}</Text>
+                        </Cell>
+                        <Cell width={MARK_WIDTH} center>
+                          <Text weight="semibold">{score(row.behaviorRate)}</Text>
+                        </Cell>
+                      </>
                     ) : (
                       <>
                         <Cell width={MARK_WIDTH} center>

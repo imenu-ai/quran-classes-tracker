@@ -17,7 +17,7 @@ import { StudentToday } from "./student-today";
 
 /**
  * The student's page in his class: his month as a simple table, then today
- * (attendance, marks, postponing, next day's homework). His details are in
+ * (attendance, marks, next day's homework). His details are in
  * the actions menu (edit student).
  */
 export function StudentView({ studentId }: { studentId: string | null }) {
@@ -74,7 +74,7 @@ export function StudentView({ studentId }: { studentId: string | null }) {
         <MonthTable profile={profile} student={student} editable={access.can("lessons.run")} />
       )}
 
-      {/* Today: attendance, marks, postponing and the next day's homework. */}
+      {/* Today: attendance, marks and the next day's homework. */}
       {student.archivedAt === null && <StudentToday student={student} />}
     </PageContainer>
   );

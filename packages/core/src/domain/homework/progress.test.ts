@@ -40,6 +40,15 @@ describe("evaluationProgress", () => {
     });
   });
 
+  it("a not-memorized item counts once it has that day's behavior mark", () => {
+    const failed = (behaviorRate: number | null) => ({
+      ...hw("1", "a"),
+      notMemorized: [{ lessonId: LESSON, behaviorRate }],
+    });
+    expect(evaluationProgress(["a"], [failed(null)], LESSON)).toEqual({ done: 0, total: 1 });
+    expect(evaluationProgress(["a"], [failed(7)], LESSON)).toEqual({ done: 1, total: 1 });
+  });
+
   it("a pending item not recited today doesn't hold a student back", () => {
     const homework = [
       hw("1", "a", { evaluatedLessonId: LESSON, memorizationRate: 9, behaviorRate: 9 }),

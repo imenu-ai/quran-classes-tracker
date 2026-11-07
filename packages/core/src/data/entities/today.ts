@@ -59,7 +59,7 @@ export async function loadStudentToday(
 
 /**
  * Today's lesson for a class, created on the first thing recorded today
- * (a mark, a postponement, an absence, new homework). Returns its id.
+ * (a mark, "لم يحفظ", an absence, new homework). Returns its id.
  */
 export async function todayLessonId(
   store: DataWriter,

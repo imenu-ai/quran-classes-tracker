@@ -26,7 +26,8 @@
     "monthlyMemorizationRate": "Monthly memorization rate",
     "monthlyBehaviorRate": "Monthly behavior rate",
     "attendedDays": "Attended days",
-    "notes": "Notes"
+    "notes": "Notes",
+    "notMemorized": "Not memorized"
   },
   "quran": {
     "ayahs": "{count, plural, one {# ayah} other {# ayahs}}",
@@ -342,7 +343,7 @@
     "newerMonth": "Next month",
     "tableCaption": "Record for {month}",
     "editRow": "Edit the record of {date}",
-    "editPostponedTitle": "Postponed recitation",
+    "editNotMemorizedTitle": "Not memorized",
     "attendanceSummary": "Present: {present} · Absent: {absent} · Excused: {excused}",
     "monthSummary": "Memorization {memorization} · Behavior {behavior} · Attended {present}"
   },
@@ -445,11 +446,7 @@
     "viewOnly": "View only: you don't have permission to run lessons.",
     "absentNote": "The student is absent today.",
     "homework": "Homework",
-    "postpone": "Postpone recitation",
-    "postponed": "Postponed",
-    "postponedHint": "Recitation postponed; the homework stays for the next day.",
-    "undoPostpone": "Undo postponement",
-    "postponedToast": "Recitation postponed",
+    "notMemorizedHint": "Not memorized: the homework stays for the next day.",
     "nextTitle": "Homework for the next day",
     "addNext": "Add homework for the next day",
     "marks": "{memorization} · {behavior}"
@@ -501,7 +498,7 @@
     "excused": "Excused",
     "evaluated": "Homework recited",
     "exams": "Exams",
-    "postponed": "Postponed",
+    "notMemorized": "Not memorized",
     "printMonth": "Print month",
     "printStudents": "Print student sheets",
     "students": "Students",

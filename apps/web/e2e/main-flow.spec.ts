@@ -6,6 +6,7 @@ import {
   openHomework,
   openMonthTable,
   setPortion,
+  setNotMemorized,
   setScore,
 } from "./helpers";
 
@@ -14,10 +15,10 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 /**
  * Two days with one class: day one, a student recites on the spot, gets
  * marks and homework for the next day; another is absent. Day two, the
- * homework is due: postponed, undone, then marked, and an exam is recorded.
+ * homework is due: "not memorized", then marked, and an exam is recorded.
  * The month table shows it all.
  */
-test("class → students → student page: mark, next-day homework, absence, postpone, exam", async ({
+test("class → students → student page: mark, next-day homework, absence, not memorized, exam", async ({
   page,
   projectName,
   browserName,
@@ -78,7 +79,7 @@ test("class → students → student page: mark, next-day homework, absence, pos
   await expect(table.locator("tbody tr").first()).toContainText(ar.glossary.absent);
   await waitForSynced(page);
 
-  // Day two, أحمد: yesterday's homework is due. Postpone, undo, then mark it.
+  // Day two, أحمد: yesterday's homework is due. "Not memorized", then mark it.
   await page.clock.setSystemTime(Date.now() + DAY_MS);
   await page.goto(classUrl);
   await page.getByRole("link", { name: /أحمد التجريبي/ }).click();
@@ -86,14 +87,13 @@ test("class → students → student page: mark, next-day homework, absence, pos
   await openMonthTable(page);
   // Due items start closed: open it first.
   const due = await openHomework(today, "الناس 1–5");
-  await due.getByRole("button", { name: ar.today.postpone }).click();
-  await expect(due.getByText(ar.today.postponed)).toBeVisible();
-  await expect(table.locator("tbody tr").first()).toContainText(ar.today.postponed);
-  await due.getByRole("button", { name: ar.today.undoPostpone }).click();
+  await setNotMemorized(due);
+  await expect(due.getByText(ar.today.notMemorizedHint)).toBeVisible();
+  await expect(table.locator("tbody tr").first()).toContainText(ar.glossary.notMemorized);
   await setScore(due, ar.glossary.memorizationRate, 8);
   await setScore(due, ar.glossary.behaviorRate, 9);
   await expect(table.locator("tbody tr").first()).toContainText("الناس 1–5");
-  await expect(table.locator("tbody")).not.toContainText(ar.today.postponed);
+  await expect(table.locator("tbody")).not.toContainText(ar.glossary.notMemorized);
   await expect(table.locator("tfoot")).toContainText("8.5");
   await expect(table.locator("tfoot")).toContainText("9.5");
 

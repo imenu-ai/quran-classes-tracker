@@ -165,13 +165,13 @@ function toParentRow(row: HistoryRow): ParentRow {
     };
   }
   const portion = { surah: row.item.surah, fromAyah: row.item.fromAyah, toAyah: row.item.toAyah };
-  if (row.kind === "postponed") {
+  if (row.kind === "notMemorized") {
     return {
       date: row.lesson.date,
-      kind: "postponed",
+      kind: "notMemorized",
       ...portion,
       memorization: null,
-      behavior: null,
+      behavior: row.behaviorRate,
       excuseNote: "",
     };
   }

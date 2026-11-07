@@ -108,7 +108,7 @@ export function localStoreSuite(factory: StorageFactory) {
           evaluatedLessonId: null,
           memorizationRate: null,
           behaviorRate: null,
-          postponedLessonIds: [],
+          notMemorized: [],
           kind: "homework",
         })
         .catch((e: unknown) => e);

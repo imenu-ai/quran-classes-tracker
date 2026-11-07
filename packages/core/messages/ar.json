@@ -26,7 +26,8 @@
     "monthlyMemorizationRate": "معدل الحفظ الشهري",
     "monthlyBehaviorRate": "معدل السلوك الشهري",
     "attendedDays": "أيام الحضور",
-    "notes": "ملاحظات"
+    "notes": "ملاحظات",
+    "notMemorized": "لم يحفظ"
   },
   "quran": {
     "ayahs": "{count, plural, few {# آيات} other {# آية}}",
@@ -342,7 +343,7 @@
     "newerMonth": "الشهر التالي",
     "tableCaption": "سجل {month}",
     "editRow": "تعديل سجل {date}",
-    "editPostponedTitle": "تسميع مؤجل",
+    "editNotMemorizedTitle": "لم يحفظ",
     "attendanceSummary": "أيام الحضور: {present} · الغياب: {absent} · الغياب بعذر: {excused}",
     "monthSummary": "الحفظ {memorization} · السلوك {behavior} · الحضور {present}"
   },
@@ -445,11 +446,7 @@
     "viewOnly": "للعرض فقط: ليست لديك صلاحية تسجيل الدروس.",
     "absentNote": "الطالب غائب اليوم.",
     "homework": "الواجب",
-    "postpone": "تأجيل التسميع",
-    "postponed": "مؤجل",
-    "postponedHint": "أُجّل التسميع؛ يبقى الواجب لليوم التالي.",
-    "undoPostpone": "إلغاء التأجيل",
-    "postponedToast": "تم تأجيل التسميع",
+    "notMemorizedHint": "لم يحفظ، فيبقى الواجب لليوم التالي.",
     "nextTitle": "واجب اليوم التالي",
     "addNext": "إضافة واجب لليوم التالي",
     "marks": "{memorization} · {behavior}"
@@ -501,7 +498,7 @@
     "excused": "الغياب بعذر",
     "evaluated": "الواجبات المسمّعة",
     "exams": "الاختبارات",
-    "postponed": "التسميع المؤجل",
+    "notMemorized": "لم يحفظ",
     "printMonth": "طباعة الشهر",
     "printStudents": "طباعة كشوف الطلاب",
     "students": "الطلاب",

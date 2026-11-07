@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { lessonIdFor } from "../../shared/ids";
 import { LocalStore } from "../local-store";
-import { postponeHomework, rateHomework, addHomework } from "../entities/homework";
+import { rateHomework, addHomework } from "../entities/homework";
+import { NOT_MEMORIZED } from "../../shared/schemas/homework";
 import { deleteLesson } from "../entities/lessons";
 import { todayLessonId } from "../entities/today";
 import type { LocalDatabase } from "../database";
@@ -42,7 +43,7 @@ export function todaySuite(factory: StorageFactory) {
       expect((await db.get("lessons", id))?.deletedAt).toBeNull();
     });
 
-    it("records a day's marks and postponements against that one lesson", async () => {
+    it("records a day's marks and not-memorized items against that one lesson", async () => {
       const lessonId = await todayLessonId(store, CLASS, TODAY);
       const old = await todayLessonId(store, CLASS, "2026-10-09");
       const portion = { surah: 112, fromAyah: 1, toAyah: 4 };
@@ -62,12 +63,18 @@ export function todaySuite(factory: StorageFactory) {
       });
 
       await rateHomework(store, a, await todayLessonId(store, CLASS, TODAY), "memorizationRate", 9);
-      await postponeHomework(store, b, await todayLessonId(store, CLASS, TODAY));
+      await rateHomework(
+        store,
+        b,
+        await todayLessonId(store, CLASS, TODAY),
+        "memorizationRate",
+        NOT_MEMORIZED,
+      );
 
       expect(await db.get("homework", a.id)).toMatchObject({ evaluatedLessonId: lessonId });
       expect(await db.get("homework", b.id)).toMatchObject({
         evaluatedLessonId: null,
-        postponedLessonIds: [lessonId],
+        notMemorized: [{ lessonId, behaviorRate: null }],
       });
       expect(await db.count("lessons")).toBe(2);
     });

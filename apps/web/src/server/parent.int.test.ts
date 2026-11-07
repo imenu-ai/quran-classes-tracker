@@ -27,6 +27,13 @@ const sep30 = lessonRecord(cls.id, { date: "2026-09-30" });
 const oct1 = lessonRecord(cls.id, { date: "2026-10-01" });
 const oct2 = lessonRecord(cls.id, { date: "2026-10-02" });
 const oct5 = lessonRecord(cls.id, { date: "2026-10-05" });
+const oct6 = lessonRecord(cls.id, { date: "2026-10-06" });
+
+/** A homework document as stored before Phase 3: postponedLessonIds, no notMemorized. */
+function postponedRecord(record: ReturnType<typeof homeworkRecord>, lessonIds: string[]) {
+  const { notMemorized: _omitted, ...rest } = record;
+  return { ...rest, postponedLessonIds: lessonIds };
+}
 
 async function put(db: Db, collection: string, tenantId: string, record: { id: string }) {
   const { id, ...fields } = record;
@@ -53,7 +60,9 @@ describe("parentReport", () => {
     });
     await put(db, COLLECTIONS.classes, TENANT, cls);
     for (const s of [ahmad, noParent, gone]) await put(db, COLLECTIONS.students, TENANT, s);
-    for (const l of [sep30, oct1, oct2, oct5]) await put(db, COLLECTIONS.lessons, TENANT, l);
+    for (const l of [sep30, oct1, oct2, oct5, oct6]) {
+      await put(db, COLLECTIONS.lessons, TENANT, l);
+    }
     const homework = [
       homeworkRecord(ahmad.id, {
         surah: 112,
@@ -73,10 +82,17 @@ describe("parentReport", () => {
         evaluatedLessonId: oct5.id,
         memorizationRate: 3,
       }),
+      // Not memorized on 5 Oct, as a device from before Phase 3 stored it.
+      postponedRecord(homeworkRecord(ahmad.id, { surah: 113, assignedLessonId: oct2.id }), [
+        oct5.id,
+      ]),
+      // And again on 6 Oct, with a behavior mark (which counts).
       homeworkRecord(ahmad.id, {
-        surah: 113,
+        surah: 114,
+        fromAyah: 1,
+        toAyah: 6,
         assignedLessonId: oct2.id,
-        postponedLessonIds: [oct5.id],
+        notMemorized: [{ lessonId: oct6.id, behaviorRate: 6 }],
       }),
       homeworkRecord(ahmad.id, {
         surah: 114,
@@ -147,8 +163,8 @@ describe("parentReport", () => {
       months: ["2026-10", "2026-09"],
       // The exam is left out of the averages.
       memorizationAverage: 9,
-      behaviorAverage: 8,
-      counts: { present: 2, absent: 0, excused: 1, evaluated: 1, exams: 1, postponed: 1 },
+      behaviorAverage: 7, // (8 + the 6 Oct "not memorized" day's 6) / 2
+      counts: { present: 2, absent: 0, excused: 1, evaluated: 1, exams: 1, notMemorized: 2 },
     });
     expect(report.rows).toEqual([
       {
@@ -183,12 +199,22 @@ describe("parentReport", () => {
       },
       {
         date: "2026-10-05",
-        kind: "postponed",
+        kind: "notMemorized",
         surah: 113,
         fromAyah: 1,
         toAyah: 10,
         memorization: null,
         behavior: null,
+        excuseNote: "",
+      },
+      {
+        date: "2026-10-06",
+        kind: "notMemorized",
+        surah: 114,
+        fromAyah: 1,
+        toAyah: 6,
+        memorization: null,
+        behavior: 6,
         excuseNote: "",
       },
     ]);

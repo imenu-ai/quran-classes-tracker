@@ -2,7 +2,11 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { SymbolView } from "expo-symbols";
 import { useTranslations } from "use-intl";
 import type { RateField } from "@qct/core/data/entities/homework";
-import type { HomeworkRecord } from "@qct/core/shared/schemas/homework";
+import {
+  NOT_MEMORIZED,
+  type HomeworkRecord,
+  type MemorizationChoice,
+} from "@qct/core/shared/schemas/homework";
 import { useTheme } from "@/theme/theme";
 import { Button } from "./button";
 import { Badge } from "./loading";
@@ -12,8 +16,8 @@ import { Text } from "./text";
 /**
  * One due homework item today, as a collapsible section (the web's
  * HomeworkItem). Closed, one line: the portion, then its marks ("9 · 10") or
- * "مؤجل". Open: the mark wheels, postpone, and the edit and undo buttons.
- * An exam has its own colour and badge, one mark, and is never postponed.
+ * "لم يحفظ". Open: the mark wheels and the edit and undo buttons. An exam has
+ * its own colour and badge, one mark, and is never "not memorized".
  */
 export function HomeworkItem({
   item,
@@ -22,13 +26,12 @@ export function HomeworkItem({
   onToggle,
   exam,
   evaluated,
-  postponed,
+  marks,
+  choices,
   readOnly,
   onEdit,
   onRate,
   onUndo,
-  onPostpone,
-  onUndoPostpone,
 }: Readonly<{
   item: HomeworkRecord;
   label: string;
@@ -36,17 +39,19 @@ export function HomeworkItem({
   onToggle: () => void;
   exam: boolean;
   evaluated: boolean;
-  postponed: boolean;
+  /** What the wheels show today (marksIn). */
+  marks: { memorization: MemorizationChoice; behavior: number | null };
+  /** What the memorization wheel offers today (memorizationChoices). */
+  choices: { marks: boolean; notMemorized: boolean };
   readOnly: boolean;
   onEdit: () => void;
-  onRate: (field: RateField, score: number | null) => Promise<unknown>;
+  onRate: (field: RateField, score: MemorizationChoice) => Promise<unknown>;
   onUndo: () => void;
-  onPostpone: () => void;
-  onUndoPostpone: () => void;
 }>) {
   const t = useTranslations();
   const { colors } = useTheme();
   const mark = (value: number | null) => (value === null ? t("common.noValue") : String(value));
+  const failed = marks.memorization === NOT_MEMORIZED;
 
   return (
     <View
@@ -75,9 +80,16 @@ export function HomeworkItem({
               {item.memorizationRate}
             </Text>
           ) : null
-        ) : postponed ? (
+        ) : failed ? (
           <Badge
-            label={t("today.postponed")}
+            label={
+              marks.behavior === null
+                ? t("glossary.notMemorized")
+                : t("today.marks", {
+                    memorization: t("glossary.notMemorized"),
+                    behavior: mark(marks.behavior),
+                  })
+            }
             background={colors.warning}
             color={colors.warningForeground}
           />
@@ -116,42 +128,33 @@ export function HomeworkItem({
               ) : null}
             </View>
           ) : null}
-          {postponed ? (
-            <View style={[styles.note, { backgroundColor: colors.muted }]}>
-              <Text tone="muted" size={14}>
-                {t("today.postponedHint")}
-              </Text>
-              {!readOnly ? (
-                <Button variant="plain" label={t("today.undoPostpone")} onPress={onUndoPostpone} />
-              ) : null}
-            </View>
-          ) : (
-            <>
-              <View style={styles.pickers}>
-                <ScorePicker
-                  label={exam ? t("exam.mark") : t("glossary.memorizationRate")}
-                  value={item.memorizationRate}
-                  onChange={(score) => onRate("memorizationRate", score)}
-                  disabled={readOnly}
-                  testID="score.memorization"
-                />
-                {exam ? (
-                  <View style={styles.spacer} />
-                ) : (
-                  <ScorePicker
-                    label={t("glossary.behaviorRate")}
-                    value={item.behaviorRate}
-                    onChange={(score) => onRate("behaviorRate", score)}
-                    disabled={readOnly}
-                    testID="score.behavior"
-                  />
-                )}
-              </View>
-              {!exam && !evaluated && !readOnly ? (
-                <Button variant="plain" label={t("today.postpone")} onPress={onPostpone} />
-              ) : null}
-            </>
-          )}
+          <View style={styles.pickers}>
+            <ScorePicker
+              label={exam ? t("exam.mark") : t("glossary.memorizationRate")}
+              value={exam ? item.memorizationRate : marks.memorization}
+              notMemorized={!exam && choices.notMemorized}
+              marks={choices.marks}
+              onChange={(score) => onRate("memorizationRate", score)}
+              disabled={readOnly}
+              testID="score.memorization"
+            />
+            {exam ? (
+              <View style={styles.spacer} />
+            ) : (
+              <ScorePicker
+                label={t("glossary.behaviorRate")}
+                value={marks.behavior}
+                onChange={(score) => onRate("behaviorRate", score)}
+                disabled={readOnly}
+                testID="score.behavior"
+              />
+            )}
+          </View>
+          {failed ? (
+            <Text tone="muted" size={14}>
+              {t("today.notMemorizedHint")}
+            </Text>
+          ) : null}
         </View>
       ) : null}
     </View>
@@ -202,7 +205,6 @@ const styles = StyleSheet.create({
   action: { flex: 1 },
   pickers: { flexDirection: "row", gap: 12 },
   spacer: { flex: 1 },
-  note: { borderRadius: 10, padding: 12, gap: 10 },
   small: { minHeight: 40, minWidth: 96, paddingHorizontal: 10, justifyContent: "center" },
   smallLabel: { alignSelf: "stretch", textAlign: "center" },
   pressed: { opacity: 0.5 },

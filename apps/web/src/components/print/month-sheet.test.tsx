@@ -97,7 +97,7 @@ describe("MonthSheet", () => {
     expect(count("أيام الغياب")).toBe("0");
     expect(count("الواجبات المسمّعة")).toBe("1");
     expect(count("الاختبارات")).toBe("1");
-    expect(count("التسميع المؤجل")).toBe("0");
+    expect(count("لم يحفظ")).toBe("0");
   });
 
   it("says so when the month has no record", () => {
