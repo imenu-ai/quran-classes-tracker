@@ -122,9 +122,7 @@ describe("two devices syncing through the real server", () => {
       deletedAt: null,
       serverVersion: 0,
       studentId: student!.id,
-      surah: 108,
-      fromAyah: 1,
-      toAyah: 5,
+      portions: [{ surah: 108, fromAyah: 1, toAyah: 5 }],
       note: "",
       assignedLessonId: null,
       evaluatedLessonId: null,
@@ -150,7 +148,7 @@ describe("two devices syncing through the real server", () => {
     expect(await phone.db.count("outbox")).toBe(0);
     expect(await phone.db.get("rejected", bad.id)).toMatchObject({
       code: "AYAH_OUT_OF_RANGE",
-      params: { surah: 108, ayahCount: 3, field: "toAyah" },
+      params: { surah: 108, ayahCount: 3, field: "portions.0.toAyah" },
     });
     await laptop.engine.syncNow();
     expect(await laptop.db.get("homework", bad.id)).toBeUndefined();

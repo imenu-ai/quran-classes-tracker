@@ -131,9 +131,7 @@ function buildMutations(): PushMutation[] {
         const homework = {
           ...base(),
           studentId: position.student.id,
-          surah: position.surah,
-          fromAyah,
-          toAyah,
+          portions: [{ surah: position.surah, fromAyah, toAyah }],
           note: "",
           assignedLessonId: lesson.id,
           evaluatedLessonId: null,

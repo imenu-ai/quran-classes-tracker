@@ -317,7 +317,9 @@
     "editRange": "Edit portion",
     "undo": "Undo evaluation",
     "deleteHomework": "Delete homework",
-    "range": "{surah} {from}–{to}"
+    "range": "{surah} {from}–{to}",
+    "wholeSurah": "{surah} (whole)",
+    "portionSeparator": ", "
   },
   "homework": {
     "addTitle": "Homework for next lesson",
@@ -328,7 +330,10 @@
     "noSurah": "No surah with that name",
     "saved": "Homework saved",
     "deleted": "Homework deleted",
-    "suggested": "Suggested after the last homework; change it if needed"
+    "suggested": "Suggested after the last homework; change it if needed",
+    "wholeSurah": "Whole sura",
+    "addSurah": "Add a sura",
+    "removeSurah": "Remove this sura"
   },
   "profile": {
     "month": "Month",

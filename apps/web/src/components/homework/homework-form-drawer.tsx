@@ -4,7 +4,7 @@ import { Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useId, useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { AyahRangeFields } from "@/components/quran/ayah-range-fields";
+import { allTouched, PortionsFields } from "@/components/quran/portions-fields";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -17,25 +17,20 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useApp } from "@/client/app-context";
 import { addExam, addHomework, updateHomework } from "@qct/core/data/entities/homework";
-import {
-  checkAyahRange,
-  type AyahRangeDraft,
-  type AyahRangeField,
-} from "@qct/core/forms/ayah-range";
+import { checkPortions, portionDrafts, type PortionDraft } from "@qct/core/forms/portions";
 import { latestPortion, suggestNextHomework } from "@qct/core/domain/homework/suggestion";
 import { NOTE_MAX } from "@qct/core/shared/schemas/base";
-import { isExam, type HomeworkRecord } from "@qct/core/shared/schemas/homework";
+import { isExam, portionsOf, type HomeworkRecord } from "@qct/core/shared/schemas/homework";
 import type { StudentRecord } from "@qct/core/shared/schemas/student";
 
 export type HomeworkFormMode =
   { kind: "next" } | { kind: "recite" } | { kind: "exam" } | { kind: "edit"; item: HomeworkRecord };
 
-const ALL_FIELDS: AyahRangeField[] = ["surah", "fromAyah", "toAyah"];
-
 /**
- * Add homework for the next lesson, "recite now", or edit a portion. New
- * homework is pre-filled with the suggestion after the student's latest
- * portion (from the sura map, in their memorization direction).
+ * Add homework for the next lesson, "recite now", or edit a portion: one or
+ * more suras. New homework is pre-filled with the suggestion after the
+ * student's latest portion (from the sura map, in their memorization
+ * direction).
  */
 export function HomeworkFormDrawer({
   open,
@@ -62,9 +57,9 @@ export function HomeworkFormDrawer({
   const t = useTranslations();
   const { store } = useApp();
   const noteId = useId();
-  const [draft, setDraft] = useState<AyahRangeDraft>({ surah: null, from: "", to: "" });
+  const [drafts, setDrafts] = useState<PortionDraft[]>(() => portionDrafts([]));
   const [note, setNote] = useState("");
-  const [touched, setTouched] = useState<Set<AyahRangeField>>(new Set());
+  const [touched, setTouched] = useState<ReadonlySet<string>>(new Set());
   const [suggested, setSuggested] = useState(false);
 
   useEffect(() => {
@@ -72,7 +67,7 @@ export function HomeworkFormDrawer({
     setTouched(new Set());
     if (mode.kind === "edit") {
       const { item } = mode;
-      setDraft({ surah: item.surah, from: String(item.fromAyah), to: String(item.toAyah) });
+      setDrafts(portionDrafts(portionsOf(item)));
       setNote(item.note);
       setSuggested(false);
       return;
@@ -82,28 +77,20 @@ export function HomeworkFormDrawer({
       mode.kind === "exam"
         ? null
         : suggestNextHomework(latestPortion(history), student.memorizationDirection);
-    setDraft(
-      suggestion
-        ? {
-            surah: suggestion.surah,
-            from: String(suggestion.fromAyah),
-            to: String(suggestion.toAyah),
-          }
-        : { surah: null, from: "", to: "" },
-    );
+    setDrafts(portionDrafts(suggestion ? [suggestion] : []));
     setNote("");
     setSuggested(suggestion !== null);
     // Only when the drawer opens; later history changes must not reset typing.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const check = checkAyahRange(draft);
+  const check = checkPortions(drafts);
   const exam = mode.kind === "exam" || (mode.kind === "edit" && isExam(mode.item));
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!check.ok) {
-      setTouched(new Set(ALL_FIELDS));
+      setTouched(allTouched(drafts));
       return;
     }
     if (mode.kind === "edit") {
@@ -115,13 +102,13 @@ export function HomeworkFormDrawer({
           ? await addExam(store, {
               studentId: student.id,
               lessonId: lesson,
-              portion: check.value,
+              portions: check.value,
               note,
             })
           : await addHomework(store, {
               studentId: student.id,
               lessonId: lesson,
-              portion: check.value,
+              portions: check.value,
               note,
               evaluateNow: mode.kind === "recite",
             });
@@ -163,14 +150,14 @@ export function HomeworkFormDrawer({
                 {t("homework.suggested")}
               </p>
             )}
-            <AyahRangeFields
-              value={draft}
+            <PortionsFields
+              value={drafts}
               errors={check.errors}
               visibleErrors={touched}
               onChange={(next, field) => {
-                setDraft(next);
+                setDrafts(next);
                 setSuggested(false);
-                setTouched((current) => new Set(current).add(field));
+                if (field) setTouched((current) => new Set(current).add(field));
               }}
             />
             <Field>

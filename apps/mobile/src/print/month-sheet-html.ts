@@ -1,5 +1,5 @@
 import type { HistoryRow, MonthSheet } from "@qct/core/domain/stats/month-sheet";
-import { isExam, type HomeworkRecord } from "@qct/core/shared/schemas/homework";
+import { isExam, type portionsOf } from "@qct/core/shared/schemas/homework";
 import { qrSvgMarkup } from "@qct/core/shared/qr";
 
 /** The words and formats a sheet needs, from the app's messages and formats. */
@@ -12,7 +12,7 @@ export interface SheetText {
   /** "25 أكتوبر 2026" for a "YYYY-MM-DD" date. */
   date: (date: string) => string;
   average: (value: number | null) => string;
-  portion: (item: Pick<HomeworkRecord, "surah" | "fromAyah" | "toAyah">) => string;
+  portion: (item: Parameters<typeof portionsOf>[0]) => string;
 }
 
 export interface SheetsInput {

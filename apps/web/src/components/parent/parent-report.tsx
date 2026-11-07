@@ -31,10 +31,7 @@ export function ParentReport({
   const average = (value: number | null) =>
     value === null ? t("common.noValue") : format.number(value, "average");
   const score = (value: number | null) => (value === null ? t("common.noValue") : String(value));
-  const portion = (row: ParentRow) =>
-    row.surah === null || row.fromAyah === null || row.toAyah === null
-      ? ""
-      : label({ surah: row.surah, fromAyah: row.fromAyah, toAyah: row.toAyah });
+  const portion = (row: ParentRow) => label(row);
   const counts: [string, number][] = [
     [t("print.present"), report.counts.present],
     [t("print.absent"), report.counts.absent],

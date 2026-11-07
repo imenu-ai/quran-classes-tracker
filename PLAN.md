@@ -330,7 +330,7 @@ Tests sit next to the code as `*.test.ts(x)`; each package runs its own with Vit
 - `status: 'present' | 'absent' | 'excused'`, `excuseNote` (only for `excused`)
 
 **`homework`**
-- `studentId`, `surah` (1–114), `fromAyah`, `toAyah` (validated by `validateAyahRange`), `note`
+- `studentId`, `portions: { surah, fromAyah, toAyah }[]` (1–114 of them, in the order given, each validated by `validateAyahRange`; one mark covers them all), `note`. Replaced the single `surah`/`fromAyah`/`toAyah` (Phase 3): `homeworkRecordSchema` converts an old record on parse, and `portionsOf()` reads either form
 - `assignedLessonId | null`, `evaluatedLessonId | null`; pending = `evaluatedLessonId == null`
 - `memorizationRate`, `behaviorRate`: 0–10 in steps of 0.5 (`RATE_VALUES`), or null; 0 is a mark
 - `notMemorized: { lessonId, behaviorRate }[]` (default `[]`): lessons where he hadn't memorized it (لم يحفظ), each with that day's behavior mark or null. Never on an exam, never twice for a lesson, never for the lesson it was evaluated in. Replaced `postponedLessonIds` (Phase 3): `homeworkRecordSchema` converts an old record's postponements on parse, and `notMemorizedOf()` reads either form
@@ -348,7 +348,7 @@ Records pulled from the server aren't re-validated on the device, so newer field
 
 **Next-homework suggestion**
 - Starts from the student's **most recent homework item, pending or evaluated** (exams ignored).
-- Same size as the previous item, continuing at `toAyah + 1`, clamped to the end of the sura.
+- Continues from that item's **last sura** (`latestPortion`): the same size as it, at `toAyah + 1`, clamped to the end of the sura.
 - At the end of a sura, moves to the next one (`+1` forward, `−1` backward) from ayah 1; `null` after sura 114 (forward) or 1 (backward).
 - With no history: nothing, or sura 114 if the student is set to backward.
 
@@ -545,7 +545,7 @@ Five features asked for by the user on 2026-11-07 (§0 #54–58), each built in 
   - Actions: choosing "لم يحفظ" adds the lesson's entry (clearing a mark given in that lesson); choosing a mark replaces it; clearing the picker undoes it; a behavior mark on that day goes into the entry. Absent or excused still cancels it.
   - Derived: the behavior average and "تم تقييم X من Y" count these behavior marks; memorization averages don't. Month sheet, print, parent page and counts say "لم يحفظ" instead of "مؤجل".
   - UI: the postpone and undo buttons go away on both platforms; messages updated in `ar` and `en`.
-- [ ] **3.3 Several suras in one homework (#56).**
+- [x] **3.3 Several suras in one homework (#56).**
   - Data: `surah`/`fromAyah`/`toAyah` become `portions: { surah, fromAyah, toAyah }[]` (1–114 items, each checked by `validateAyahRange`); old records read as one portion.
   - Form: a list of suras, each with the searchable sura sheet, its ayah fields or "السورة كاملة", add and remove; the same for exams and for editing.
   - Suggestion: continues after the last portion. Labels list the suras ("الملك ١–٣٠، القلم ١–١٥", a whole sura by its name) everywhere a portion is shown.
@@ -936,3 +936,12 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
   - **Checked:** core suites on all three adapters (memory, SQLite, Dexie), push and parent integration tests with old-form records, the web `HomeworkItem` and parent view, the mobile today card, and the web E2E suite (main flow now "not memorized", then a mark): all 10 tests pass on Desktop Chrome and Pixel 7. The iPhone (WebKit) project couldn't run: in this session WebKit closes before opening even a blank page (a standalone launch fails the same way), so it needs a rerun on a working WebKit.
   - `student-form-drawer.test.tsx` failed once while all three packages ran their tests at once, and passed alone and in the web suite: a timing flake, not this change.
   - Tests: core 449, web 295, mobile 83.
+
+- 2026-11-07 (3.3):
+  - **Data:** `surah`/`fromAyah`/`toAyah` became `portions[]`. The schema's preprocess (now `fromPhase2`) converts an old record's single sura as it already did its postponements; `portionsOf()` reads either form for records pulled unparsed, and the parent page goes through it. Errors carry the portion's place (`portions.1.toAyah`). Test builders still take `surah`/`fromAyah`/`toAyah` for a one-sura record, so the existing tests kept their fixtures.
+  - **Actions and suggestion:** `addHomework`, `addExam` and `updateHomework` take `portions`. `latestHomework()` finds the item to continue from and `latestPortion()` gives its last sura, which `suggestNextHomework()` continues as before.
+  - **Form:** `checkPortions()` and `portionDrafts()` (`packages/core/src/forms/portions.ts`) validate and fill a list of drafts, each with a stable key for list keys and touched fields; a saved portion covering its whole sura opens as "السورة كاملة". `PortionsFields` on both platforms: each sura with its picker and ayah fields (hidden when whole: a checkbox on the web, a native `Switch` in the app), "حذف هذه السورة" while there are several, and "إضافة سورة".
+  - **Labels:** the suras joined with "، ", and a whole sura as "الفلق كاملة", also when it's the only one (the tests that showed "الفلق 1–5" or "الإخلاص 1–4" now say "كاملة"). The parent API's rows carry `portions` instead of one sura.
+  - **E2E:** the exam in the main flow now has two suras, the second whole ("الملك 1–10، القلم كاملة"). A first run failed because `{ name: "السورة" }` also matched "حذف هذه السورة", so the step clicked a remove button; the step matches exactly now. All 10 tests pass on Desktop Chrome and Pixel 7; the iPhone project still can't launch WebKit in this session (see 3.2).
+  - Not checked on the Android emulator in this step; the Jest test drives the switch, add and remove, and 3.6 runs the Maestro flows.
+  - Tests: core 456, web 297, mobile 84.

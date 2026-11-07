@@ -100,9 +100,7 @@ export function localStoreSuite(factory: StorageFactory) {
       const error = await store
         .create("homework", {
           studentId: CLASS_ID,
-          surah: 108,
-          fromAyah: 1,
-          toAyah: 4,
+          portions: [{ surah: 108, fromAyah: 1, toAyah: 4 }],
           note: "",
           assignedLessonId: null,
           evaluatedLessonId: null,
@@ -113,7 +111,7 @@ export function localStoreSuite(factory: StorageFactory) {
         })
         .catch((e: unknown) => e);
       expect((error as LocalValidationError).errors[0]).toMatchObject({
-        path: "toAyah",
+        path: "portions.0.toAyah",
         code: "AYAH_OUT_OF_RANGE",
       });
     });

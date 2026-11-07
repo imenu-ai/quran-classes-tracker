@@ -43,7 +43,7 @@ test("class → students → student page: mark, next-day homework, absence, not
   await today.getByRole("button", { name: ar.evaluation.reciteNow }).click();
   await setPortion(page, "الفلق", /^113 · الفلق/, "1", "5");
   await page.getByRole("dialog").getByRole("button", { name: ar.common.save }).click();
-  await expect(today.getByText("الفلق 1–5")).toBeVisible();
+  await expect(today.getByText("الفلق كاملة")).toBeVisible();
 
   // An item just recited on the spot opens by itself.
   await setScore(today, ar.glossary.memorizationRate, 9);
@@ -64,7 +64,7 @@ test("class → students → student page: mark, next-day homework, absence, not
   await expect(page.locator("main table")).toHaveCount(0);
   await openMonthTable(page);
   const table = page.locator("main table");
-  await expect(table.locator("tbody tr").first()).toContainText("الفلق 1–5");
+  await expect(table.locator("tbody tr").first()).toContainText("الفلق كاملة");
   await expect(table.locator("tbody tr").first()).toContainText("9");
   await expect(table.locator("tfoot")).toContainText("9.0");
   await expect(table.locator("tfoot")).toContainText("10.0");
@@ -101,10 +101,18 @@ test("class → students → student page: mark, next-day homework, absence, not
   // and one mark, left out of the averages.
   await today.getByRole("button", { name: ar.exam.add }).click();
   await setPortion(page, "الملك", /^67 · الملك/, "1", "10");
-  await page.getByRole("dialog").getByRole("button", { name: ar.common.save }).click();
+  // Two suras in one exam: the second one whole.
+  const sheet = page.getByRole("dialog");
+  await sheet.getByRole("button", { name: ar.homework.addSurah }).click();
+  await sheet.getByRole("button", { name: ar.glossary.surah, exact: true }).nth(1).click();
+  await page.getByRole("combobox").fill("القلم");
+  await page.getByRole("option", { name: /^68 · القلم/ }).click();
+  await sheet.getByRole("checkbox", { name: ar.homework.wholeSurah }).nth(1).check();
+  await sheet.getByRole("button", { name: ar.common.save }).click();
   await setScore(today.locator("li").filter({ hasText: "الملك 1–10" }), ar.exam.mark, 3);
   const examRow = table.locator("tbody tr").filter({ hasText: "الملك 1–10" });
   await expect(examRow).toContainText(ar.exam.badge);
+  await expect(examRow).toContainText("الملك 1–10، القلم كاملة");
   await expect(examRow).toContainText("3");
   await expect(examRow).toHaveClass(/bg-exam/);
   await expect(table.locator("tfoot")).toContainText("8.5");

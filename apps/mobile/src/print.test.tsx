@@ -10,6 +10,7 @@ import { startLesson } from "@qct/core/data/entities/lessons";
 import { createStudent } from "@qct/core/data/entities/students";
 import { loadPrintSheets } from "@qct/core/data/entities/print";
 import { todayInTimeZone } from "@qct/core/domain/dates/local-date";
+import { portionsOf } from "@qct/core/shared/schemas/homework";
 import ar from "@qct/core/messages/ar.json";
 import { buildSheetsHtml, type SheetText } from "@/print/month-sheet-html";
 import { createTestServices, renderWithApp, TEST_SESSION } from "@/test/app-services";
@@ -56,7 +57,7 @@ async function setup(parentId = "123456789") {
   await addHomework(services.store, {
     studentId: ahmad.id,
     lessonId: lesson.id,
-    portion: { surah: 78, fromAyah: 1, toAyah: 5 },
+    portions: [{ surah: 78, fromAyah: 1, toAyah: 5 }],
     note: "",
     evaluateNow: true,
   });
@@ -78,7 +79,10 @@ describe("the printed sheet", () => {
       month: (key) => key,
       date: (date) => date,
       average: (value) => (value === null ? "—" : String(value)),
-      portion: (item) => `${item.surah} ${item.fromAyah}–${item.toAyah}`,
+      portion: (item) =>
+        portionsOf(item)
+          .map((p) => `${p.surah} ${p.fromAyah}–${p.toAyah}`)
+          .join("، "),
     };
     const html = buildSheetsHtml({
       sheets: data!.sheets,

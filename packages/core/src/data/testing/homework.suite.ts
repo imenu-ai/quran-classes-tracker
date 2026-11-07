@@ -46,7 +46,7 @@ export function homeworkSuite(factory: StorageFactory) {
       addHomework(store, {
         studentId: STUDENT,
         lessonId: OLD_LESSON,
-        portion: { surah: 78, fromAyah: 1, toAyah: 10 },
+        portions: [{ surah: 78, fromAyah: 1, toAyah: 10 }],
         note: "",
         evaluateNow: false,
       });
@@ -127,13 +127,13 @@ export function homeworkSuite(factory: StorageFactory) {
       const exam = await addExam(store, {
         studentId: STUDENT,
         lessonId: LESSON,
-        portion: { surah: 67, fromAyah: 1, toAyah: 10 },
+        portions: [{ surah: 67, fromAyah: 1, toAyah: 10 }],
         note: "",
       });
       const recited = await addHomework(store, {
         studentId: STUDENT,
         lessonId: LESSON,
-        portion: { surah: 78, fromAyah: 1, toAyah: 5 },
+        portions: [{ surah: 78, fromAyah: 1, toAyah: 5 }],
         note: "",
         evaluateNow: true,
       });
@@ -150,7 +150,7 @@ export function homeworkSuite(factory: StorageFactory) {
       const exam = await addExam(store, {
         studentId: STUDENT,
         lessonId: LESSON,
-        portion: { surah: 67, fromAyah: 1, toAyah: 10 },
+        portions: [{ surah: 67, fromAyah: 1, toAyah: 10 }],
         note: "",
       });
       expect(exam).toMatchObject({
@@ -231,7 +231,7 @@ export function homeworkSuite(factory: StorageFactory) {
       const item = await addHomework(store, {
         studentId: STUDENT,
         lessonId: LESSON,
-        portion: { surah: 114, fromAyah: 1, toAyah: 6 },
+        portions: [{ surah: 114, fromAyah: 1, toAyah: 6 }],
         note: "",
         evaluateNow: true,
       });
@@ -254,7 +254,7 @@ export function homeworkSuite(factory: StorageFactory) {
       const recited = await addHomework(store, {
         studentId: STUDENT,
         lessonId: LESSON,
-        portion: { surah: 114, fromAyah: 1, toAyah: 6 },
+        portions: [{ surah: 114, fromAyah: 1, toAyah: 6 }],
         note: "",
         evaluateNow: true,
       });
@@ -264,12 +264,19 @@ export function homeworkSuite(factory: StorageFactory) {
 
     it("edits the portion and rejects an invalid ayah range locally", async () => {
       const item = await assignInOldLesson();
-      await updateHomework(store, item.id, { surah: 78, fromAyah: 1, toAyah: 5 }, "");
-      expect(await db.get("homework", item.id)).toMatchObject({ toAyah: 5 });
+      const two = [
+        { surah: 78, fromAyah: 1, toAyah: 5 },
+        { surah: 79, fromAyah: 1, toAyah: 46 },
+      ];
+      await updateHomework(store, item.id, two, "");
+      expect(await db.get("homework", item.id)).toMatchObject({ portions: two });
       const error = await updateHomework(
         store,
         item.id,
-        { surah: 108, fromAyah: 1, toAyah: 5 },
+        [
+          { surah: 78, fromAyah: 1, toAyah: 5 },
+          { surah: 108, fromAyah: 1, toAyah: 5 },
+        ],
         "",
       ).catch((e: unknown) => e);
       expect((error as LocalValidationError).errors[0]?.code).toBe("AYAH_OUT_OF_RANGE");

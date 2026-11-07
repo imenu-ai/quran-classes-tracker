@@ -296,7 +296,7 @@ describe("pushChanges", () => {
         id: bad.id,
         status: "rejected",
         code: "AYAH_OUT_OF_RANGE",
-        params: { surah: 2, ayahCount: 286, field: "toAyah" },
+        params: { surah: 2, ayahCount: 286, field: "portions.0.toAyah" },
       });
       expect(await stored("homework", bad.id)).toBeNull();
     });

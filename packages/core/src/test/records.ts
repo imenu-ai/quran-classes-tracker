@@ -63,21 +63,30 @@ export const attendanceRecord = (
   ...overrides,
 });
 
+/**
+ * A homework record (النبأ 1–10 by default). For a one-sura portion, tests
+ * may pass `surah`, `fromAyah` and `toAyah` instead of `portions`.
+ */
 export const homeworkRecord = (
   studentId: string,
-  overrides: Partial<SyncRecordMap["homework"]> = {},
-): SyncRecordMap["homework"] => ({
-  ...base(overrides),
-  studentId,
-  surah: 78,
-  fromAyah: 1,
-  toAyah: 10,
-  note: "",
-  assignedLessonId: null,
-  evaluatedLessonId: null,
-  memorizationRate: null,
-  behaviorRate: null,
-  notMemorized: [],
-  kind: "homework",
-  ...overrides,
-});
+  overrides: Partial<SyncRecordMap["homework"]> & {
+    surah?: number;
+    fromAyah?: number;
+    toAyah?: number;
+  } = {},
+): SyncRecordMap["homework"] => {
+  const { surah = 78, fromAyah = 1, toAyah = 10, ...rest } = overrides;
+  return {
+    ...base(rest),
+    studentId,
+    portions: [{ surah, fromAyah, toAyah }],
+    note: "",
+    assignedLessonId: null,
+    evaluatedLessonId: null,
+    memorizationRate: null,
+    behaviorRate: null,
+    notMemorized: [],
+    kind: "homework",
+    ...rest,
+  };
+};

@@ -51,8 +51,13 @@ const ayahRangeFields = {
   toAyah: z.number(),
 };
 
-/** Sura + ayah range alone, for the form's instant feedback. */
+/** One sura and its ayah range: a homework holds one or more of these. */
 export const ayahRangeSchema = z.object(ayahRangeFields).superRefine(refineAyahRange);
+
+export type HomeworkPortion = z.infer<typeof ayahRangeSchema>;
+
+/** At most one portion per sura of the Quran. */
+export const PORTIONS_MAX = 114;
 
 export const notMemorizedEntrySchema = z.object({
   lessonId: idSchema,
@@ -63,7 +68,12 @@ export type NotMemorizedEntry = z.infer<typeof notMemorizedEntrySchema>;
 
 export const homeworkFieldsSchema = z.object({
   studentId: idSchema,
-  ...ayahRangeFields,
+  /**
+   * The suras it covers, in the order given, each with its ayah range; one
+   * mark for all of them. Read through portionsOf(): records from before
+   * Phase 3 have surah/fromAyah/toAyah instead.
+   */
+  portions: z.array(ayahRangeSchema).min(1).max(PORTIONS_MAX),
   note: noteSchema(NOTE_MAX),
   assignedLessonId: idSchema.nullable(),
   /** Pending while null. */
@@ -81,28 +91,34 @@ export const homeworkFieldsSchema = z.object({
 });
 
 /**
- * A record from before Phase 3 lists its postponements in postponedLessonIds
- * (they became "not memorized" without a behavior mark). Parsing converts
- * it, so the first write of an old record keeps them.
+ * A record from before Phase 3 has one sura in surah/fromAyah/toAyah, and
+ * lists its postponements in postponedLessonIds (they became "not memorized"
+ * without a behavior mark). Parsing converts both, so the first write of an
+ * old record (on a device, or pushed by one) keeps them.
  */
-function fromPostponed(input: unknown): unknown {
+function fromPhase2(input: unknown): unknown {
   if (typeof input !== "object" || input === null) return input;
-  const record = input as Record<string, unknown>;
-  if (record.notMemorized !== undefined || !Array.isArray(record.postponedLessonIds)) return input;
-  const { postponedLessonIds, ...rest } = record;
-  return {
-    ...rest,
-    notMemorized: (postponedLessonIds as unknown[]).map((lessonId) => ({
-      lessonId,
-      behaviorRate: null,
-    })),
-  };
+  let record = input as Record<string, unknown>;
+  if (record.portions === undefined && record.surah !== undefined) {
+    const { surah, fromAyah, toAyah, ...rest } = record;
+    record = { ...rest, portions: [{ surah, fromAyah, toAyah }] };
+  }
+  if (record.notMemorized === undefined && Array.isArray(record.postponedLessonIds)) {
+    const { postponedLessonIds, ...rest } = record;
+    record = {
+      ...rest,
+      notMemorized: (postponedLessonIds as unknown[]).map((lessonId) => ({
+        lessonId,
+        behaviorRate: null,
+      })),
+    };
+  }
+  return record;
 }
 
 const currentHomeworkRecordSchema = syncableBaseSchema
   .extend(homeworkFieldsSchema.shape)
   .superRefine((homework, ctx) => {
-    refineAyahRange(homework, ctx);
     const hasRate = homework.memorizationRate !== null || homework.behaviorRate !== null;
     if (hasRate && homework.evaluatedLessonId === null) {
       ctx.addIssue({
@@ -126,7 +142,7 @@ const currentHomeworkRecordSchema = syncableBaseSchema
     }
   });
 
-export const homeworkRecordSchema = z.preprocess(fromPostponed, currentHomeworkRecordSchema);
+export const homeworkRecordSchema = z.preprocess(fromPhase2, currentHomeworkRecordSchema);
 
 export type HomeworkRecord = z.infer<typeof currentHomeworkRecordSchema>;
 
@@ -134,6 +150,24 @@ export type HomeworkRecord = z.infer<typeof currentHomeworkRecordSchema>;
 export const kindOf = (item: { kind?: HomeworkKind }): HomeworkKind => item.kind ?? "homework";
 
 export const isExam = (item: { kind?: HomeworkKind }) => kindOf(item) === "exam";
+
+/**
+ * The suras of a homework item. Records pulled from the server aren't
+ * re-validated, so one from before Phase 3 may have a single
+ * surah/fromAyah/toAyah instead.
+ */
+export function portionsOf(item: {
+  portions?: readonly HomeworkPortion[];
+  surah?: number;
+  fromAyah?: number;
+  toAyah?: number;
+}): readonly HomeworkPortion[] {
+  if (item.portions) return item.portions;
+  if (item.surah === undefined || item.fromAyah === undefined || item.toAyah === undefined) {
+    return [];
+  }
+  return [{ surah: item.surah, fromAyah: item.fromAyah, toAyah: item.toAyah }];
+}
 
 /** The value a memorization picker sets for "لم يحفظ". */
 export const NOT_MEMORIZED = "notMemorized";

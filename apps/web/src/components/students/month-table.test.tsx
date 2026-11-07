@@ -96,7 +96,7 @@ describe("MonthTable", () => {
     expect(within(examRow).getAllByRole("cell")).toHaveLength(3);
     expect(within(examRow).getAllByRole("cell")[2]?.textContent).toBe("6");
 
-    const homeworkRow = screen.getByText("الإخلاص 1–4").closest("tr")!;
+    const homeworkRow = screen.getByText("الإخلاص كاملة").closest("tr")!;
     expect(homeworkRow.className).not.toContain("bg-exam");
 
     const footer = document.querySelector("tfoot")!;

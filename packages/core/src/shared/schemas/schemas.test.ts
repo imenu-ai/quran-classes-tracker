@@ -26,6 +26,7 @@ const base = {
   serverVersion: 0,
 };
 
+/** One sura in the pre-Phase 3 form (surah/fromAyah/toAyah), which parsing converts. */
 const validHomework = {
   ...base,
   studentId: ID2,
@@ -222,6 +223,36 @@ describe("homeworkRecordSchema", () => {
     ).toEqual([invalid]);
   });
 
+  it("turns an older record's single sura into portions", () => {
+    const result = parseWithCodes(homeworkRecordSchema, validHomework);
+    expect(result.success && result.data.portions).toEqual([{ surah: 2, fromAyah: 1, toAyah: 5 }]);
+    expect(result.success && "surah" in result.data).toBe(false);
+  });
+
+  it("accepts several suras, and reports a bad one by its place in the list", () => {
+    const { surah: _s, fromAyah: _f, toAyah: _t, ...rest } = validHomework;
+    const two = [
+      { surah: 67, fromAyah: 1, toAyah: 30 },
+      { surah: 68, fromAyah: 1, toAyah: 15 },
+    ];
+    expect(parseWithCodes(homeworkRecordSchema, { ...rest, portions: two }).success).toBe(true);
+    expect(
+      errorsOf(homeworkRecordSchema, {
+        ...rest,
+        portions: [two[0], { surah: 68, fromAyah: 1, toAyah: 60 }],
+      }),
+    ).toEqual([
+      {
+        path: "portions.1.toAyah",
+        code: "AYAH_OUT_OF_RANGE",
+        params: { surah: 68, ayahCount: 52 },
+      },
+    ]);
+    expect(errorsOf(homeworkRecordSchema, { ...rest, portions: [] })).toEqual([
+      { path: "portions", code: "TOO_SMALL", params: { minimum: 1 } },
+    ]);
+  });
+
   it("accepts a pending homework item", () => {
     expect(parseWithCodes(homeworkRecordSchema, validHomework).success).toBe(true);
   });
@@ -238,16 +269,20 @@ describe("homeworkRecordSchema", () => {
   });
 
   it.each([
-    [{ surah: 115 }, { path: "surah", code: "SURAH_NOT_FOUND", params: {} }],
-    [{ fromAyah: 0 }, { path: "fromAyah", code: "INVALID_AYAH", params: {} }],
-    [{ toAyah: 2.5 }, { path: "toAyah", code: "INVALID_AYAH", params: {} }],
+    [{ surah: 115 }, { path: "portions.0.surah", code: "SURAH_NOT_FOUND", params: {} }],
+    [{ fromAyah: 0 }, { path: "portions.0.fromAyah", code: "INVALID_AYAH", params: {} }],
+    [{ toAyah: 2.5 }, { path: "portions.0.toAyah", code: "INVALID_AYAH", params: {} }],
     [
       { toAyah: 287 },
-      { path: "toAyah", code: "AYAH_OUT_OF_RANGE", params: { surah: 2, ayahCount: 286 } },
+      {
+        path: "portions.0.toAyah",
+        code: "AYAH_OUT_OF_RANGE",
+        params: { surah: 2, ayahCount: 286 },
+      },
     ],
     [
       { fromAyah: 9, toAyah: 3 },
-      { path: "toAyah", code: "FROM_AFTER_TO", params: { fromAyah: 9, toAyah: 3 } },
+      { path: "portions.0.toAyah", code: "FROM_AFTER_TO", params: { fromAyah: 9, toAyah: 3 } },
     ],
   ])("rejects %o with the ayah range code", (patch, expected) => {
     expect(errorsOf(homeworkRecordSchema, { ...validHomework, ...patch })).toEqual([expected]);

@@ -50,14 +50,14 @@ export function todaySuite(factory: StorageFactory) {
       const a = await addHomework(store, {
         studentId: STUDENT,
         lessonId: old,
-        portion,
+        portions: [portion],
         note: "",
         evaluateNow: false,
       });
       const b = await addHomework(store, {
         studentId: STUDENT,
         lessonId: old,
-        portion,
+        portions: [portion],
         note: "",
         evaluateNow: false,
       });

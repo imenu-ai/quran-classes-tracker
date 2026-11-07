@@ -77,7 +77,13 @@ export function lessonsSuite(factory: StorageFactory) {
       const later = await startLesson(store, CLASS_ID, "2026-10-08");
       const portion = { surah: 78, fromAyah: 1, toAyah: 5 };
       const add = (lessonId: string, evaluateNow = false) =>
-        addHomework(store, { studentId: STUDENT, lessonId, portion, note: "", evaluateNow });
+        addHomework(store, {
+          studentId: STUDENT,
+          lessonId,
+          portions: [portion],
+          note: "",
+          evaluateNow,
+        });
 
       const fromEarlier = await add(earlier.id); // recited in the deleted lesson
       await rateHomework(store, fromEarlier, lesson.id, "memorizationRate", 9);

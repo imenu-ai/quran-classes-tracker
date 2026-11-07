@@ -170,9 +170,7 @@ describe("parentReport", () => {
       {
         date: "2026-10-01",
         kind: "homework",
-        surah: 112,
-        fromAyah: 1,
-        toAyah: 4,
+        portions: [{ surah: 112, fromAyah: 1, toAyah: 4 }],
         memorization: 9,
         behavior: 8,
         excuseNote: "",
@@ -180,9 +178,7 @@ describe("parentReport", () => {
       {
         date: "2026-10-02",
         kind: "excused",
-        surah: null,
-        fromAyah: null,
-        toAyah: null,
+        portions: [],
         memorization: null,
         behavior: null,
         excuseNote: "مريض",
@@ -190,9 +186,7 @@ describe("parentReport", () => {
       {
         date: "2026-10-05",
         kind: "exam",
-        surah: 67,
-        fromAyah: 1,
-        toAyah: 10,
+        portions: [{ surah: 67, fromAyah: 1, toAyah: 10 }],
         memorization: 3,
         behavior: null,
         excuseNote: "",
@@ -200,9 +194,7 @@ describe("parentReport", () => {
       {
         date: "2026-10-05",
         kind: "notMemorized",
-        surah: 113,
-        fromAyah: 1,
-        toAyah: 10,
+        portions: [{ surah: 113, fromAyah: 1, toAyah: 10 }],
         memorization: null,
         behavior: null,
         excuseNote: "",
@@ -210,9 +202,7 @@ describe("parentReport", () => {
       {
         date: "2026-10-06",
         kind: "notMemorized",
-        surah: 114,
-        fromAyah: 1,
-        toAyah: 6,
+        portions: [{ surah: 114, fromAyah: 1, toAyah: 6 }],
         memorization: null,
         behavior: 6,
         excuseNote: "",
@@ -231,7 +221,13 @@ describe("parentReport", () => {
     expect(result.ok && result.report).toMatchObject({
       month: "2026-09",
       memorizationAverage: 7,
-      rows: [{ date: "2026-09-30", kind: "homework", surah: 114 }],
+      rows: [
+        {
+          date: "2026-09-30",
+          kind: "homework",
+          portions: [{ surah: 114, fromAyah: 1, toAyah: 10 }],
+        },
+      ],
     });
   });
 

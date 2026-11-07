@@ -6,15 +6,11 @@ import { addExam, addHomework, updateHomework } from "@qct/core/data/entities/ho
 import { todayLessonId } from "@qct/core/data/entities/today";
 import { todayInTimeZone } from "@qct/core/domain/dates/local-date";
 import { latestPortion, suggestNextHomework } from "@qct/core/domain/homework/suggestion";
-import {
-  checkAyahRange,
-  type AyahRangeDraft,
-  type AyahRangeField,
-} from "@qct/core/forms/ayah-range";
+import { checkPortions, portionDrafts, type PortionDraft } from "@qct/core/forms/portions";
 import { NOTE_MAX } from "@qct/core/shared/schemas/base";
-import { isExam, type HomeworkRecord } from "@qct/core/shared/schemas/homework";
+import { isExam, portionsOf, type HomeworkRecord } from "@qct/core/shared/schemas/homework";
 import type { StudentRecord } from "@qct/core/shared/schemas/student";
-import { AyahRangeFields } from "@/components/ayah-range-fields";
+import { allTouched, PortionsFields } from "@/components/portions-fields";
 import { Button } from "@/components/button";
 import { Loading } from "@/components/loading";
 import { Screen } from "@/components/screen";
@@ -26,8 +22,6 @@ import { useStudent, useStudentHomework } from "@/data/queries";
 import { useTheme } from "@/theme/theme";
 
 type Kind = "next" | "recite" | "exam" | "edit";
-
-const ALL_FIELDS: AyahRangeField[] = ["surah", "fromAyah", "toAyah"];
 
 /**
  * Homework for the next lesson, "recite now", an exam, or a portion's edit
@@ -74,13 +68,9 @@ function initialDraft(
   history: readonly HomeworkRecord[],
   student: StudentRecord,
   item?: HomeworkRecord,
-): { draft: AyahRangeDraft; note: string; suggested: boolean } {
+): { drafts: PortionDraft[]; note: string; suggested: boolean } {
   if (item) {
-    return {
-      draft: { surah: item.surah, from: String(item.fromAyah), to: String(item.toAyah) },
-      note: item.note,
-      suggested: false,
-    };
+    return { drafts: portionDrafts(portionsOf(item)), note: item.note, suggested: false };
   }
   // An exam reviews any part: nothing is suggested for it.
   const suggestion =
@@ -88,13 +78,7 @@ function initialDraft(
       ? null
       : suggestNextHomework(latestPortion(history), student.memorizationDirection);
   return {
-    draft: suggestion
-      ? {
-          surah: suggestion.surah,
-          from: String(suggestion.fromAyah),
-          to: String(suggestion.toAyah),
-        }
-      : { surah: null, from: "", to: "" },
+    drafts: portionDrafts(suggestion ? [suggestion] : []),
     note: "",
     suggested: suggestion !== null,
   };
@@ -118,13 +102,13 @@ function HomeworkForm({
   const { colors } = useTheme();
   // Only from what was there when the form opened; later changes must not reset typing.
   const [initial] = useState(() => initialDraft(kind, history, student, item));
-  const [draft, setDraft] = useState(initial.draft);
+  const [drafts, setDrafts] = useState(initial.drafts);
   const [note, setNote] = useState(initial.note);
   const [suggested, setSuggested] = useState(initial.suggested);
-  const [touched, setTouched] = useState<ReadonlySet<AyahRangeField>>(new Set());
+  const [touched, setTouched] = useState<ReadonlySet<string>>(new Set());
   const [busy, setBusy] = useState(false);
 
-  const check = checkAyahRange(draft);
+  const check = checkPortions(drafts);
   const exam = kind === "exam" || (item !== undefined && isExam(item));
   const title = item
     ? exam
@@ -138,7 +122,7 @@ function HomeworkForm({
 
   async function save() {
     if (!check.ok) {
-      setTouched(new Set(ALL_FIELDS));
+      setTouched(allTouched(drafts));
       return;
     }
     setBusy(true);
@@ -154,13 +138,13 @@ function HomeworkForm({
             ? await addExam(store, {
                 studentId: student.id,
                 lessonId: lesson,
-                portion: check.value,
+                portions: check.value,
                 note,
               })
             : await addHomework(store, {
                 studentId: student.id,
                 lessonId: lesson,
-                portion: check.value,
+                portions: check.value,
                 note,
                 evaluateNow: kind === "recite",
               });
@@ -183,14 +167,14 @@ function HomeworkForm({
           </Text>
         </View>
       ) : null}
-      <AyahRangeFields
-        value={draft}
+      <PortionsFields
+        value={drafts}
         errors={check.errors}
         visibleErrors={touched}
         onChange={(next, field) => {
-          setDraft(next);
+          setDrafts(next);
           setSuggested(false);
-          setTouched((current) => new Set(current).add(field));
+          if (field) setTouched((current) => new Set(current).add(field));
         }}
       />
       <TextField

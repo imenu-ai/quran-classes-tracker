@@ -136,7 +136,7 @@ export function addHomework(
   input: {
     studentId: string;
     lessonId: string;
-    portion: Portion;
+    portions: readonly Portion[];
     note: string;
     evaluateNow: boolean;
   },
@@ -145,7 +145,7 @@ export function addHomework(
     if (input.evaluateNow) await ensurePresent(tx, input.lessonId, input.studentId);
     return tx.create("homework", {
       studentId: input.studentId,
-      ...input.portion,
+      portions: [...input.portions],
       note: input.note,
       assignedLessonId: input.lessonId,
       evaluatedLessonId: input.evaluateNow ? input.lessonId : null,
@@ -164,13 +164,13 @@ export function addHomework(
  */
 export function addExam(
   store: DataWriter,
-  input: { studentId: string; lessonId: string; portion: Portion; note: string },
+  input: { studentId: string; lessonId: string; portions: readonly Portion[]; note: string },
 ) {
   return store.transaction(async (tx) => {
     await ensurePresent(tx, input.lessonId, input.studentId);
     return tx.create("homework", {
       studentId: input.studentId,
-      ...input.portion,
+      portions: [...input.portions],
       note: input.note,
       assignedLessonId: input.lessonId,
       evaluatedLessonId: input.lessonId,
@@ -182,9 +182,14 @@ export function addExam(
   });
 }
 
-/** Edits the portion (e.g. the student recited only part of it). */
-export function updateHomework(store: DataWriter, id: string, portion: Portion, note: string) {
-  return store.update("homework", id, { ...portion, note });
+/** Edits the suras and ayahs (e.g. the student recited only part of it). */
+export function updateHomework(
+  store: DataWriter,
+  id: string,
+  portions: readonly Portion[],
+  note: string,
+) {
+  return store.update("homework", id, { portions: [...portions], note });
 }
 
 export function deleteHomework(store: DataWriter, id: string) {

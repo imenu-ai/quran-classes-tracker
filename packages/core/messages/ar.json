@@ -317,7 +317,9 @@
     "editRange": "تعديل المقطع",
     "undo": "إلغاء التقييم",
     "deleteHomework": "حذف الواجب",
-    "range": "{surah} {from}–{to}"
+    "range": "{surah} {from}–{to}",
+    "wholeSurah": "{surah} كاملة",
+    "portionSeparator": "، "
   },
   "homework": {
     "addTitle": "واجب الدرس القادم",
@@ -328,7 +330,10 @@
     "noSurah": "لا توجد سورة بهذا الاسم",
     "saved": "تم حفظ الواجب",
     "deleted": "تم حذف الواجب",
-    "suggested": "مقترح بعد آخر واجب، ويمكنك تغييره"
+    "suggested": "مقترح بعد آخر واجب، ويمكنك تغييره",
+    "wholeSurah": "السورة كاملة",
+    "addSurah": "إضافة سورة",
+    "removeSurah": "حذف هذه السورة"
   },
   "profile": {
     "month": "الشهر",

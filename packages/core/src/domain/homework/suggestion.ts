@@ -1,3 +1,4 @@
+import { portionsOf } from "../../shared/schemas/homework";
 import { getAyahCount, SURAH_COUNT } from "../quran/surahs";
 
 export type Direction = "forward" | "backward";
@@ -44,15 +45,23 @@ export function suggestNextHomework(
   return { surah: nextSurah, fromAyah: 1, toAyah: Math.min(nextCount, size) };
 }
 
+interface HistoryItem {
+  createdAt: number;
+  id: string;
+  deletedAt: number | null;
+  kind?: string;
+  portions?: readonly Portion[];
+  surah?: number;
+  fromAyah?: number;
+  toAyah?: number;
+}
+
 /**
- * The portion to continue from: the student's most recently created
- * homework, pending or evaluated (so assigning after a pending item
- * continues after it). Deleted items and exams (usually a review of older
- * parts) are ignored.
+ * The homework to continue from: the student's most recently created item,
+ * pending or evaluated (so assigning after a pending item continues after
+ * it). Deleted items and exams (usually a review of older parts) are ignored.
  */
-export function latestPortion<
-  T extends Portion & { createdAt: number; id: string; deletedAt: number | null; kind?: string },
->(homework: readonly T[]): T | null {
+export function latestHomework<T extends HistoryItem>(homework: readonly T[]): T | null {
   let latest: T | null = null;
   for (const item of homework) {
     if (item.deletedAt !== null || item.kind === "exam") continue;
@@ -65,4 +74,10 @@ export function latestPortion<
     }
   }
   return latest;
+}
+
+/** The portion to continue from: the last sura of the latest homework (latestHomework). */
+export function latestPortion(homework: readonly HistoryItem[]): Portion | null {
+  const latest = latestHomework(homework);
+  return latest ? (portionsOf(latest).at(-1) ?? null) : null;
 }

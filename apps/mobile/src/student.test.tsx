@@ -43,7 +43,7 @@ async function homeworkDue(services: AppServices, classId: string, studentId: st
   return addHomework(services.store, {
     studentId,
     lessonId: lesson.id,
-    portion: { surah: 78, fromAyah: 1, toAyah: 10 },
+    portions: [{ surah: 78, fromAyah: 1, toAyah: 10 }],
     note: "",
     evaluateNow: false,
   });
@@ -176,11 +176,34 @@ describe("the homework form", () => {
     const lessons = await services.db.all("lessons");
     const todays = lessons.find((l) => l.date === today());
     const items = await services.db.all("homework");
-    expect(items.find((h) => h.fromAyah === 11)).toMatchObject({
-      surah: 78,
+    expect(items.find((h) => h.portions[0]?.fromAyah === 11)).toMatchObject({
+      portions: [{ surah: 78, fromAyah: 11, toAyah: 20 }],
       assignedLessonId: todays?.id,
       evaluatedLessonId: null,
     });
+  });
+
+  it("saves several suras, one of them whole", async () => {
+    const { services, student, cls } = await setup();
+    await homeworkDue(services, cls.id, student.id);
+    params.mockReturnValue({ studentId: student.id, kind: "next" });
+    await renderWithApp(<HomeworkFormScreen />, services);
+    await screen.findByText(ar.homework.suggested);
+    // The suggested النبأ 11–20 becomes the whole sura, then a second sura.
+    await fireEvent(screen.getByTestId("portion.whole.0"), "valueChange", true);
+    expect(screen.queryByLabelText(ar.glossary.fromAyah)).toBeNull();
+    await fireEvent.press(button(ar.homework.addSurah));
+    expect(screen.getAllByRole("button", { name: ar.homework.removeSurah })).toHaveLength(2);
+    // Saving with the new sura empty shows its error and saves nothing.
+    await fireEvent.press(button(ar.common.save));
+    expect(router.back).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getAllByRole("button", { name: ar.homework.removeSurah })[1]!);
+    await fireEvent.press(button(ar.common.save));
+    await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
+    const items = await services.db.all("homework");
+    expect(items.find((h) => h.portions[0]?.toAyah === 40)?.portions).toEqual([
+      { surah: 78, fromAyah: 1, toAyah: 40 },
+    ]);
   });
 
   it("shows an ayah outside the sura as soon as it's typed", async () => {

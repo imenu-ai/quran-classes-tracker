@@ -25,10 +25,8 @@ export interface ParentRow {
   /** "YYYY-MM-DD". */
   date: string;
   kind: ParentRowKind;
-  /** The portion (null on an absence). */
-  surah: number | null;
-  fromAyah: number | null;
-  toAyah: number | null;
+  /** The suras and ayahs (empty on an absence). */
+  portions: { surah: number; fromAyah: number; toAyah: number }[];
   /** An exam's one mark is `memorization`. */
   memorization: number | null;
   behavior: number | null;
