@@ -238,6 +238,8 @@ On the iPhone:
 
 `apps/mobile` is an Expo app (SDK 58, React Native 0.88) with native navigation and controls, in Arabic and right to left from the start. It's being built in Phase 2 (PLAN.md): so far the teacher's day, class statistics, settings and user management, printing and the parent link, and tablet layouts. EAS project: `@imenu/quran-classes-tracker`; bundle id and Android package `ai.imenu.quran`.
 
+**Step-by-step build guides:** [iPhone (development, simulator, production and App Store submission)](apps/mobile/docs/ios-builds.md) and [Android (the local emulator, release builds and Google Play)](apps/mobile/docs/android-builds.md). The sections below are the short version.
+
 **Setup (Windows, Android).**
 
 - Android Studio with an emulator (the plan's checks use a Small Phone profile, 360 dp wide), JDK 17 (`JAVA_HOME`), `ANDROID_HOME` set.
@@ -327,7 +329,7 @@ npx eas-cli build --profile production --platform android   # an .aab; the versi
 
 The first build asks to generate the Android keystore: say yes, and EAS keeps it (it's the upload key; Google re-signs the app with its own key). Google's API can't create an app's first release, so the first `.aab` is uploaded by hand: download it from the build page and upload it in the Play Console (Testing → Internal testing, or Closed testing). For later builds, create a Google Cloud service account with access to the app in the Play Console, upload its JSON key under `npx eas-cli credentials` → Android → Google Service Account, and run `npx eas-cli submit --profile production --platform android --latest`.
 
-**Android without Google Play:** `npx eas-cli build --profile android-apk --platform android` makes an APK and prints a link to its download page. People open it on their phone and allow installing from that source when Android asks; Play Protect may warn about an unknown developer. JavaScript fixes reach it through EAS Update like the iOS app; native changes need a new APK. EAS keeps the signing key, and the same key will sign the Play Store version later, so installed copies can update to it.
+**Android without Google Play:** `npx eas-cli build --profile android-apk --platform android` makes an APK and prints a link to its download page. People open it on their phone and allow installing from that source when Android asks; Play Protect may warn about an unknown developer. JavaScript fixes reach it through EAS Update like the iOS app; native changes need a new APK. EAS keeps the signing key. Google Play re-signs its copies with Google's app signing key (unless the app uses the upload key, see Play Console → App integrity), so an APK copy can't update to the Play version without uninstalling; sync first.
 
 **The demo center for App Review** (production, code `689723`, `demo_admin` and `demo_teacher`). If a reviewer deletes it, recreate it from the repo root with the production `apps/web/.env`: `pnpm center:create --center "مركز النور التجريبي" --name "المدير التجريبي" --email mhmdtshref+qct-demo@gmail.com --username demo_admin`, then `pnpm dev:seed --center <new code>`, add `demo_teacher` (one class, "run lessons" and "see reports") in Users, and update the code in App Store Connect.
 
