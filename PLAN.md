@@ -332,7 +332,7 @@ Tests sit next to the code as `*.test.ts(x)`; each package runs its own with Vit
 **`homework`**
 - `studentId`, `surah` (1–114), `fromAyah`, `toAyah` (validated by `validateAyahRange`), `note`
 - `assignedLessonId | null`, `evaluatedLessonId | null`; pending = `evaluatedLessonId == null`
-- `memorizationRate`, `behaviorRate`: int 1–10 or null
+- `memorizationRate`, `behaviorRate`: 0–10 in steps of 0.5 (`RATE_VALUES`), or null; 0 is a mark
 - `postponedLessonIds: string[]` (default `[]`): lessons in which the recitation was postponed
 - `kind: 'homework' | 'exam'` (default `'homework'`). An exam's mark is in `memorizationRate`; its `behaviorRate` stays null.
 
@@ -536,7 +536,7 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
 
 Five features asked for by the user on 2026-11-07 (§0 #54–58), each built in `packages/core`, the web app and the mobile app in the same step. No version of the app before this phase is in use, so records change shape without keeping older apps working (#52 doesn't apply here). Records already on the server and on devices are read through helpers that fill in the new shape, as with `postponedLessonsOf()` and `kindOf()`.
 
-- [ ] **3.1 Marks 0–10 in halves (#54).**
+- [x] **3.1 Marks 0–10 in halves (#54).**
   - `rateSchema`: 0–10, multiple of 0.5. The picker (web native select, mobile wheel): 0, 0.5 … 10.
   - Marks shown with the half in every place: today card, month table, statistics, printed sheet, parent page (`Intl` number format, Arabic digits and decimal separator; the Hermes polyfills already cover it). Averages keep one decimal.
   - Tests: schema bounds and steps, averages with 0 and halves, a 0 that isn't "no mark".
@@ -921,3 +921,9 @@ The plan had 14 phases until 2026-10-22; they are now parts 1.1–1.14 of Phase 
 - 2026-11-01 (2.16, Play screenshots): six phone and six tablet shots are in `apps/mobile/store/play/screenshots/`. The demo admin's password is in no file, so they were taken against a throwaway in-memory database with the same `center:create` and `dev:seed` data, using the development build with the dev client's tools button turned off and Android's demo-mode status bar. The phone was set to 1080 × 1920 at density 480 (still 360 dp) to reach Play's size for promotion. The parent link shot is left out because that screen would show a `localhost` address.
 
 - 2026-11-07 (2.16 done, Phase 2 closed): the user confirmed the app is released on the App Store and Google Play.
+
+- 2026-11-07 (3.1):
+  - `rateSchema` is 0–10 with `multipleOf(0.5)`; `RATE_VALUES` (0, 0.5 … 10) feeds both pickers. A mark between halves gets the generic `INVALID` code (only the pickers set marks).
+  - No display change was needed: marks were already shown with `String(value)`, and `ar-u-nu-latn` writes "9.5" with a full stop, the same as Intl. Nothing in the code treated 0 as "no mark" (every check is `!== null`).
+  - The Maestro main flow picks 2.5: Android's dropdown now starts at 0, 0.5, 1 …, so 5 would be off screen. Sample data (`dev:seed`) uses half marks.
+  - Tests: core 439, web 290, mobile 83.

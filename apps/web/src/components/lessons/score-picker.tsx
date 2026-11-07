@@ -3,13 +3,12 @@
 import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
 import { cn } from "@/lib/utils";
-import { RATE_MAX, RATE_MIN } from "@qct/core/shared/schemas/homework";
-
-const SCORES = Array.from({ length: RATE_MAX - RATE_MIN + 1 }, (_, i) => RATE_MIN + i);
+import { RATE_VALUES } from "@qct/core/shared/schemas/homework";
 
 /**
- * A mark from 1 to 10 in the phone's own picker: a native select, which
- * iPhone shows as a wheel. "—" means no mark (choosing it clears one).
+ * A mark from 0 to 10 in halves in the phone's own picker: a native select,
+ * which iPhone shows as a wheel. "—" means no mark (choosing it clears one);
+ * 0 is a mark.
  *
  * The chosen mark shows at once, before the local write and live query
  * catch up, and stays until `value` moves off what it was when chosen. A
@@ -57,7 +56,7 @@ export function ScorePicker({
         )}
       >
         <option value="">{t("noValue")}</option>
-        {SCORES.map((score) => (
+        {RATE_VALUES.map((score) => (
           <option key={score} value={String(score)}>
             {score}
           </option>

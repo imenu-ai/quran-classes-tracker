@@ -2,15 +2,14 @@ import { useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useTranslations } from "use-intl";
-import { RATE_MAX, RATE_MIN } from "@qct/core/shared/schemas/homework";
+import { RATE_VALUES } from "@qct/core/shared/schemas/homework";
 import { useTheme } from "@/theme/theme";
 import { Text } from "./text";
 
-const SCORES = Array.from({ length: RATE_MAX - RATE_MIN + 1 }, (_, i) => RATE_MIN + i);
-
 /**
- * A mark from 1 to 10 in the native picker: the wheel on iOS, a dropdown on
- * Android. "—" means no mark (choosing it clears one), as on the web.
+ * A mark from 0 to 10 in halves in the native picker: the wheel on iOS, a
+ * dropdown on Android. "—" means no mark (choosing it clears one), as on the
+ * web; 0 is a mark.
  *
  * The chosen mark shows at once, before the local write and the live query
  * catch up, and stays until `value` moves off what it was when chosen. A
@@ -73,7 +72,7 @@ export function ScorePicker({
           dropdownIconColor={colors.mutedForeground}
         >
           <Picker.Item label={t("noValue")} value="" />
-          {SCORES.map((score) => (
+          {RATE_VALUES.map((score) => (
             <Picker.Item key={score} label={String(score)} value={String(score)} />
           ))}
         </Picker>

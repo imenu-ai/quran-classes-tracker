@@ -7,6 +7,8 @@ import {
   lessonRecordSchema,
   parseWithCodes,
   normalizeParentId,
+  RATE_VALUES,
+  rateSchema,
   studentRecordSchema,
   type FieldError,
 } from ".";
@@ -222,14 +224,38 @@ describe("homeworkRecordSchema", () => {
     expect(errorsOf(homeworkRecordSchema, { ...validHomework, ...patch })).toEqual([expected]);
   });
 
-  it("rejects scores outside 1–10", () => {
+  it("accepts 0 and half marks", () => {
     const evaluated = { ...validHomework, evaluatedLessonId: ID2 };
-    expect(errorsOf(homeworkRecordSchema, { ...evaluated, memorizationRate: 11 })).toEqual([
+    for (const [memorizationRate, behaviorRate] of [
+      [0, 0],
+      [9.5, 0.5],
+      [10, 7.5],
+    ]) {
+      expect(
+        parseWithCodes(homeworkRecordSchema, { ...evaluated, memorizationRate, behaviorRate })
+          .success,
+      ).toBe(true);
+    }
+  });
+
+  it("rejects scores outside 0–10 or between halves", () => {
+    const evaluated = { ...validHomework, evaluatedLessonId: ID2 };
+    expect(errorsOf(homeworkRecordSchema, { ...evaluated, memorizationRate: 10.5 })).toEqual([
       { path: "memorizationRate", code: "TOO_LARGE", params: { maximum: 10 } },
     ]);
-    expect(errorsOf(homeworkRecordSchema, { ...evaluated, behaviorRate: 0 })).toEqual([
-      { path: "behaviorRate", code: "TOO_SMALL", params: { minimum: 1 } },
+    expect(errorsOf(homeworkRecordSchema, { ...evaluated, behaviorRate: -0.5 })).toEqual([
+      { path: "behaviorRate", code: "TOO_SMALL", params: { minimum: 0 } },
     ]);
+    expect(errorsOf(homeworkRecordSchema, { ...evaluated, memorizationRate: 9.25 })).toEqual([
+      { path: "memorizationRate", code: "INVALID", params: {} },
+    ]);
+  });
+
+  it("offers every mark from 0 to 10 in halves", () => {
+    expect(RATE_VALUES).toHaveLength(21);
+    expect(RATE_VALUES.slice(0, 3)).toEqual([0, 0.5, 1]);
+    expect(RATE_VALUES.at(-1)).toBe(10);
+    for (const value of RATE_VALUES) expect(rateSchema.safeParse(value).success).toBe(true);
   });
 
   it("rejects scores on a pending item", () => {

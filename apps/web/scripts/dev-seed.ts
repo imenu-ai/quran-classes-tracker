@@ -118,8 +118,9 @@ function buildMutations(): PushMutation[] {
             ...previous,
             updatedAt: clock,
             evaluatedLessonId: lesson.id,
-            memorizationRate: 6 + Math.floor(random() * 5),
-            behaviorRate: 7 + Math.floor(random() * 4),
+            // Marks in halves: 6–10 and 7–10.
+            memorizationRate: 6 + Math.floor(random() * 9) / 2,
+            behaviorRate: 7 + Math.floor(random() * 7) / 2,
           });
         }
 

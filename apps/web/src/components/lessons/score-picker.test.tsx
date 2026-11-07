@@ -21,22 +21,25 @@ function deferred() {
 }
 
 describe("ScorePicker", () => {
-  it("offers no mark and 1 to 10, showing the stored mark", () => {
+  it("offers no mark and 0 to 10 in halves, showing the stored mark", () => {
     renderArabic(<ScorePicker label="الحفظ" value={7} onChange={vi.fn()} />);
-    expect([...select().options].map((option) => option.textContent)).toEqual([
-      "—",
-      "1",
-      "2",
-      "3",
-      "4",
-      "5",
-      "6",
-      "7",
-      "8",
-      "9",
-      "10",
-    ]);
+    const labels = [...select().options].map((option) => option.textContent);
+    expect(labels).toHaveLength(22);
+    expect(labels.slice(0, 4)).toEqual(["—", "0", "0.5", "1"]);
+    expect(labels.slice(-2)).toEqual(["9.5", "10"]);
     expect(select().value).toBe("7");
+  });
+
+  it("chooses a half mark and 0 (which is a mark, not none)", async () => {
+    const onChange = vi.fn(() => Promise.resolve());
+    const view = renderArabic(<ScorePicker label="الحفظ" value={null} onChange={onChange} />);
+    await userEvent.selectOptions(select(), "9.5");
+    expect(onChange).toHaveBeenLastCalledWith(9.5);
+    view.rerender(<ScorePicker label="الحفظ" value={9.5} onChange={onChange} />);
+    await userEvent.selectOptions(select(), "0");
+    expect(onChange).toHaveBeenLastCalledWith(0);
+    view.rerender(<ScorePicker label="الحفظ" value={0} onChange={onChange} />);
+    expect(select().value).toBe("0");
   });
 
   it("shows the chosen mark before the write lands, then follows the stored value", async () => {

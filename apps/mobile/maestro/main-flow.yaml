@@ -68,10 +68,10 @@ env:
     direction: DOWN
 - tapOn:
     id: score.memorization
-# A mark the dropdown shows without scrolling.
-- tapOn: "5"
+# A half mark the dropdown shows without scrolling (it starts at 0, 0.5, 1 …).
+- tapOn: '2\.5'
 - extendedWaitUntil:
-    visible: 5 · —
+    visible: 2\.5 · —
     timeout: 10000
 
 # The month table shows the day.
@@ -79,7 +79,7 @@ env:
     element: .*2026.*
     direction: UP
 - tapOn: أكتوبر 2026
-- assertVisible: "5"
+- assertVisible: '2\.5'
 
 # Everything reached the server: the sync section says so.
 - tapOn: الإعدادات

@@ -2,10 +2,18 @@ import { z } from "zod";
 import { validateAyahRange } from "../../domain/quran/validation";
 import { idSchema, noteSchema, NOTE_MAX, syncableBaseSchema } from "./base";
 
-export const RATE_MIN = 1;
+export const RATE_MIN = 0;
 export const RATE_MAX = 10;
+/** Marks go in halves (9.5). 0 is a real mark, not "no mark". */
+export const RATE_STEP = 0.5;
 
-export const rateSchema = z.number().int().min(RATE_MIN).max(RATE_MAX);
+export const rateSchema = z.number().min(RATE_MIN).max(RATE_MAX).multipleOf(RATE_STEP);
+
+/** Every mark a picker offers, lowest first: 0, 0.5 … 10. */
+export const RATE_VALUES: readonly number[] = Array.from(
+  { length: (RATE_MAX - RATE_MIN) / RATE_STEP + 1 },
+  (_, i) => RATE_MIN + i * RATE_STEP,
+);
 
 /**
  * homework: assigned (or recited on the spot) and marked for memorization
