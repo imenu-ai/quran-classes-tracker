@@ -6,6 +6,7 @@ import {
   openHomework,
   openMonthTable,
   setPortion,
+  setNotMemorized,
   setScore,
 } from "./helpers";
 
@@ -14,10 +15,10 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 /**
  * Two days with one class: day one, a student recites on the spot, gets
  * marks and homework for the next day; another is absent. Day two, the
- * homework is due: postponed, undone, then marked, and an exam is recorded.
+ * homework is due: "not memorized", then marked, and an exam is recorded.
  * The month table shows it all.
  */
-test("class → students → student page: mark, next-day homework, absence, postpone, exam", async ({
+test("class → students → student page: mark, next-day homework, absence, not memorized, exam", async ({
   page,
   projectName,
   browserName,
@@ -42,7 +43,7 @@ test("class → students → student page: mark, next-day homework, absence, pos
   await today.getByRole("button", { name: ar.evaluation.reciteNow }).click();
   await setPortion(page, "الفلق", /^113 · الفلق/, "1", "5");
   await page.getByRole("dialog").getByRole("button", { name: ar.common.save }).click();
-  await expect(today.getByText("الفلق 1–5")).toBeVisible();
+  await expect(today.getByText("الفلق كاملة")).toBeVisible();
 
   // An item just recited on the spot opens by itself.
   await setScore(today, ar.glossary.memorizationRate, 9);
@@ -63,7 +64,7 @@ test("class → students → student page: mark, next-day homework, absence, pos
   await expect(page.locator("main table")).toHaveCount(0);
   await openMonthTable(page);
   const table = page.locator("main table");
-  await expect(table.locator("tbody tr").first()).toContainText("الفلق 1–5");
+  await expect(table.locator("tbody tr").first()).toContainText("الفلق كاملة");
   await expect(table.locator("tbody tr").first()).toContainText("9");
   await expect(table.locator("tfoot")).toContainText("9.0");
   await expect(table.locator("tfoot")).toContainText("10.0");
@@ -78,7 +79,7 @@ test("class → students → student page: mark, next-day homework, absence, pos
   await expect(table.locator("tbody tr").first()).toContainText(ar.glossary.absent);
   await waitForSynced(page);
 
-  // Day two, أحمد: yesterday's homework is due. Postpone, undo, then mark it.
+  // Day two, أحمد: yesterday's homework is due. "Not memorized", then mark it.
   await page.clock.setSystemTime(Date.now() + DAY_MS);
   await page.goto(classUrl);
   await page.getByRole("link", { name: /أحمد التجريبي/ }).click();
@@ -86,14 +87,13 @@ test("class → students → student page: mark, next-day homework, absence, pos
   await openMonthTable(page);
   // Due items start closed: open it first.
   const due = await openHomework(today, "الناس 1–5");
-  await due.getByRole("button", { name: ar.today.postpone }).click();
-  await expect(due.getByText(ar.today.postponed)).toBeVisible();
-  await expect(table.locator("tbody tr").first()).toContainText(ar.today.postponed);
-  await due.getByRole("button", { name: ar.today.undoPostpone }).click();
+  await setNotMemorized(due);
+  await expect(due.getByText(ar.today.notMemorizedHint)).toBeVisible();
+  await expect(table.locator("tbody tr").first()).toContainText(ar.glossary.notMemorized);
   await setScore(due, ar.glossary.memorizationRate, 8);
   await setScore(due, ar.glossary.behaviorRate, 9);
   await expect(table.locator("tbody tr").first()).toContainText("الناس 1–5");
-  await expect(table.locator("tbody")).not.toContainText(ar.today.postponed);
+  await expect(table.locator("tbody")).not.toContainText(ar.glossary.notMemorized);
   await expect(table.locator("tfoot")).toContainText("8.5");
   await expect(table.locator("tfoot")).toContainText("9.5");
 
@@ -101,14 +101,32 @@ test("class → students → student page: mark, next-day homework, absence, pos
   // and one mark, left out of the averages.
   await today.getByRole("button", { name: ar.exam.add }).click();
   await setPortion(page, "الملك", /^67 · الملك/, "1", "10");
-  await page.getByRole("dialog").getByRole("button", { name: ar.common.save }).click();
+  // Two suras in one exam: the second one whole.
+  const sheet = page.getByRole("dialog");
+  await sheet.getByRole("button", { name: ar.homework.addSurah }).click();
+  await sheet.getByRole("button", { name: ar.glossary.surah, exact: true }).nth(1).click();
+  await page.getByRole("combobox").fill("القلم");
+  await page.getByRole("option", { name: /^68 · القلم/ }).click();
+  await sheet.getByRole("checkbox", { name: ar.homework.wholeSurah }).nth(1).check();
+  await sheet.getByRole("button", { name: ar.common.save }).click();
   await setScore(today.locator("li").filter({ hasText: "الملك 1–10" }), ar.exam.mark, 3);
   const examRow = table.locator("tbody tr").filter({ hasText: "الملك 1–10" });
   await expect(examRow).toContainText(ar.exam.badge);
+  await expect(examRow).toContainText("الملك 1–10، القلم كاملة");
   await expect(examRow).toContainText("3");
   await expect(examRow).toHaveClass(/bg-exam/);
   await expect(table.locator("tfoot")).toContainText("8.5");
   await expect(table.locator("tfoot")).toContainText("9.5");
+
+  // Homework for the next day as a whole page: the last page holds three suras.
+  await today.getByRole("button", { name: ar.today.addNext }).click();
+  const pagesSheet = page.getByRole("dialog");
+  await pagesSheet.getByRole("radio", { name: ar.homework.byPages }).click();
+  await pagesSheet.getByRole("textbox", { name: ar.homework.fromPage }).fill("604");
+  await pagesSheet.getByRole("textbox", { name: ar.homework.toPage }).fill("604");
+  await expect(pagesSheet).toContainText("الإخلاص كاملة، الفلق كاملة، الناس كاملة");
+  await pagesSheet.getByRole("button", { name: ar.common.save }).click();
+  await expect(today.getByText("ص 604 · الإخلاص كاملة، الفلق كاملة، الناس كاملة")).toBeVisible();
   await waitForSynced(page);
 
   // Print his month: an A4 sheet naming the center, class, student and the
@@ -172,4 +190,26 @@ test("class → students → student page: mark, next-day homework, absence, pos
     await page.addStyleTag({ content: "@page { size: letter; margin: 12mm !important; }" });
     expect(await pages()).toBe(2);
   }
+
+  // A session on an earlier day ("إضافة جلسة"): ten days back, he was absent.
+  await page.goto(classUrl);
+  await page.getByRole("link", { name: /أحمد التجريبي/ }).click();
+  await page.waitForURL(/\/student\?id=/);
+  await page.getByRole("button", { name: ar.day.add }).click();
+  const earlier = new Date(Date.now() - 10 * DAY_MS).toISOString().slice(0, 10);
+  const picker = page.getByRole("dialog");
+  await picker.getByLabel(ar.glossary.date).fill(earlier);
+  await picker.getByRole("button", { name: ar.day.open }).click();
+  await page.waitForURL(new RegExp(`date=${earlier}`));
+  const pastDay = page.locator("section[aria-labelledby=today-title]");
+  await expect(pastDay.getByRole("heading", { name: ar.day.title })).toBeVisible();
+  await pastDay.getByRole("radio", { name: ar.glossary.absent, exact: true }).click();
+  await expect(pastDay.getByText(ar.today.absentNote)).toBeVisible();
+  await page.getByRole("link", { name: ar.day.backToToday }).click();
+  await expect(
+    page.locator("section[aria-labelledby=today-title]").getByRole("heading", {
+      name: ar.today.title,
+      exact: true,
+    }),
+  ).toBeVisible();
 });

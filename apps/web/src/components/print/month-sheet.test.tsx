@@ -82,7 +82,7 @@ describe("MonthSheet", () => {
     const rows = within(screen.getByRole("table")).getAllByRole("row");
     // Header, two days, the averages.
     expect(rows).toHaveLength(4);
-    expect(rows[1]?.textContent).toContain("الإخلاص 1–4");
+    expect(rows[1]?.textContent).toContain("الإخلاص كاملة");
     expect(rows[2]?.textContent).toContain("الملك 1–10");
     expect(rows[2]?.textContent).toContain("اختبار");
     expect(rows[2]?.className).toContain("bg-violet-50");
@@ -97,7 +97,7 @@ describe("MonthSheet", () => {
     expect(count("أيام الغياب")).toBe("0");
     expect(count("الواجبات المسمّعة")).toBe("1");
     expect(count("الاختبارات")).toBe("1");
-    expect(count("التسميع المؤجل")).toBe("0");
+    expect(count("لم يحفظ")).toBe("0");
   });
 
   it("says so when the month has no record", () => {

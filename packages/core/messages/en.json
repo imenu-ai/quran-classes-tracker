@@ -26,7 +26,8 @@
     "monthlyMemorizationRate": "Monthly memorization rate",
     "monthlyBehaviorRate": "Monthly behavior rate",
     "attendedDays": "Attended days",
-    "notes": "Notes"
+    "notes": "Notes",
+    "notMemorized": "Not memorized"
   },
   "quran": {
     "ayahs": "{count, plural, one {# ayah} other {# ayahs}}",
@@ -51,7 +52,8 @@
       "INVALID_FORMAT": "Invalid format",
       "INVALID_VALUE": "Value not allowed",
       "RATES_REQUIRE_EVALUATION": "Scores can only be entered when the homework is evaluated",
-      "INVALID": "Invalid value"
+      "INVALID": "Invalid value",
+      "PAGE_FROM_AFTER_TO": "The first page must be before or the same as the last page"
     }
   },
   "common": {
@@ -316,7 +318,12 @@
     "editRange": "Edit portion",
     "undo": "Undo evaluation",
     "deleteHomework": "Delete homework",
-    "range": "{surah} {from}–{to}"
+    "range": "{surah} {from}–{to}",
+    "wholeSurah": "{surah} (whole)",
+    "portionSeparator": ", ",
+    "page": "p. {page}",
+    "pageRange": "pp. {from}–{to}",
+    "withPages": "{pages} · {portions}"
   },
   "homework": {
     "addTitle": "Homework for next lesson",
@@ -327,7 +334,17 @@
     "noSurah": "No surah with that name",
     "saved": "Homework saved",
     "deleted": "Homework deleted",
-    "suggested": "Suggested after the last homework; change it if needed"
+    "suggested": "Suggested after the last homework; change it if needed",
+    "wholeSurah": "Whole sura",
+    "addSurah": "Add a sura",
+    "removeSurah": "Remove this sura",
+    "entryMode": "Enter as",
+    "byAyahs": "Ayahs",
+    "byPages": "Pages",
+    "fromPage": "From page",
+    "toPage": "To page",
+    "pagesHint": "Mushaf pages 1 to {pageCount}",
+    "pagesPreview": "Covers: {portions}"
   },
   "profile": {
     "month": "Month",
@@ -342,7 +359,7 @@
     "newerMonth": "Next month",
     "tableCaption": "Record for {month}",
     "editRow": "Edit the record of {date}",
-    "editPostponedTitle": "Postponed recitation",
+    "editNotMemorizedTitle": "Not memorized",
     "attendanceSummary": "Present: {present} · Absent: {absent} · Excused: {excused}",
     "monthSummary": "Memorization {memorization} · Behavior {behavior} · Attended {present}"
   },
@@ -445,14 +462,19 @@
     "viewOnly": "View only: you don't have permission to run lessons.",
     "absentNote": "The student is absent today.",
     "homework": "Homework",
-    "postpone": "Postpone recitation",
-    "postponed": "Postponed",
-    "postponedHint": "Recitation postponed; the homework stays for the next day.",
-    "undoPostpone": "Undo postponement",
-    "postponedToast": "Recitation postponed",
+    "notMemorizedHint": "Not memorized: the homework stays for the next day.",
     "nextTitle": "Homework for the next day",
     "addNext": "Add homework for the next day",
     "marks": "{memorization} · {behavior}"
+  },
+  "day": {
+    "title": "Session",
+    "add": "Add a session",
+    "pickTitle": "A session on an earlier day",
+    "pickHint": "Pick an earlier day to record his attendance, recitation and marks on it.",
+    "open": "Open the session",
+    "backToToday": "Back to today",
+    "futureNotAllowed": "A day in the future can't be picked"
   },
   "classStats": {
     "button": "Statistics",
@@ -501,7 +523,7 @@
     "excused": "Excused",
     "evaluated": "Homework recited",
     "exams": "Exams",
-    "postponed": "Postponed",
+    "notMemorized": "Not memorized",
     "printMonth": "Print month",
     "printStudents": "Print student sheets",
     "students": "Students",
@@ -635,7 +657,7 @@
       },
       "deletion": {
         "title": "Deleting your account or the center",
-        "body": "In Settings → Account → \"Delete account\". An admin can delete the whole center in Settings → Center → \"Delete the center\". The privacy policy has the details."
+        "body": "In the app, or on this website without the app: sign in, open Settings → Account → \"Delete account\" and enter your password. Your name, username, phone number and password are deleted at once and for good, and you're signed out on all your devices. The center's classes, students and their records stay with the center.\n\nThe center's only admin can't delete their account alone: make another user an admin first, or delete the whole center with all its data in Settings → Center → \"Delete the center\".\n\nIf you can't sign in, write to {email} with your center code and username, and we'll delete the account. The privacy policy has the details."
       }
     }
   },

@@ -1,5 +1,6 @@
 # The teacher's day, like the web's main-flow spec: a class, a student,
-# attendance, a recitation with its mark, and the month table, all synced.
+# attendance, a recitation with a half mark, next-day homework as a page, and
+# the month table, all synced.
 appId: ai.imenu.quran
 name: Main flow
 env:
@@ -68,18 +69,38 @@ env:
     direction: DOWN
 - tapOn:
     id: score.memorization
-# A mark the dropdown shows without scrolling.
-- tapOn: "5"
+# A half mark the dropdown shows without scrolling (it starts at 0, 0.5, 1 …).
+- tapOn: '2\.5'
 - extendedWaitUntil:
-    visible: 5 · —
+    visible: 2\.5 · —
     timeout: 10000
 
-# The month table shows the day.
+# Next-day homework as a whole page: page 604 holds the last three suras.
 - scrollUntilVisible:
-    element: .*2026.*
+    element: إضافة واجب لليوم التالي
+    direction: DOWN
+- tapOn: إضافة واجب لليوم التالي
+- tapOn: صفحات
+- tapOn:
+    id: page.from
+- inputText: "604"
+- tapOn:
+    id: page.to
+- inputText: "604"
+- hideKeyboard
+- assertVisible: .*الإخلاص كاملة، الفلق كاملة، الناس كاملة.*
+- tapOn: حفظ
+- extendedWaitUntil:
+    visible: ص 604 · .*
+    timeout: 10000
+
+# The month table shows the day. Its heading is the month, whichever it is
+# ("نوفمبر 2026"); a date elsewhere on the page has more words.
+- scrollUntilVisible:
+    element: "[^ ]+ 20[0-9][0-9]"
     direction: UP
-- tapOn: أكتوبر 2026
-- assertVisible: "5"
+- tapOn: "[^ ]+ 20[0-9][0-9]"
+- assertVisible: '2\.5'
 
 # Everything reached the server: the sync section says so.
 - tapOn: الإعدادات

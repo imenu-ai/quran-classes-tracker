@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { validateAyahRange } from "../quran/validation";
-import { latestPortion, suggestNextHomework } from "./suggestion";
+import { latestHomework, latestPortion, suggestNextHomework } from "./suggestion";
 
 const p = (surah: number, fromAyah: number, toAyah: number) => ({ surah, fromAyah, toAyah });
 
@@ -51,7 +51,7 @@ describe("suggestNextHomework", () => {
   });
 });
 
-describe("latestPortion", () => {
+describe("latestHomework", () => {
   const item = (id: string, createdAt: number, deletedAt: number | null = null) => ({
     ...p(2, 1, 5),
     id,
@@ -60,16 +60,33 @@ describe("latestPortion", () => {
   });
 
   it("picks the most recently created item, pending or evaluated", () => {
-    expect(latestPortion([item("a", 1), item("b", 3), item("c", 2)])?.id).toBe("b");
+    expect(latestHomework([item("a", 1), item("b", 3), item("c", 2)])?.id).toBe("b");
   });
 
   it("ignores exams (a review of older parts, not progress)", () => {
     const exam = { ...item("exam", 5), kind: "exam" };
-    expect(latestPortion([item("a", 1), exam])?.id).toBe("a");
+    expect(latestHomework([item("a", 1), exam])?.id).toBe("a");
   });
 
   it("ignores deleted items and returns null when there are none", () => {
-    expect(latestPortion([item("a", 1), item("b", 3, 9)])?.id).toBe("a");
+    expect(latestHomework([item("a", 1), item("b", 3, 9)])?.id).toBe("a");
+    expect(latestHomework([])).toBeNull();
+  });
+});
+
+describe("latestPortion", () => {
+  it("is the last sura of the latest homework, in either stored form", () => {
+    const several = {
+      id: "a",
+      createdAt: 2,
+      deletedAt: null,
+      portions: [p(67, 1, 30), p(68, 1, 15)],
+    };
+    expect(latestPortion([several])).toEqual(p(68, 1, 15));
+    // A record from before Phase 3 (one surah/fromAyah/toAyah).
+    expect(latestPortion([{ ...p(2, 1, 5), id: "b", createdAt: 1, deletedAt: null }])).toEqual(
+      p(2, 1, 5),
+    );
     expect(latestPortion([])).toBeNull();
   });
 });

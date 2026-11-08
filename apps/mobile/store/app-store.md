@@ -39,8 +39,9 @@ App names are unique across the App Store. If "تحفيظ القرآن" is taken
 
 للمعلم
 • حضور الطالب أو غيابه بلمسة، مع العذر عند الحاجة.
-• التسميع من أي سورة وآية، مع درجة الحفظ ودرجة السلوك.
-• تأجيل التسميع إلى الدرس التالي دون أن يتأثر معدّل الطالب.
+• التسميع من سورة أو أكثر، بالآيات أو بصفحات المصحف، مع درجة الحفظ ودرجة السلوك من 0 إلى 10 بأنصاف الدرجات.
+• «لم يحفظ» حين لا يحفظ الطالب واجبه: يبقى الواجب للدرس التالي دون أن يتأثر معدّل حفظه، مع درجة السلوك.
+• تسجيل جلسة في يوم سابق.
 • الواجب التالي مقترح تلقائيًا من آخر ما حفظه الطالب.
 • الاختبارات بدرجة واحدة، منفصلة عن المعدّلات.
 • جدول شهري لكل طالب بالحضور والمقاطع والدرجات والمعدّلات.
@@ -63,7 +64,13 @@ App names are unique across the App Store. If "تحفيظ القرآن" is taken
 **Keywords** (100, no spaces after commas):
 حلقة,حلقات,معلم,طلاب,طالب,حضور,تسميع,حفظ,مركز,درجات,مصحف,واجبات,اختبار,متابعة,شيخ,مدرسة
 
-**What's new** (first version): الإصدار الأول.
+**What's new** (1.1.0):
+
+• الدرجات من 0 إلى 10 بأنصاف الدرجات (مثل 9.5).
+• «لم يحفظ» في قائمة درجة الحفظ بدل تأجيل التسميع، مع درجة السلوك في ذلك اليوم.
+• الواجب أو الاختبار من أكثر من سورة، أو سورة كاملة.
+• إدخال الواجب بصفحات المصحف.
+• إضافة جلسة في يوم سابق.
 
 ## English
 
@@ -80,8 +87,9 @@ An app for Quran memorization centers: teachers record their students' attendanc
 
 For teachers
 • Mark a student present or absent with one tap, with an excuse when needed.
-• Record a recitation from any sura and ayah, with a memorization mark and a behavior mark.
-• Postpone a recitation to the next lesson without affecting the student's average.
+• Record a recitation of one or more suras, by ayahs or by mushaf pages, with a memorization mark and a behavior mark from 0 to 10 in halves.
+• "Not memorized" when a student isn't ready: the homework stays for the next lesson without affecting his memorization average, and he still gets a behavior mark.
+• Record a session on an earlier day.
 • The next homework is suggested from what the student memorized last.
 • Exams with a single mark, kept out of the averages.
 • A monthly table per student with attendance, portions, marks and averages.
@@ -104,7 +112,13 @@ No ads and no tracking. Every user can delete their account, and an admin can de
 **Keywords** (100):
 hifz,tahfiz,halaqa,class,teacher,students,homework,progress,islamic,school,madrasa,sheikh,exam
 
-**What's new** (first version): First release.
+**What's new** (1.1.0):
+
+• Marks from 0 to 10 in halves (such as 9.5).
+• "Not memorized" in the memorization mark list instead of postponing, with that day's behavior mark.
+• Homework or an exam of several suras, or a whole sura.
+• Homework given as mushaf pages.
+• Add a session on an earlier day.
 
 ## App Review
 

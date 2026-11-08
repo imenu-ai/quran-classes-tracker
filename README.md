@@ -113,28 +113,31 @@ The CLI scripts read `apps/web/.env.local` then `apps/web/.env`; variables alrea
 ## Daily use
 
 - **Opening a class** lists its students.
-- **A student's page** shows his month as a simple table: one row per day with the portion and the memorization and behavior marks, "مؤجل" or "غائب", and the month's averages. It starts closed, showing just the month, its averages and the days attended; tap it to open the table. Earlier months are one tap away, and tapping a row corrects it (for users who can run lessons).
+- **A student's page** shows his month as a simple table: one row per day with the portion and the memorization and behavior marks, "لم يحفظ" or "غائب", and the month's averages. It starts closed, showing just the month, its averages and the days attended; tap it to open the table. Earlier months are one tap away, and tapping a row corrects it (for users who can run lessons).
 - **Under the table, "اليوم" (today):**
   - attendance (present, absent, excused with a note);
-  - each due homework item as a collapsible section (sura and ayat; tap to open), with two mark pickers (1–10, the phone's own wheel on iPhone);
-  - "تأجيل التسميع" (postpone the recitation) when he isn't ready: the homework stays for the next day and his averages aren't affected;
+  - each due homework item as a collapsible section (its suras and ayat, or its pages; tap to open), with two mark pickers (0–10 in halves, the phone's own wheel on iPhone);
+  - "لم يحفظ" (not memorized), the memorization picker's first entry, when he isn't ready: the homework stays for the next day, his memorization average isn't affected, and he can still get a behavior mark that day;
   - "تسميع الآن" when nothing is due;
-  - "إضافة اختبار" (add an exam): any portion, added and marked on the spot with one mark (1–10). Exams show in violet with an "اختبار" badge, in today's list and in the month table. They're left out of every average (the student's and the class statistics) and don't move the next-homework suggestion;
+  - "إضافة اختبار" (add an exam): any portion, added and marked on the spot with one mark (0–10 in halves). Exams show in violet with an "اختبار" badge, in today's list and in the month table. They're left out of every average (the student's and the class statistics) and don't move the next-homework suggestion;
   - "إضافة واجب لليوم التالي", pre-filled with the next portion.
+  - **A homework or exam** holds one or more suras ("إضافة سورة"), each with its ayah range or "السورة كاملة", and gets one mark. Or switch to "صفحات" and give whole pages of the Madinah Mushaf (1–604): the form shows which suras and ayahs they hold, and it's shown as "ص 12–13 · …". After a page homework, the next one is suggested as the next pages.
 - **Class statistics** ("الإحصائيات" next to "إضافة طالب"):
   - the class's attendance rate (present, absent, excused) and average marks;
   - its students ranked by attendance rate, then memorization average, then behavior average. An excused absence counts as attended here, and a student's rate counts the lesson days since he joined.
   - All time by default; pick a year, or a year and a month, to narrow it.
-- **Printing** (needs "view reports"): a student's month prints on one A4 sheet. It shows the center, class, student and the user who printed it; the month's table (oldest day first) with its averages; and counts of days present, absent and excused, homework recited, exams and postponements.
+- **Printing** (needs "view reports"): a student's month prints on one A4 sheet. It shows the center, class, student and the user who printed it; the month's table (oldest day first) with its averages; and counts of days present, absent and excused, homework recited, exams and "لم يحفظ".
   - From the student page: open the month table, then "طباعة الشهر" (the month shown).
   - From the class statistics: "طباعة كشوف الطلاب", then pick the month (the one shown there, else the current month) and the students ("تحديد الكل" selects or clears them all). It makes one document with a page per student.
   - The print page shows the sheets; "طباعة / حفظ PDF" opens the device's print dialog, which prints them or saves a PDF ("Save as PDF", or Share → Save to Files on iPhone). It works offline.
 - **The parent link.** Each student has a link for his parent, who opens it with his **ID number** (رقم الهوية); no account needed.
   - Set the parent's ID number in the student's "تعديل البيانات" (users who can manage students). Digits only, 5–20; Arabic digits are fine. Siblings can share the same number.
   - Hand the link out from the student menu, "رابط ولي الأمر" (copy, share or its QR code), or print the month: every printed sheet carries the link as a QR code.
-  - The parent sees what the printed sheet shows, for the current month or any other: homework and exams with their marks, absences and postponements, the averages and counts.
+  - The parent sees what the printed sheet shows, for the current month or any other: homework and exams with their marks, absences and "لم يحفظ", the averages and counts.
   - The phone is remembered for 30 days; "خروج من هذا الجهاز" forgets it. Without a parent ID, the link says it isn't valid. The page needs a connection (it reads from the server).
 - **Lessons** still exist in the data (one per class per day), but the teacher never manages them: today's is created the first time something is recorded.
+
+**Page map.** The Mushaf's page starts (`packages/core/src/domain/quran/pages.ts`) come from Tanzil's Quran metadata, [tanzil.net](https://tanzil.net), `quran-data.js` 1.0, © Tanzil, licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
 
 ## Architecture in short
 
@@ -280,7 +283,7 @@ Sign-in, registration, "forgot password" (it opens the web page) and the forced 
 
 | Flow        | Covers                                                                                                                                                         |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `main-flow` | sign in, create a class and a student, mark him present, recite now with a mark, the month table, everything synced                                            |
+| `main-flow` | sign in, create a class and a student, mark him present, recite now with a half mark, the month table, next-day homework as a page, everything synced          |
 | `offline`   | airplane mode: create a class, the indicator shows it waiting; back online it syncs; after signing out (which wipes the device) and in again, it's still there |
 | `roles`     | the admin creates a class, a student and a teacher for it; the teacher's forced password change, only that class, no admin controls, taking attendance         |
 | `deletion`  | the only admin can't delete their own account; a wrong password, then the center deleted; signed out, and the account no longer signs in                       |
@@ -295,10 +298,13 @@ Each flow starts from a cleared app. Flows find fields by their `testID` (`sign-
 - [ ] Share: the parent link ("رابط ولي الأمر") copies, opens the share sheet, and shows a QR code that a phone camera opens.
 - [ ] iPad: the classes in columns (three in landscape), the class page in two; it rotates freely, and forms and sheets stay narrow and centred. The iPhone stays in portrait.
 - [ ] The score wheel and form sheets behave natively; the keyboard doesn't cover the field being typed in.
+- [ ] Marks (Phase 3): the wheel offers —, لم يحفظ, 0, 0.5 … 10. "لم يحفظ" turns the item amber with "لم يحفظ" on its closed line, a behavior mark still goes in, and the homework is due again the next day.
+- [ ] Several suras and pages: "إضافة سورة" and "السورة كاملة" in the homework form; "صفحات" with from/to page shows the suras the pages hold, and the item shows "ص … · …".
+- [ ] "إضافة جلسة" under the month table: the compact date button opens the calendar (no later than today); a past day opens its session sheet, and recording there shows on that day in the month table.
 
 ### Releasing the app
 
-The listing texts, App Review notes, privacy answers and the screenshot list are in `apps/mobile/store/app-store.md`. The release builds talk to `https://quran.imenu.ai` (`EXPO_PUBLIC_API_URL` in `apps/mobile/eas.json`), and the store listing links to its `/privacy` and `/support` pages, so the web app must be deployed first.
+The App Store listing texts, App Review notes, privacy answers and the screenshot list are in `apps/mobile/store/app-store.md`; Google Play's are in `apps/mobile/store/play-store.md`. The release builds talk to `https://quran.imenu.ai` (`EXPO_PUBLIC_API_URL` in `apps/mobile/eas.json`), and the store listing links to its `/privacy` and `/support` pages, so the web app must be deployed first.
 
 **iOS** (from `apps/mobile`; asks for the Apple ID sign-in and its two-factor code):
 
@@ -312,6 +318,14 @@ Then, in App Store Connect: test in TestFlight, fill in the listing from `store/
 **iPad screenshots without an iPad:** `npx eas-cli build --profile simulator --platform ios` makes a simulator build (a `.tar.gz` with the `.app`, no signing). Upload it to [Appetize.io](https://appetize.io/upload), run it on a 13" iPad Pro and take the shots there.
 
 **JavaScript-only fixes** to a released version go out without a new build: `npx eas-cli update --channel production --message "…"`. A new native module or an `app.json` change needs a new build and a new version (`version` in `app.json`; the runtime version follows it).
+
+**Android (Google Play)** (from `apps/mobile`; the listing, graphics, App content and Data safety answers are in `store/play-store.md` and `store/play/`):
+
+```sh
+npx eas-cli build --profile production --platform android   # an .aab; the version code goes up by itself
+```
+
+The first build asks to generate the Android keystore: say yes, and EAS keeps it (it's the upload key; Google re-signs the app with its own key). Google's API can't create an app's first release, so the first `.aab` is uploaded by hand: download it from the build page and upload it in the Play Console (Testing → Internal testing, or Closed testing). For later builds, create a Google Cloud service account with access to the app in the Play Console, upload its JSON key under `npx eas-cli credentials` → Android → Google Service Account, and run `npx eas-cli submit --profile production --platform android --latest`.
 
 **Android without Google Play:** `npx eas-cli build --profile android-apk --platform android` makes an APK and prints a link to its download page. People open it on their phone and allow installing from that source when Android asks; Play Protect may warn about an unknown developer. JavaScript fixes reach it through EAS Update like the iOS app; native changes need a new APK. EAS keeps the signing key, and the same key will sign the Play Store version later, so installed copies can update to it.
 

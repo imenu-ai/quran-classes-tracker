@@ -43,7 +43,7 @@ async function homeworkDue(services: AppServices, classId: string, studentId: st
   return addHomework(services.store, {
     studentId,
     lessonId: lesson.id,
-    portion: { surah: 78, fromAyah: 1, toAyah: 10 },
+    portions: [{ surah: 78, fromAyah: 1, toAyah: 10 }],
     note: "",
     evaluateNow: false,
   });
@@ -104,17 +104,32 @@ describe("homework due today", () => {
     expect(await screen.findByText("9 · —")).toBeOnTheScreen();
   });
 
-  it("postpones the recitation, and undoes it", async () => {
+  it("marks it not memorized with a behavior mark, and undoes it", async () => {
     const { services, student, cls } = await setup();
     const item = await homeworkDue(services, cls.id, student.id);
     await renderWithApp(<TodayCard student={student} />, services);
     await fireEvent.press(await screen.findByText("النبأ 1–10"));
-    await fireEvent.press(button(ar.today.postpone));
-    expect(await screen.findByText(ar.today.postponed)).toBeOnTheScreen();
-    expect((await services.db.get("homework", item.id))?.postponedLessonIds).toHaveLength(1);
-    await fireEvent.press(button(ar.today.undoPostpone));
+    expect(screen.queryByRole("button", { name: "تأجيل التسميع" })).toBeNull();
+    await act(async () => {
+      fireEvent(screen.getByLabelText(ar.glossary.memorizationRate), "valueChange", "notMemorized");
+    });
+    expect(await screen.findByText(ar.glossary.notMemorized)).toBeOnTheScreen();
+    expect(screen.getByText(ar.today.notMemorizedHint)).toBeOnTheScreen();
+    await act(async () => {
+      fireEvent(screen.getByLabelText(ar.glossary.behaviorRate), "valueChange", "7.5");
+    });
+    expect(await screen.findByText(`${ar.glossary.notMemorized} · 7.5`)).toBeOnTheScreen();
+    expect(await services.db.get("homework", item.id)).toMatchObject({
+      evaluatedLessonId: null,
+      notMemorized: [{ behaviorRate: 7.5 }],
+    });
+
+    // Clearing the memorization wheel undoes it.
+    await act(async () => {
+      fireEvent(screen.getByLabelText(ar.glossary.memorizationRate), "valueChange", "");
+    });
     await waitFor(async () =>
-      expect((await services.db.get("homework", item.id))?.postponedLessonIds).toHaveLength(0),
+      expect((await services.db.get("homework", item.id))?.notMemorized).toHaveLength(0),
     );
   });
 
@@ -144,7 +159,7 @@ describe("homework due today", () => {
     expect(screen.queryByRole("button", { name: ar.exam.add })).toBeNull();
     expect(screen.queryByRole("button", { name: ar.today.addNext })).toBeNull();
     await fireEvent.press(screen.getByText("النبأ 1–10"));
-    expect(screen.queryByRole("button", { name: ar.today.postpone })).toBeNull();
+    expect(screen.queryByRole("button", { name: ar.evaluation.editRange })).toBeNull();
   });
 });
 
@@ -161,11 +176,57 @@ describe("the homework form", () => {
     const lessons = await services.db.all("lessons");
     const todays = lessons.find((l) => l.date === today());
     const items = await services.db.all("homework");
-    expect(items.find((h) => h.fromAyah === 11)).toMatchObject({
-      surah: 78,
+    expect(items.find((h) => h.portions[0]?.fromAyah === 11)).toMatchObject({
+      portions: [{ surah: 78, fromAyah: 11, toAyah: 20 }],
       assignedLessonId: todays?.id,
       evaluatedLessonId: null,
     });
+  });
+
+  it("saves whole pages, and the next homework continues by pages", async () => {
+    const { services, student } = await setup();
+    params.mockReturnValue({ studentId: student.id, kind: "next" });
+    const view = await renderWithApp(<HomeworkFormScreen />, services);
+    await fireEvent.press(screen.getByRole("radio", { name: ar.homework.byPages }));
+    await fireEvent.changeText(screen.getByTestId("page.from"), "582");
+    await fireEvent.changeText(screen.getByTestId("page.to"), "582");
+    expect(await screen.findByText(/النبأ 1–30/)).toBeOnTheScreen();
+    await fireEvent.press(button(ar.common.save));
+    await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
+    const [saved] = await services.db.all("homework");
+    expect(saved).toMatchObject({
+      pages: { from: 582, to: 582 },
+      portions: [{ surah: 78, fromAyah: 1, toAyah: 30 }],
+    });
+    await view.unmount();
+
+    await renderWithApp(<HomeworkFormScreen />, services);
+    expect(await screen.findByText(ar.homework.suggested)).toBeOnTheScreen();
+    expect(screen.getByTestId("page.from")).toHaveDisplayValue("583");
+    expect(screen.getByTestId("page.to")).toHaveDisplayValue("583");
+  });
+
+  it("saves several suras, one of them whole", async () => {
+    const { services, student, cls } = await setup();
+    await homeworkDue(services, cls.id, student.id);
+    params.mockReturnValue({ studentId: student.id, kind: "next" });
+    await renderWithApp(<HomeworkFormScreen />, services);
+    await screen.findByText(ar.homework.suggested);
+    // The suggested النبأ 11–20 becomes the whole sura, then a second sura.
+    await fireEvent(screen.getByTestId("portion.whole.0"), "valueChange", true);
+    expect(screen.queryByLabelText(ar.glossary.fromAyah)).toBeNull();
+    await fireEvent.press(button(ar.homework.addSurah));
+    expect(screen.getAllByRole("button", { name: ar.homework.removeSurah })).toHaveLength(2);
+    // Saving with the new sura empty shows its error and saves nothing.
+    await fireEvent.press(button(ar.common.save));
+    expect(router.back).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getAllByRole("button", { name: ar.homework.removeSurah })[1]!);
+    await fireEvent.press(button(ar.common.save));
+    await waitFor(() => expect(router.back).toHaveBeenCalledTimes(1));
+    const items = await services.db.all("homework");
+    expect(items.find((h) => h.portions[0]?.toAyah === 40)?.portions).toEqual([
+      { surah: 78, fromAyah: 1, toAyah: 40 },
+    ]);
   });
 
   it("shows an ayah outside the sura as soon as it's typed", async () => {

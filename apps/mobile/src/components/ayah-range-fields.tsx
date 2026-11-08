@@ -18,11 +18,14 @@ export function AyahRangeFields({
   onChange,
   errors,
   visibleErrors,
+  ayahs = true,
 }: Readonly<{
   value: AyahRangeDraft;
   onChange: (next: AyahRangeDraft, changed: AyahRangeField) => void;
   errors: AyahRangeErrors;
   visibleErrors: ReadonlySet<AyahRangeField>;
+  /** Show the from/to fields (hidden for a whole sura). */
+  ayahs?: boolean;
 }>) {
   const t = useTranslations();
   const errorMessage = useErrorMessage();
@@ -56,11 +59,13 @@ export function AyahRangeFields({
         onChange={(surah) => onChange({ ...value, surah }, "surah")}
         error={error("surah")}
       />
-      <View style={styles.row}>
-        {ayahField("fromAyah", "from")}
-        {ayahField("toAyah", "to")}
-      </View>
-      {ayahCount ? (
+      {ayahs ? (
+        <View style={styles.row}>
+          {ayahField("fromAyah", "from")}
+          {ayahField("toAyah", "to")}
+        </View>
+      ) : null}
+      {ayahs && ayahCount ? (
         <Text tone="muted" size={14}>
           {t("quran.ayahRangeHint", { ayahCount })}
         </Text>

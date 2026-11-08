@@ -1,6 +1,14 @@
 import type { Portion } from "../../domain/homework/suggestion";
 import type { AttendanceStatus } from "../../shared/schemas/attendance";
-import { postponedLessonsOf, type HomeworkRecord } from "../../shared/schemas/homework";
+import {
+  memorizationChoices,
+  NOT_MEMORIZED,
+  notMemorizedIn,
+  notMemorizedOf,
+  type HomeworkRecord,
+  type MemorizationChoice,
+  type PageRange,
+} from "../../shared/schemas/homework";
 import type { DataWriter } from "../local-store";
 import { findAttendance, setAttendance } from "./attendance";
 
@@ -15,54 +23,75 @@ async function ensurePresent(tx: DataWriter, lessonId: string, studentId: string
 export type RateField = "memorizationRate" | "behaviorRate";
 
 /**
- * Sets (or clears, with null) one score; the item becomes evaluated in this
- * lesson. Scoring after a postponement in the same lesson replaces it.
+ * Sets (or clears, with null) one mark for this item in this lesson; the
+ * memorization picker can also choose NOT_MEMORIZED ("لم يحفظ").
+ *
+ * - A mark makes the item evaluated in this lesson. If he was "not
+ *   memorized" here, that's replaced, and its behavior mark carries over.
+ * - NOT_MEMORIZED keeps (or puts) the item back to pending with an entry for
+ *   this lesson, carrying over a behavior mark given here. Not for exams, items
+ *   added in this lesson, or items recited in another lesson.
+ * - While he's "not memorized" here, a behavior mark goes into that entry, and
+ *   clearing the memorization picker removes the entry.
+ * - A mark in a lesson where he failed it, after he recited it in a later
+ *   one, is ignored (it would move that evaluation).
+ *
+ * Anything recorded marks the student present.
  */
 export async function rateHomework(
   store: DataWriter,
   item: Pick<HomeworkRecord, "id" | "studentId">,
   lessonId: string,
   field: RateField,
-  score: number | null,
+  score: MemorizationChoice,
 ) {
   await store.transaction(async (tx) => {
-    await ensurePresent(tx, lessonId, item.studentId);
     const current = await tx.get("homework", item.id);
-    const postponed = current ? postponedLessonsOf(current) : [];
-    await tx.update("homework", item.id, {
+    if (!current || current.deletedAt !== null) return;
+    const entries = notMemorizedOf(current);
+    const entry = notMemorizedIn(current, lessonId);
+    const others = entries.filter((e) => e.lessonId !== lessonId);
+    const choices = memorizationChoices(current, lessonId);
+    const evaluatedHere = current.evaluatedLessonId === lessonId;
+
+    if (score === NOT_MEMORIZED) {
+      if (field !== "memorizationRate" || !choices.notMemorized || entry) return;
+      await ensurePresent(tx, lessonId, current.studentId);
+      await tx.update("homework", current.id, {
+        evaluatedLessonId: null,
+        memorizationRate: null,
+        behaviorRate: null,
+        notMemorized: [
+          ...others,
+          { lessonId, behaviorRate: evaluatedHere ? current.behaviorRate : null },
+        ],
+      });
+      return;
+    }
+
+    if (entry && (field === "behaviorRate" || score === null)) {
+      await ensurePresent(tx, lessonId, current.studentId);
+      await tx.update("homework", current.id, {
+        notMemorized:
+          field === "behaviorRate" ? [...others, { lessonId, behaviorRate: score }] : others,
+      });
+      return;
+    }
+
+    if (!choices.marks) return;
+    await ensurePresent(tx, lessonId, current.studentId);
+    await tx.update("homework", current.id, {
       evaluatedLessonId: lessonId,
       [field]: score,
-      ...(postponed.includes(lessonId)
-        ? { postponedLessonIds: postponed.filter((id) => id !== lessonId) }
-        : {}),
+      ...(entry ? { notMemorized: others, behaviorRate: entry.behaviorRate } : {}),
     });
   });
 }
 
 /**
- * Postpones the recitation ("تأجيل التسميع"): the student wasn't ready. The
- * item stays pending for the next day, the student counts as present, and
- * nothing is scored. Only for items not evaluated yet.
- */
-export async function postponeHomework(
-  store: DataWriter,
-  item: Pick<HomeworkRecord, "id" | "studentId">,
-  lessonId: string,
-) {
-  await store.transaction(async (tx) => {
-    const current = await tx.get("homework", item.id);
-    if (!current || current.deletedAt !== null || current.evaluatedLessonId !== null) return;
-    const postponed = postponedLessonsOf(current);
-    if (postponed.includes(lessonId)) return;
-    await ensurePresent(tx, lessonId, item.studentId);
-    await tx.update("homework", item.id, { postponedLessonIds: [...postponed, lessonId] });
-  });
-}
-
-/**
- * Sets a student's attendance in a lesson. A postponed recitation means he
- * was there, so marking him absent or excused also cancels his
- * postponements in that lesson.
+ * Sets a student's attendance in a lesson. "Not memorized" means he was
+ * there, so marking him absent or excused also removes those entries (and
+ * their behavior marks) in that lesson.
  */
 export async function setStudentAttendance(
   store: DataWriter,
@@ -75,29 +104,11 @@ export async function setStudentAttendance(
     if (status === "present") return;
     const items = await tx.query("homework", "studentId", { equals: studentId });
     for (const item of items) {
-      const postponed = postponedLessonsOf(item);
-      if (item.deletedAt !== null || !postponed.includes(lessonId)) continue;
+      if (item.deletedAt !== null || !notMemorizedIn(item, lessonId)) continue;
       await tx.update("homework", item.id, {
-        postponedLessonIds: postponed.filter((id) => id !== lessonId),
+        notMemorized: notMemorizedOf(item).filter((e) => e.lessonId !== lessonId),
       });
     }
-  });
-}
-
-/** Undoes a postponement made in this lesson. */
-export async function undoPostpone(
-  store: DataWriter,
-  item: Pick<HomeworkRecord, "id">,
-  lessonId: string,
-) {
-  await store.transaction(async (tx) => {
-    const current = await tx.get("homework", item.id);
-    if (!current) return;
-    const postponed = postponedLessonsOf(current);
-    if (!postponed.includes(lessonId)) return;
-    await tx.update("homework", item.id, {
-      postponedLessonIds: postponed.filter((id) => id !== lessonId),
-    });
   });
 }
 
@@ -126,7 +137,9 @@ export function addHomework(
   input: {
     studentId: string;
     lessonId: string;
-    portion: Portion;
+    portions: readonly Portion[];
+    /** When given as whole pages (the portions are then those pages'). */
+    pages?: PageRange | null;
     note: string;
     evaluateNow: boolean;
   },
@@ -135,13 +148,14 @@ export function addHomework(
     if (input.evaluateNow) await ensurePresent(tx, input.lessonId, input.studentId);
     return tx.create("homework", {
       studentId: input.studentId,
-      ...input.portion,
+      portions: [...input.portions],
+      pages: input.pages ?? null,
       note: input.note,
       assignedLessonId: input.lessonId,
       evaluatedLessonId: input.evaluateNow ? input.lessonId : null,
       memorizationRate: null,
       behaviorRate: null,
-      postponedLessonIds: [],
+      notMemorized: [],
       kind: "homework",
     });
   });
@@ -154,27 +168,43 @@ export function addHomework(
  */
 export function addExam(
   store: DataWriter,
-  input: { studentId: string; lessonId: string; portion: Portion; note: string },
+  input: {
+    studentId: string;
+    lessonId: string;
+    portions: readonly Portion[];
+    pages?: PageRange | null;
+    note: string;
+  },
 ) {
   return store.transaction(async (tx) => {
     await ensurePresent(tx, input.lessonId, input.studentId);
     return tx.create("homework", {
       studentId: input.studentId,
-      ...input.portion,
+      portions: [...input.portions],
+      pages: input.pages ?? null,
       note: input.note,
       assignedLessonId: input.lessonId,
       evaluatedLessonId: input.lessonId,
       memorizationRate: null,
       behaviorRate: null,
-      postponedLessonIds: [],
+      notMemorized: [],
       kind: "exam",
     });
   });
 }
 
-/** Edits the portion (e.g. the student recited only part of it). */
-export function updateHomework(store: DataWriter, id: string, portion: Portion, note: string) {
-  return store.update("homework", id, { ...portion, note });
+/**
+ * Edits the suras and ayahs (e.g. the student recited only part of it).
+ * `pages` is the page range when saved as pages; edited as ayahs, it's null.
+ */
+export function updateHomework(
+  store: DataWriter,
+  id: string,
+  portions: readonly Portion[],
+  note: string,
+  pages: PageRange | null = null,
+) {
+  return store.update("homework", id, { portions: [...portions], pages, note });
 }
 
 export function deleteHomework(store: DataWriter, id: string) {

@@ -1,7 +1,7 @@
 import { monthKey } from "../dates/local-date";
 import { monthlyStats, type MonthStats } from "./monthly";
 import type { AttendanceRecord } from "../../shared/schemas/attendance";
-import { isExam, postponedLessonsOf, type HomeworkRecord } from "../../shared/schemas/homework";
+import { isExam, notMemorizedOf, type HomeworkRecord } from "../../shared/schemas/homework";
 import type { LessonRecord } from "../../shared/schemas/lesson";
 import type { StudentRecord } from "../../shared/schemas/student";
 
@@ -12,16 +12,26 @@ import type { StudentRecord } from "../../shared/schemas/student";
 
 export type HistoryRow =
   | { kind: "evaluation"; lesson: LessonRecord; item: HomeworkRecord }
-  | { kind: "postponed"; lesson: LessonRecord; item: HomeworkRecord }
+  /** "لم يحفظ" in that lesson, with the behavior mark he got there. */
+  | {
+      kind: "notMemorized";
+      lesson: LessonRecord;
+      item: HomeworkRecord;
+      behaviorRate: number | null;
+    }
   | { kind: "absence"; lesson: LessonRecord; record: AttendanceRecord };
 
-const KIND_ORDER: Record<HistoryRow["kind"], number> = { evaluation: 0, postponed: 1, absence: 2 };
+const KIND_ORDER: Record<HistoryRow["kind"], number> = {
+  evaluation: 0,
+  notMemorized: 1,
+  absence: 2,
+};
 
 /**
  * One month of a student's record, newest first: every homework item
- * evaluated in that month's lessons, every postponed recitation, and
- * absences (with excuse notes). Within a day: evaluations, then
- * postponements, then the absence row.
+ * evaluated in that month's lessons, every "not memorized", and absences
+ * (with excuse notes). Within a day: evaluations, then "not memorized",
+ * then the absence row.
  */
 export function buildMonthHistory(
   homework: readonly HomeworkRecord[],
@@ -38,9 +48,16 @@ export function buildMonthHistory(
     const lesson = item.deletedAt === null ? inMonth(item.evaluatedLessonId) : null;
     if (lesson) rows.push({ kind: "evaluation", lesson, item });
     if (item.deletedAt !== null) continue;
-    for (const lessonId of postponedLessonsOf(item)) {
-      const postponedIn = inMonth(lessonId);
-      if (postponedIn) rows.push({ kind: "postponed", lesson: postponedIn, item });
+    for (const entry of notMemorizedOf(item)) {
+      const failedIn = inMonth(entry.lessonId);
+      if (failedIn) {
+        rows.push({
+          kind: "notMemorized",
+          lesson: failedIn,
+          item,
+          behaviorRate: entry.behaviorRate,
+        });
+      }
     }
   }
   for (const record of attendance) {
@@ -73,7 +90,7 @@ export function referencedLessonIds(
       ...homework.flatMap((h) => [
         h.evaluatedLessonId,
         h.assignedLessonId,
-        ...postponedLessonsOf(h),
+        ...notMemorizedOf(h).map((entry) => entry.lessonId),
       ]),
       ...attendance.map((a) => a.lessonId),
     ]),
@@ -109,7 +126,8 @@ export interface MonthSheetCounts {
   /** Homework recited and marked (exams aren't counted here). */
   evaluated: number;
   exams: number;
-  postponed: number;
+  /** "لم يحفظ" rows. */
+  notMemorized: number;
 }
 
 /** One student's month as a summary: the month table's rows, averages and counts. */
@@ -146,7 +164,7 @@ export function buildMonthSheet(
       excused: stats?.excused ?? 0,
       evaluated: stats?.evaluatedCount ?? 0,
       exams: rows.filter((row) => row.kind === "evaluation" && isExam(row.item)).length,
-      postponed: rows.filter((row) => row.kind === "postponed").length,
+      notMemorized: rows.filter((row) => row.kind === "notMemorized").length,
     },
   };
 }

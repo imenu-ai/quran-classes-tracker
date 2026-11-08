@@ -18,17 +18,17 @@ export const parentRequestSchema = z.object({
 
 export type ParentRequest = z.infer<typeof parentRequestSchema>;
 
-export type ParentRowKind = "homework" | "exam" | "postponed" | "absent" | "excused";
+export type ParentRowKind = "homework" | "exam" | "notMemorized" | "absent" | "excused";
 
 /** One row of the month, without any internal id or teacher's note. */
 export interface ParentRow {
   /** "YYYY-MM-DD". */
   date: string;
   kind: ParentRowKind;
-  /** The portion (null on an absence). */
-  surah: number | null;
-  fromAyah: number | null;
-  toAyah: number | null;
+  /** The suras and ayahs (empty on an absence). */
+  portions: { surah: number; fromAyah: number; toAyah: number }[];
+  /** When it was given as whole pages. */
+  pages: { from: number; to: number } | null;
   /** An exam's one mark is `memorization`. */
   memorization: number | null;
   behavior: number | null;
@@ -54,7 +54,7 @@ export interface ParentReport {
     excused: number;
     evaluated: number;
     exams: number;
-    postponed: number;
+    notMemorized: number;
   };
 }
 

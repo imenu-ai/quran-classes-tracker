@@ -65,7 +65,7 @@ export function MonthSheet({
     [t("print.excused"), sheet.counts.excused],
     [t("print.evaluated"), sheet.counts.evaluated],
     [t("print.exams"), sheet.counts.exams],
-    [t("print.postponed"), sheet.counts.postponed],
+    [t("print.notMemorized"), sheet.counts.notMemorized],
   ];
 
   return (
@@ -189,10 +189,15 @@ export function MonthSheet({
                       >
                         {score(row.item.memorizationRate)}
                       </td>
-                    ) : row.kind === "postponed" ? (
-                      <td colSpan={2} className={cn(cell, "text-center")}>
-                        {t("today.postponed")}
-                      </td>
+                    ) : row.kind === "notMemorized" ? (
+                      <>
+                        <td className={cn(cell, "text-center text-[0.85em] font-semibold")}>
+                          {t("glossary.notMemorized")}
+                        </td>
+                        <td className={cn(cell, "text-center font-semibold tabular-nums")}>
+                          {score(row.behaviorRate)}
+                        </td>
+                      </>
                     ) : (
                       <>
                         <td className={cn(cell, "text-center font-semibold tabular-nums")}>

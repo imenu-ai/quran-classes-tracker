@@ -39,7 +39,7 @@ const homework = [
   scored("a", "l3", 10, 10),
   scored("b", "l1", 10, 10),
   scored("c", "l3", 9, 6),
-  // Postponed (pending, no marks), deleted, and in a deleted lesson: none count.
+  // Pending (no marks), deleted, and in a deleted lesson: none count.
   {
     studentId: "a",
     evaluatedLessonId: null,
@@ -53,6 +53,35 @@ const homework = [
 
 const stats = (period = ALL_TIME) =>
   classStatistics({ students, lessons, attendance, homework, period, timeZone: TZ, locale: "ar" });
+
+describe("classStatistics and not memorized", () => {
+  it("counts a not-memorized day's behavior mark, not a memorization mark", () => {
+    const result = classStatistics({
+      students,
+      lessons,
+      attendance,
+      homework: [
+        scored("a", "l2", 8, 9),
+        {
+          studentId: "a",
+          evaluatedLessonId: null,
+          memorizationRate: null,
+          behaviorRate: null,
+          deletedAt: null,
+          notMemorized: [{ lessonId: "l3", behaviorRate: 5 }],
+        },
+      ],
+      period: ALL_TIME,
+      timeZone: TZ,
+      locale: "ar",
+    });
+    expect(result.students.find((s) => s.studentId === "a")).toMatchObject({
+      memorizationAverage: 8,
+      behaviorAverage: 7, // (9+5)/2
+    });
+    expect(result).toMatchObject({ memorizationAverage: 8, behaviorAverage: 7 });
+  });
+});
 
 describe("inPeriod", () => {
   it("matches all time, a year, or a month", () => {

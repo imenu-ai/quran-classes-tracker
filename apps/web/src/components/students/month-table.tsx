@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronLeft, ChevronRight, Clock, Pencil, Printer } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Pencil, Printer } from "lucide-react";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
 import { useId, useMemo, useState } from "react";
@@ -19,13 +19,18 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { useApp } from "@/client/app-context";
-import { rateHomework, setStudentAttendance, undoPostpone } from "@qct/core/data/entities/homework";
+import { rateHomework, setStudentAttendance } from "@qct/core/data/entities/homework";
 import { printHref } from "@/client/data/print";
 import { buildMonthHistory, type HistoryRow, type StudentProfile } from "@/client/data/profile";
 import { localDateToUtcDate, monthKey, todayInTimeZone } from "@qct/core/domain/dates/local-date";
 import { cn } from "@/lib/utils";
 import type { AttendanceStatus } from "@qct/core/shared/schemas/attendance";
-import { isExam } from "@qct/core/shared/schemas/homework";
+import {
+  isExam,
+  marksIn,
+  memorizationChoices,
+  notMemorizedIn,
+} from "@qct/core/shared/schemas/homework";
 import type { StudentRecord } from "@qct/core/shared/schemas/student";
 import { AttendanceToggle, ExcuseNoteInput } from "./attendance-controls";
 
@@ -50,12 +55,17 @@ function resolveTarget(target: EditTarget | null, profile: StudentProfile): Hist
     return record ? { kind: "absence", lesson, record } : null;
   }
   const item = profile.homework.find((h) => h.id === target.id);
-  return item ? { kind: target.kind, lesson, item } : null;
+  if (!item) return null;
+  if (target.kind === "notMemorized") {
+    const behaviorRate = notMemorizedIn(item, lesson.id)?.behaviorRate ?? null;
+    return { kind: "notMemorized", lesson, item, behaviorRate };
+  }
+  return { kind: "evaluation", lesson, item };
 }
 
 /**
  * The student's month as a simple table: one row per recorded day (a mark,
- * a postponement or an absence), the month's averages at the bottom, and a
+ * "لم يحفظ" or an absence), the month's averages at the bottom, and a
  * switcher for earlier months. It starts closed, showing the month and its
  * averages; tapping that opens the table. Tapping a row corrects it, when
  * `editable`.
@@ -260,6 +270,11 @@ export function MonthTable({
                               {t("exam.badge")}
                             </Badge>
                           )}
+                          {row.kind === "notMemorized" && (
+                            <Badge className="bg-warning text-warning-foreground">
+                              {t("glossary.notMemorized")}
+                            </Badge>
+                          )}
                         </span>
                       </td>
                       {isExam(row.item) ? (
@@ -270,13 +285,16 @@ export function MonthTable({
                         >
                           {score(row.item.memorizationRate)}
                         </td>
-                      ) : row.kind === "postponed" ? (
-                        <td colSpan={2} className="px-1 py-2.5 text-center">
-                          <Badge className="bg-warning text-warning-foreground">
-                            <Clock aria-hidden />
-                            {t("today.postponed")}
-                          </Badge>
-                        </td>
+                      ) : row.kind === "notMemorized" ? (
+                        // No memorization mark that day; the behavior mark, if any.
+                        <>
+                          <td className="px-1 py-2.5 text-center text-muted-foreground">
+                            {t("common.noValue")}
+                          </td>
+                          <td className="px-1 py-2.5 text-center font-semibold tabular-nums">
+                            {score(row.behaviorRate)}
+                          </td>
+                        </>
                       ) : (
                         <>
                           <td className="px-1 py-2.5 text-center font-semibold tabular-nums">
@@ -333,7 +351,7 @@ export function MonthTable({
   );
 }
 
-/** Corrects one day: the scores of an evaluation, a postponement, or an absence. */
+/** Corrects one day: the marks of an evaluation or a "لم يحفظ", or an absence. */
 function RowEditDrawer({
   row,
   open,
@@ -358,8 +376,8 @@ function RowEditDrawer({
     ? t("exam.editTitle")
     : row?.kind === "evaluation"
       ? t("profile.editEvaluationTitle")
-      : row?.kind === "postponed"
-        ? t("profile.editPostponedTitle")
+      : row?.kind === "notMemorized"
+        ? t("profile.editNotMemorizedTitle")
         : t("profile.editAttendanceTitle");
 
   return (
@@ -408,37 +426,7 @@ function RowEditDrawer({
                         {t("evaluation.editRange")}
                       </Button>
                     </div>
-                    {row.kind === "postponed" ? (
-                      <Button
-                        variant="outline"
-                        className="h-11"
-                        onClick={() =>
-                          void undoPostpone(store, row.item, row.lesson.id).then(onClose)
-                        }
-                      >
-                        <Clock aria-hidden />
-                        {t("today.undoPostpone")}
-                      </Button>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-3">
-                        <ScorePicker
-                          label={exam ? t("exam.mark") : t("glossary.memorizationRate")}
-                          value={row.item.memorizationRate}
-                          onChange={(value) =>
-                            rateHomework(store, row.item, row.lesson.id, "memorizationRate", value)
-                          }
-                        />
-                        {!exam && (
-                          <ScorePicker
-                            label={t("glossary.behaviorRate")}
-                            value={row.item.behaviorRate}
-                            onChange={(value) =>
-                              rateHomework(store, row.item, row.lesson.id, "behaviorRate", value)
-                            }
-                          />
-                        )}
-                      </div>
-                    )}
+                    <RowMarks row={row} exam={exam} />
                   </>
                 )}
               </div>
@@ -457,5 +445,33 @@ function RowEditDrawer({
         />
       )}
     </>
+  );
+}
+
+/** The day's two pickers (one for an exam), as in the today card. */
+function RowMarks({ row, exam }: { row: Extract<HistoryRow, { item: unknown }>; exam: boolean }) {
+  const t = useTranslations();
+  const { store } = useApp();
+  const marks = marksIn(row.item, row.lesson.id);
+  const choices = memorizationChoices(row.item, row.lesson.id);
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <ScorePicker
+        label={exam ? t("exam.mark") : t("glossary.memorizationRate")}
+        value={marks.memorization}
+        notMemorized={choices.notMemorized}
+        marks={choices.marks}
+        onChange={(value) =>
+          rateHomework(store, row.item, row.lesson.id, "memorizationRate", value)
+        }
+      />
+      {!exam && (
+        <ScorePicker
+          label={t("glossary.behaviorRate")}
+          value={marks.behavior}
+          onChange={(value) => rateHomework(store, row.item, row.lesson.id, "behaviorRate", value)}
+        />
+      )}
+    </div>
   );
 }

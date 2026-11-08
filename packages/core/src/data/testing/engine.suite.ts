@@ -121,15 +121,14 @@ export function engineSuite(factory: StorageFactory) {
       });
       const homework = await store.create("homework", {
         studentId: student.id,
-        surah: 112,
-        fromAyah: 1,
-        toAyah: 4,
+        portions: [{ surah: 112, fromAyah: 1, toAyah: 4 }],
+        pages: null,
         note: "",
         assignedLessonId: null,
         evaluatedLessonId: null,
         memorizationRate: null,
         behaviorRate: null,
-        postponedLessonIds: [],
+        notMemorized: [],
         kind: "homework",
       });
       // Later: today's lesson is created and the (still unsynced) homework scored in it.

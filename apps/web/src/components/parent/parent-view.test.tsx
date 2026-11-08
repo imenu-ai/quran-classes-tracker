@@ -23,9 +23,8 @@ const report: ParentReport = {
     {
       date: "2026-10-01",
       kind: "homework",
-      surah: 112,
-      fromAyah: 1,
-      toAyah: 4,
+      portions: [{ surah: 112, fromAyah: 1, toAyah: 4 }],
+      pages: null,
       memorization: 9,
       behavior: 8,
       excuseNote: "",
@@ -33,9 +32,8 @@ const report: ParentReport = {
     {
       date: "2026-10-02",
       kind: "excused",
-      surah: null,
-      fromAyah: null,
-      toAyah: null,
+      portions: [],
+      pages: null,
       memorization: null,
       behavior: null,
       excuseNote: "مريض",
@@ -43,27 +41,25 @@ const report: ParentReport = {
     {
       date: "2026-10-05",
       kind: "exam",
-      surah: 67,
-      fromAyah: 1,
-      toAyah: 10,
+      portions: [{ surah: 67, fromAyah: 1, toAyah: 10 }],
+      pages: null,
       memorization: 3,
       behavior: null,
       excuseNote: "",
     },
     {
       date: "2026-10-05",
-      kind: "postponed",
-      surah: 113,
-      fromAyah: 1,
-      toAyah: 5,
+      kind: "notMemorized",
+      portions: [{ surah: 113, fromAyah: 1, toAyah: 5 }],
+      pages: null,
       memorization: null,
-      behavior: null,
+      behavior: 7,
       excuseNote: "",
     },
   ],
   memorizationAverage: 9,
   behaviorAverage: 8,
-  counts: { present: 2, absent: 0, excused: 1, evaluated: 1, exams: 1, postponed: 1 },
+  counts: { present: 2, absent: 0, excused: 1, evaluated: 1, exams: 1, notMemorized: 1 },
 };
 
 const json = (status: number, body: unknown) =>
@@ -118,12 +114,13 @@ describe("ParentView", () => {
 
     const rows = within(await screen.findByRole("table")).getAllByRole("row");
     expect(rows).toHaveLength(5);
-    expect(rows[1]?.textContent).toMatch(/الإخلاص 1–4.*9.*8/);
+    expect(rows[1]?.textContent).toMatch(/الإخلاص كاملة.*9.*8/);
     expect(rows[2]?.textContent).toContain("غائب بعذر");
     expect(rows[2]?.textContent).toContain("مريض");
     expect(rows[3]?.textContent).toContain("اختبار");
     expect(rows[3]?.className).toContain("bg-exam");
-    expect(rows[4]?.textContent).toContain("مؤجل");
+    expect(rows[4]?.textContent).toContain("لم يحفظ");
+    expect(rows[4]?.textContent).toContain("7");
 
     const summary = screen.getByRole("region", { name: "المعدل" });
     expect(summary.textContent).toContain("9.0");
@@ -132,6 +129,7 @@ describe("ParentView", () => {
       within(summary).getByText(name).closest("div")?.querySelector("dd")?.textContent;
     expect(count("الاختبارات")).toBe("1");
     expect(count("الغياب بعذر")).toBe("1");
+    expect(count("لم يحفظ")).toBe("1");
   });
 
   it("keeps a picked month in the URL, and asks for it", async () => {

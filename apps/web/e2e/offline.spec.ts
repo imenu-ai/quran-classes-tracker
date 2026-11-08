@@ -63,7 +63,7 @@ test("offline: mark a student without a connection, reconnect, and the server ha
   await other.getByRole("link", { name: /خالد دون اتصال/ }).click();
   await openMonthTable(other);
   const table = other.locator("main table");
-  await expect(table.locator("tbody tr").first()).toContainText("الإخلاص 1–4");
+  await expect(table.locator("tbody tr").first()).toContainText("الإخلاص كاملة");
   await expect(table.locator("tfoot")).toContainText("8.0");
   await expect(table.locator("tfoot")).toContainText("9.0");
   await other.goBack();

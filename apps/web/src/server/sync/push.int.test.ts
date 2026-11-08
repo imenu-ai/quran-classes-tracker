@@ -59,36 +59,40 @@ describe("pushChanges", () => {
     expect(await stored("students", withParent.id)).toMatchObject({ parentId: "123456789" });
   });
 
-  it("stores postponements, and fills them in for a device from before Phase 9", async () => {
+  it("stores not-memorized entries, converting an older device's postponements", async () => {
     const cls = classRecord();
     const student = studentRecord(cls.id);
     const lesson = lessonRecord(cls.id);
-    const postponed = homeworkRecord(student.id, { postponedLessonIds: [lesson.id] });
-    const { postponedLessonIds: _omitted, kind: _kind, ...older } = homeworkRecord(student.id);
+    const failed = homeworkRecord(student.id, {
+      notMemorized: [{ lessonId: lesson.id, behaviorRate: 7.5 }],
+    });
+    const { notMemorized: _n, ...base } = homeworkRecord(student.id);
+    const postponed = { ...base, postponedLessonIds: [lesson.id] };
+    const { notMemorized: _m, kind: _kind, ...older } = homeworkRecord(student.id);
     const results = await pushChanges(
       db,
-      "tenant-postpone",
+      "tenant-not-memorized",
       [
         m("classes", cls),
         m("students", student),
         m("lessons", lesson),
+        m("homework", failed),
         m("homework", postponed),
         m("homework", older),
       ],
       NOW,
     );
-    expect(results.map((r) => r.status)).toEqual([
-      "applied",
-      "applied",
-      "applied",
-      "applied",
-      "applied",
-    ]);
-    expect(await stored("homework", postponed.id)).toMatchObject({
-      postponedLessonIds: [lesson.id],
+    expect(results.map((r) => r.status)).toEqual(Array(6).fill("applied"));
+    expect(await stored("homework", failed.id)).toMatchObject({
+      notMemorized: [{ lessonId: lesson.id, behaviorRate: 7.5 }],
     });
+    const converted = await stored("homework", postponed.id);
+    expect(converted).toMatchObject({
+      notMemorized: [{ lessonId: lesson.id, behaviorRate: null }],
+    });
+    expect(converted).not.toHaveProperty("postponedLessonIds");
     expect(await stored("homework", older.id)).toMatchObject({
-      postponedLessonIds: [],
+      notMemorized: [],
       kind: "homework",
     });
   });
@@ -292,7 +296,7 @@ describe("pushChanges", () => {
         id: bad.id,
         status: "rejected",
         code: "AYAH_OUT_OF_RANGE",
-        params: { surah: 2, ayahCount: 286, field: "toAyah" },
+        params: { surah: 2, ayahCount: 286, field: "portions.0.toAyah" },
       });
       expect(await stored("homework", bad.id)).toBeNull();
     });

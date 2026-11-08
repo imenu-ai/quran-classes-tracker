@@ -88,7 +88,7 @@ test("parent link: ID number, the month, remembered phone, invalid link, printed
   await expect(parent.locator("header")).toContainText("حلقة الأهالي");
   const rows = parent.locator("tbody tr");
   await expect(rows).toHaveCount(2);
-  await expect(rows.nth(0)).toContainText("الفلق 1–5");
+  await expect(rows.nth(0)).toContainText("الفلق كاملة");
   await expect(rows.nth(1)).toContainText(ar.exam.badge);
   // The exam is left out of the averages.
   const summary = parent.getByRole("region", { name: ar.profile.average });

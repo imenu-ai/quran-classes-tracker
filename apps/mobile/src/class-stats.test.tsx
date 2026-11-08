@@ -43,7 +43,7 @@ async function setup(services: AppServices) {
     const item = await addHomework(services.store, {
       studentId: who.id,
       lessonId: october.id,
-      portion: { surah: 78, fromAyah: 1, toAyah: 5 },
+      portions: [{ surah: 78, fromAyah: 1, toAyah: 5 }],
       note: "",
       evaluateNow: true,
     });

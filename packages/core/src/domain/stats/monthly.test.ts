@@ -51,6 +51,44 @@ describe("monthlyStats", () => {
     });
   });
 
+  it("counts 0 as a mark and averages half marks", () => {
+    const [october] = monthlyStats(
+      [hw("oct-01", 0, 9.5), hw("oct-05", 9.5, 0), hw("oct-31", 10, 8.5)],
+      [],
+      lessons,
+    );
+    expect(october).toMatchObject({
+      memorizationAverage: 6.5, // (0+9.5+10)/3
+      behaviorAverage: 6, // (9.5+0+8.5)/3
+      evaluatedCount: 3,
+    });
+  });
+
+  it("counts a not-memorized day's behavior mark in its month, never a memorization mark", () => {
+    const stats = monthlyStats(
+      [
+        {
+          ...hw("oct-05", 8, 8),
+          notMemorized: [
+            { lessonId: "oct-01", behaviorRate: 6 },
+            { lessonId: "sep-28", behaviorRate: null },
+          ],
+        },
+        // An older record's postponement: no marks at all.
+        { ...hw(null, null, null), postponedLessonIds: ["oct-01"] },
+      ],
+      [],
+      lessons,
+    );
+    expect(stats).toHaveLength(1);
+    expect(stats[0]).toMatchObject({
+      month: "2026-10",
+      memorizationAverage: 8,
+      behaviorAverage: 7, // (8+6)/2
+      evaluatedCount: 1,
+    });
+  });
+
   it("gives null averages when a month has evaluations without scores", () => {
     const [october] = monthlyStats([hw("oct-01", null, null)], [att("oct-01", "present")], lessons);
     expect(october).toMatchObject({

@@ -10,7 +10,12 @@ import {
 import { DEFAULT_TIME_ZONE } from "@qct/core/i18n/config";
 import type { ParentError, ParentReport, ParentRow } from "@qct/core/shared/parent";
 import type { AttendanceRecord } from "@qct/core/shared/schemas/attendance";
-import { isExam, type HomeworkRecord } from "@qct/core/shared/schemas/homework";
+import {
+  isExam,
+  pagesOf,
+  portionsOf,
+  type HomeworkRecord,
+} from "@qct/core/shared/schemas/homework";
 import type { LessonRecord } from "@qct/core/shared/schemas/lesson";
 import { normalizeParentId, type StudentRecord } from "@qct/core/shared/schemas/student";
 import { COLLECTIONS } from "./collections";
@@ -156,22 +161,25 @@ function toParentRow(row: HistoryRow): ParentRow {
     return {
       date: row.lesson.date,
       kind: row.record.status === "excused" ? "excused" : "absent",
-      surah: null,
-      fromAyah: null,
-      toAyah: null,
+      portions: [],
+      pages: null,
       memorization: null,
       behavior: null,
       excuseNote: row.record.excuseNote,
     };
   }
-  const portion = { surah: row.item.surah, fromAyah: row.item.fromAyah, toAyah: row.item.toAyah };
-  if (row.kind === "postponed") {
+  const pages = pagesOf(row.item);
+  const portion = {
+    portions: portionsOf(row.item).map((p) => ({ ...p })),
+    pages: pages && { from: pages.from, to: pages.to },
+  };
+  if (row.kind === "notMemorized") {
     return {
       date: row.lesson.date,
-      kind: "postponed",
+      kind: "notMemorized",
       ...portion,
       memorization: null,
-      behavior: null,
+      behavior: row.behaviorRate,
       excuseNote: "",
     };
   }

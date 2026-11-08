@@ -1,21 +1,40 @@
 import { useCallback } from "react";
 import { useFormatter, useTranslations } from "use-intl";
-import { getSurah, getSurahName } from "@qct/core/domain/quran/surahs";
+import { getAyahCount, getSurah, getSurahName } from "@qct/core/domain/quran/surahs";
 import { localDateToUtcDate, type LocalDate } from "@qct/core/domain/dates/local-date";
-import type { HomeworkRecord } from "@qct/core/shared/schemas/homework";
+import { pagesOf, portionsOf } from "@qct/core/shared/schemas/homework";
 import { useAppLocale } from "./locale";
 
-/** "النبأ 31–35": the sura's name from the sura map, plus the range (the web's usePortionLabel). */
+/**
+ * "النبأ 31–35" for one sura, "الملك 1–30، القلم كاملة" for several (the
+ * web's usePortionLabel): each sura's name from the sura map, with its range,
+ * or "كاملة" when it covers the whole sura. Given as pages, the pages come
+ * first: "ص 12–13 · البقرة 77–88".
+ */
 export function usePortionLabel() {
   const t = useTranslations("evaluation");
   const locale = useAppLocale();
   return useCallback(
-    (item: Pick<HomeworkRecord, "surah" | "fromAyah" | "toAyah">) =>
-      t("range", {
-        surah: getSurahName(item.surah, locale) ?? String(item.surah),
-        from: item.fromAyah,
-        to: item.toAyah,
-      }),
+    (item: Parameters<typeof portionsOf>[0] & Parameters<typeof pagesOf>[0]) => {
+      const portions = portionsOf(item)
+        .map((portion) => {
+          const surah = getSurahName(portion.surah, locale) ?? String(portion.surah);
+          const whole = portion.fromAyah === 1 && portion.toAyah === getAyahCount(portion.surah);
+          return whole
+            ? t("wholeSurah", { surah })
+            : t("range", { surah, from: portion.fromAyah, to: portion.toAyah });
+        })
+        .join(t("portionSeparator"));
+      const pages = pagesOf(item);
+      if (!pages) return portions;
+      return t("withPages", {
+        pages:
+          pages.from === pages.to
+            ? t("page", { page: pages.from })
+            : t("pageRange", { from: pages.from, to: pages.to }),
+        portions,
+      });
+    },
     [t, locale],
   );
 }
