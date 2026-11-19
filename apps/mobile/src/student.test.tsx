@@ -150,6 +150,35 @@ describe("homework due today", () => {
     });
   });
 
+  it("with nothing due, a portion recited now can be not memorized, then undone", async () => {
+    const { services, student, cls } = await setup();
+    const lesson = await startLesson(services.store, cls.id, today());
+    const item = await addHomework(services.store, {
+      studentId: student.id,
+      lessonId: lesson.id,
+      portions: [{ surah: 78, fromAyah: 1, toAyah: 5 }],
+      note: "",
+      evaluateNow: true,
+    });
+    await renderWithApp(<TodayCard student={student} />, services);
+    await fireEvent.press(await screen.findByText("النبأ 1–5"));
+    await act(async () => {
+      fireEvent(screen.getByLabelText(ar.glossary.memorizationRate), "valueChange", "notMemorized");
+    });
+    // Still in today's list with its badge, not under next homework; due next time.
+    expect(await screen.findByText(ar.glossary.notMemorized)).toBeOnTheScreen();
+    expect(await services.db.get("homework", item.id)).toMatchObject({
+      evaluatedLessonId: null,
+      notMemorized: [{ lessonId: lesson.id, behaviorRate: null }],
+    });
+    expect(screen.getAllByText("النبأ 1–5")).toHaveLength(1);
+
+    await fireEvent.press(button(ar.evaluation.undo));
+    await waitFor(async () =>
+      expect((await services.db.get("homework", item.id))?.deletedAt).not.toBeNull(),
+    );
+  });
+
   it("is view-only without lessons.run", async () => {
     const { services, student, cls } = await setup([]);
     await homeworkDue(services, cls.id, student.id);

@@ -546,7 +546,8 @@
     "offline": "No internet connection. This page needs one.",
     "error": "Couldn't load the data. Try again.",
     "retry": "Try again",
-    "forget": "Sign out on this device"
+    "forget": "Sign out on this device",
+    "homeworkTitle": "Next homework"
   },
   "parentLink": {
     "menu": "Parent link",

@@ -36,10 +36,20 @@ export interface ParentRow {
   excuseNote: string;
 }
 
+/** A homework item still to recite, without any internal id or teacher's note. */
+export interface ParentHomework {
+  portions: { surah: number; fromAyah: number; toAyah: number }[];
+  pages: { from: number; to: number } | null;
+  /** He has already had a "لم يحفظ" on it. */
+  notMemorized: boolean;
+}
+
 export interface ParentReport {
   centerName: string;
   className: string;
   studentName: string;
+  /** His pending homework now (whatever the month), oldest first. */
+  homework: ParentHomework[];
   /** The month shown, "YYYY-MM". */
   month: string;
   /** Months with records, plus the current one; newest first. */

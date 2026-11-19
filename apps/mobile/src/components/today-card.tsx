@@ -12,6 +12,7 @@ import {
 import { todayLessonId } from "@qct/core/data/entities/today";
 import { localDateToUtcDate, type LocalDate } from "@qct/core/domain/dates/local-date";
 import {
+  canUndoIn,
   isExam,
   marksIn,
   memorizationChoices,
@@ -170,6 +171,7 @@ export function TodayCard({
                   onToggle={() => setOpen(item.id, !openIds.has(item.id))}
                   exam={isExam(item)}
                   evaluated={lesson !== null && item.evaluatedLessonId === lesson.id}
+                  undoable={lesson !== null && canUndoIn(item, lesson.id)}
                   marks={lesson ? marksIn(item, lesson.id) : NO_MARKS}
                   // Before today's lesson exists, nothing ties the item to it.
                   choices={

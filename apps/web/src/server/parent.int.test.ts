@@ -100,6 +100,14 @@ describe("parentReport", () => {
         memorizationRate: 7,
         behaviorRate: 7,
       }),
+      // Given on 6 Oct for the next lesson, as a page.
+      homeworkRecord(ahmad.id, {
+        portions: [{ surah: 78, fromAyah: 1, toAyah: 30 }],
+        pages: { from: 582, to: 582 },
+        note: "ملاحظة المعلم",
+        assignedLessonId: oct6.id,
+        createdAt: 2_000,
+      }),
     ];
     for (const h of homework) await put(db, COLLECTIONS.homework, TENANT, h);
     await put(db, COLLECTIONS.attendance, TENANT, attendanceRecord(oct1.id, ahmad.id));
@@ -166,6 +174,16 @@ describe("parentReport", () => {
       behaviorAverage: 7, // (8 + the 6 Oct "not memorized" day's 6) / 2
       counts: { present: 2, absent: 0, excused: 1, evaluated: 1, exams: 1, notMemorized: 2 },
     });
+    // What he's to recite next, oldest first: the two he hadn't memorized, then the page.
+    expect(report.homework).toEqual([
+      { portions: [{ surah: 113, fromAyah: 1, toAyah: 10 }], pages: null, notMemorized: true },
+      { portions: [{ surah: 114, fromAyah: 1, toAyah: 6 }], pages: null, notMemorized: true },
+      {
+        portions: [{ surah: 78, fromAyah: 1, toAyah: 30 }],
+        pages: { from: 582, to: 582 },
+        notMemorized: false,
+      },
+    ]);
     expect(report.rows).toEqual([
       {
         date: "2026-10-01",
@@ -223,6 +241,7 @@ describe("parentReport", () => {
 
   it("shows another month on request", async () => {
     const result = await ask({ parentId: PARENT_ID, month: "2026-09" });
+    expect(result.ok && result.report.homework).toHaveLength(3); // whatever the month
     expect(result.ok && result.report).toMatchObject({
       month: "2026-09",
       memorizationAverage: 7,

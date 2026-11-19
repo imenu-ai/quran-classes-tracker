@@ -22,6 +22,7 @@ function Harness(props: Partial<Parameters<typeof HomeworkItem>[0]>) {
         open={open}
         onToggle={() => setOpen((value) => !value)}
         evaluated={false}
+        undoable={false}
         marks={{ memorization: null, behavior: null }}
         choices={{ marks: true, notMemorized: true }}
         onEdit={vi.fn()}
@@ -54,6 +55,20 @@ describe("HomeworkItem", () => {
     ]);
     const behavior = screen.getByRole("combobox", { name: "تقييم السلوك" }) as HTMLSelectElement;
     expect([...behavior.options].map((o) => o.textContent)).not.toContain("لم يحفظ");
+  });
+
+  it("offers undo on a not-memorized item recited on the spot", async () => {
+    const onUndo = vi.fn(async () => {});
+    renderArabic(
+      <Harness
+        undoable
+        onUndo={onUndo}
+        marks={{ memorization: NOT_MEMORIZED, behavior: null }}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: /الفلق 1–5/ }));
+    await userEvent.click(screen.getByRole("button", { name: "إلغاء التقييم" }));
+    expect(onUndo).toHaveBeenCalledTimes(1);
   });
 
   it("passes not memorized to onRate", async () => {
