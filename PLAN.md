@@ -566,7 +566,7 @@ Five features asked for by the user on 2026-11-07 (§0 #54–58), and two more o
   - Core: `memorizationChoices` offers "لم يحفظ" on an item recited on the spot ("تسميع الآن"). `rateHomework`: clearing it on such an item makes it "recite now" again. `splitLessonHomework` keeps an item that has a "not memorized" entry in the lesson in that day's list, never under next homework.
   - UI (web and mobile): the picker offers it; undo shows on such an item and removes it.
   - Tests: choices, rateHomework and the split on every adapter; the today card on both platforms.
-- [ ] **3.8 Homework on the parent page (#60).**
+- [x] **3.8 Homework on the parent page (#60).**
   - `ParentReport.homework`: the pending items' portions and pages, oldest first, from `buildStudentProfile().pending`.
   - The page: a "الواجب القادم" card above the month table (none when there's nothing pending); messages in `ar` and `en`.
   - Tests: the server report and the component.

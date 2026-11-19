@@ -8,10 +8,16 @@ import {
   type HistoryRow,
 } from "@qct/core/domain/stats/month-sheet";
 import { DEFAULT_TIME_ZONE } from "@qct/core/i18n/config";
-import type { ParentError, ParentReport, ParentRow } from "@qct/core/shared/parent";
+import type {
+  ParentError,
+  ParentHomework,
+  ParentReport,
+  ParentRow,
+} from "@qct/core/shared/parent";
 import type { AttendanceRecord } from "@qct/core/shared/schemas/attendance";
 import {
   isExam,
+  notMemorizedOf,
   pagesOf,
   portionsOf,
   type HomeworkRecord,
@@ -145,6 +151,7 @@ export async function parentReport(
       centerName: tenant?.name ?? "",
       className: typeof classDoc?.name === "string" ? classDoc.name : "",
       studentName: student.fullName,
+      homework: profile.pending.map(toParentHomework),
       month,
       months,
       rows: sheet.rows.map(toParentRow),
@@ -152,6 +159,16 @@ export async function parentReport(
       behaviorAverage: sheet.behaviorAverage,
       counts: sheet.counts,
     },
+  };
+}
+
+/** Pending homework as the parent sees it: the portion only. */
+function toParentHomework(item: HomeworkRecord): ParentHomework {
+  const pages = pagesOf(item);
+  return {
+    portions: portionsOf(item).map((p) => ({ ...p })),
+    pages: pages && { from: pages.from, to: pages.to },
+    notMemorized: notMemorizedOf(item).length > 0,
   };
 }
 

@@ -10,9 +10,9 @@ import { cn } from "@/lib/utils";
 import type { ParentReport as ParentReportData, ParentRow } from "@qct/core/shared/parent";
 
 /**
- * A student's month for his parent (read-only): the month picker, the
- * averages and counts, then each day's homework, exam, "لم يحفظ" or
- * absence with its marks.
+ * A student's month for his parent (read-only): his homework still to
+ * recite, the month picker, the averages and counts, then each day's
+ * homework, exam, "لم يحفظ" or absence with its marks.
  */
 export function ParentReport({
   report,
@@ -25,6 +25,7 @@ export function ParentReport({
   const format = useFormatter();
   const label = usePortionLabel();
   const monthId = useId();
+  const homeworkId = useId();
 
   const monthLabel = (key: string) => format.dateTime(new Date(`${key}-01T00:00:00Z`), "month");
   const day = (date: string) => format.dateTime(localDateToUtcDate(date), "dayShort");
@@ -43,6 +44,32 @@ export function ParentReport({
 
   return (
     <div className="flex flex-col gap-4">
+      {report.homework.length > 0 && (
+        <section
+          aria-labelledby={homeworkId}
+          className="flex flex-col gap-2 rounded-2xl border bg-card p-4 shadow-sm"
+        >
+          <h2 id={homeworkId} className="text-lg font-semibold">
+            {t("parent.homeworkTitle")}
+          </h2>
+          <ul className="flex flex-col gap-2">
+            {report.homework.map((item, index) => (
+              <li
+                key={index}
+                className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/50 px-3 py-2.5"
+              >
+                <bdi className="min-w-0 break-words text-base font-medium">{label(item)}</bdi>
+                {item.notMemorized && (
+                  <Badge className="bg-warning text-warning-foreground">
+                    {t("glossary.notMemorized")}
+                  </Badge>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <div className="flex flex-col gap-1.5">
         <label htmlFor={monthId} className="text-sm font-medium text-muted-foreground">
           {t("print.month")}

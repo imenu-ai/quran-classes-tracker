@@ -17,6 +17,14 @@ const report: ParentReport = {
   centerName: "مركز النور",
   className: "حلقة الفجر",
   studentName: "أحمد",
+  homework: [
+    { portions: [{ surah: 113, fromAyah: 1, toAyah: 5 }], pages: null, notMemorized: true },
+    {
+      portions: [{ surah: 78, fromAyah: 1, toAyah: 30 }],
+      pages: { from: 582, to: 582 },
+      notMemorized: false,
+    },
+  ],
   month: "2026-10",
   months: ["2026-10", "2026-09"],
   rows: [
@@ -130,6 +138,23 @@ describe("ParentView", () => {
     expect(count("الاختبارات")).toBe("1");
     expect(count("الغياب بعذر")).toBe("1");
     expect(count("لم يحفظ")).toBe("1");
+  });
+
+  it("shows the homework still to recite above the month, none when there's nothing", async () => {
+    fetchMock.mockReturnValueOnce(json(200, report));
+    const view = renderArabic(<ParentView studentId={STUDENT} month={null} />);
+    const card = await screen.findByRole("region", { name: "الواجب القادم" });
+    const items = within(card).getAllByRole("listitem");
+    expect(items).toHaveLength(2);
+    expect(items[0]?.textContent).toMatch(/الفلق كاملة.*لم يحفظ/);
+    expect(items[1]?.textContent).toContain("582");
+    expect(items[1]?.textContent).not.toContain("لم يحفظ");
+    view.unmount();
+
+    fetchMock.mockReturnValueOnce(json(200, { ...report, homework: [] }));
+    renderArabic(<ParentView studentId={STUDENT} month={null} />);
+    await screen.findByRole("table");
+    expect(screen.queryByRole("region", { name: "الواجب القادم" })).toBeNull();
   });
 
   it("keeps a picked month in the URL, and asks for it", async () => {
