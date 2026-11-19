@@ -123,27 +123,85 @@ export function homeworkSuite(factory: StorageFactory) {
       });
     });
 
-    it("never marks an exam or an item added in this lesson not memorized", async () => {
+    it("never marks an exam or homework for the next lesson not memorized", async () => {
       const exam = await addExam(store, {
         studentId: STUDENT,
         lessonId: LESSON,
         portions: [{ surah: 67, fromAyah: 1, toAyah: 10 }],
         note: "",
       });
-      const recited = await addHomework(store, {
+      await rateHomework(store, exam, LESSON, "memorizationRate", NOT_MEMORIZED);
+      expect(await db.get("homework", exam.id)).toMatchObject({
+        evaluatedLessonId: LESSON,
+        notMemorized: [],
+      });
+
+      const next = await addHomework(store, {
+        studentId: STUDENT,
+        lessonId: LESSON,
+        portions: [{ surah: 78, fromAyah: 1, toAyah: 5 }],
+        note: "",
+        evaluateNow: false,
+      });
+      await rateHomework(store, next, LESSON, "memorizationRate", NOT_MEMORIZED);
+      expect(await db.get("homework", next.id)).toMatchObject({
+        evaluatedLessonId: null,
+        notMemorized: [],
+      });
+    });
+
+    const reciteNow = () =>
+      addHomework(store, {
         studentId: STUDENT,
         lessonId: LESSON,
         portions: [{ surah: 78, fromAyah: 1, toAyah: 5 }],
         note: "",
         evaluateNow: true,
       });
-      for (const item of [exam, recited]) {
-        await rateHomework(store, item, LESSON, "memorizationRate", NOT_MEMORIZED);
-        expect(await db.get("homework", item.id)).toMatchObject({
-          evaluatedLessonId: LESSON,
-          notMemorized: [],
-        });
-      }
+
+    it("'recite now' can be not memorized: then due next lesson, with its behavior mark", async () => {
+      const item = await reciteNow();
+      await rateHomework(store, item, LESSON, "behaviorRate", 7);
+      await rateHomework(store, item, LESSON, "memorizationRate", NOT_MEMORIZED);
+      expect(await db.get("homework", item.id)).toMatchObject({
+        assignedLessonId: LESSON,
+        evaluatedLessonId: null,
+        memorizationRate: null,
+        behaviorRate: null,
+        notMemorized: [{ lessonId: LESSON, behaviorRate: 7 }],
+      });
+    });
+
+    it("clearing not memorized on 'recite now' makes it 'recite now' again", async () => {
+      const item = await reciteNow();
+      await rateHomework(store, item, LESSON, "memorizationRate", NOT_MEMORIZED);
+      await rateHomework(store, item, LESSON, "behaviorRate", 6.5);
+      await rateHomework(store, item, LESSON, "memorizationRate", null);
+      expect(await db.get("homework", item.id)).toMatchObject({
+        evaluatedLessonId: LESSON,
+        memorizationRate: null,
+        behaviorRate: 6.5,
+        notMemorized: [],
+      });
+    });
+
+    it("a mark of 0 on 'recite now' replaces not memorized", async () => {
+      const item = await reciteNow();
+      await rateHomework(store, item, LESSON, "memorizationRate", NOT_MEMORIZED);
+      await rateHomework(store, item, LESSON, "memorizationRate", 0);
+      expect(await db.get("homework", item.id)).toMatchObject({
+        evaluatedLessonId: LESSON,
+        memorizationRate: 0,
+        notMemorized: [],
+      });
+    });
+
+    it("undo removes a not-memorized 'recite now' item", async () => {
+      const item = await reciteNow();
+      await rateHomework(store, item, LESSON, "memorizationRate", NOT_MEMORIZED);
+      const current = await db.get("homework", item.id);
+      await undoEvaluation(store, current!, LESSON);
+      expect((await db.get("homework", item.id))?.deletedAt).not.toBeNull();
     });
 
     it("records an exam on the spot: marked present, one mark, undo removes it", async () => {

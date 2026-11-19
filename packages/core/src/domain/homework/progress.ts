@@ -46,7 +46,10 @@ export interface LessonHomeworkItem extends ProgressHomework {
 export interface StudentLessonHomework<T> {
   /** Pending items assigned before this lesson (or never assigned to one). */
   toRecite: T[];
-  /** Items evaluated in this lesson (including "recite now"). */
+  /**
+   * Items evaluated in this lesson (including "recite now"), and those
+   * recited on the spot here and marked "not memorized".
+   */
   evaluatedHere: T[];
   /** Assigned in this lesson for the next one, not evaluated yet. */
   nextHomework: T[];
@@ -68,7 +71,8 @@ export function splitLessonHomework<T extends LessonHomeworkItem>(
       result.evaluatedHere.push(item);
     } else if (item.evaluatedLessonId === null) {
       if (item.assignedLessonId === lesson.id) {
-        result.nextHomework.push(item);
+        if (notMemorizedIn(item, lesson.id)) result.evaluatedHere.push(item);
+        else result.nextHomework.push(item);
       } else {
         const assignedDate = item.assignedLessonId
           ? lessonDates.get(item.assignedLessonId)

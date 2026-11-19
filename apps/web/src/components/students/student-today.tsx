@@ -25,6 +25,7 @@ import {
 import { todayLessonId, useStudentToday } from "@/client/data/today";
 import { localDateToUtcDate, type LocalDate } from "@qct/core/domain/dates/local-date";
 import {
+  canUndoIn,
   isExam,
   marksIn,
   memorizationChoices,
@@ -149,6 +150,7 @@ export function StudentToday({
                       onToggle={() => toggle(item.id)}
                       exam={isExam(item)}
                       evaluated={lesson !== null && item.evaluatedLessonId === lesson.id}
+                      undoable={lesson !== null && canUndoIn(item, lesson.id)}
                       marks={lesson ? marksIn(item, lesson.id) : NO_MARKS}
                       // Before today's lesson exists, nothing ties the item to it.
                       choices={
@@ -254,6 +256,7 @@ export function HomeworkItem({
   onToggle,
   exam = false,
   evaluated,
+  undoable,
   marks,
   choices,
   onEdit,
@@ -267,6 +270,8 @@ export function HomeworkItem({
   /** An exam: its own colour and badge, one mark, never "not memorized". */
   exam?: boolean;
   evaluated: boolean;
+  /** Offer undo (canUndoIn). */
+  undoable: boolean;
   /** What the pickers show today (marksIn). */
   marks: { memorization: MemorizationChoice; behavior: number | null };
   /** What the memorization picker offers today (memorizationChoices). */
@@ -335,7 +340,7 @@ export function HomeworkItem({
               <Pencil aria-hidden />
               {t("evaluation.editRange")}
             </Button>
-            {evaluated && (
+            {undoable && (
               <Button variant="ghost" className="h-10" onClick={() => void onUndo()}>
                 <DirectionalIcon icon={Undo2} />
                 {t("evaluation.undo")}

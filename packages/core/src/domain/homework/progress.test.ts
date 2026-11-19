@@ -95,4 +95,16 @@ describe("splitLessonHomework", () => {
     expect(split.evaluatedHere.map((i) => i.id)).toEqual(["recited-here", "recite-now"]);
     expect(split.nextHomework.map((i) => i.id)).toEqual(["next"]);
   });
+
+  it("keeps a 'recite now' item marked not memorized in the day's list, due the next lesson", () => {
+    const failed = {
+      ...hw("recite-now-failed", "a", { assignedLessonId: LESSON }),
+      notMemorized: [{ lessonId: LESSON, behaviorRate: null }],
+    };
+    const today = splitLessonHomework([failed], lesson, dates);
+    expect(today.evaluatedHere.map((i) => i.id)).toEqual(["recite-now-failed"]);
+    expect(today.nextHomework).toEqual([]);
+    const later = splitLessonHomework([failed], { id: "L-later", date: "2026-10-08" }, dates);
+    expect(later.toRecite.map((i) => i.id)).toEqual(["recite-now-failed"]);
+  });
 });

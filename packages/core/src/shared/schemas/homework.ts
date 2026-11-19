@@ -241,17 +241,34 @@ export function marksIn(
 
 /**
  * Which memorization choices this item takes in this lesson. "Not memorized"
- * is for due homework: never an exam, nor an item added in this lesson
- * (recited on the spot), nor one already recited in another lesson. Marks
- * can't be given in a lesson where he failed it if he recited it later.
+ * is for due homework and for an item recited on the spot ("تسميع الآن"),
+ * never an exam, homework given in this lesson for the next one, or an item
+ * already recited in another lesson. Marks can't be given in a lesson where
+ * he failed it if he recited it later.
  */
 export function memorizationChoices(
   item: MarkedItem,
   lessonId: string,
 ): { marks: boolean; notMemorized: boolean } {
   const elsewhere = item.evaluatedLessonId !== null && item.evaluatedLessonId !== lessonId;
+  // Added here: recited on the spot (evaluated here) or already failed here,
+  // as against homework for the next lesson.
+  const forNextLesson =
+    item.assignedLessonId === lessonId &&
+    item.evaluatedLessonId !== lessonId &&
+    notMemorizedIn(item, lessonId) === null;
   return {
     marks: !elsewhere,
-    notMemorized: !isExam(item) && item.assignedLessonId !== lessonId && !elsewhere,
+    notMemorized: !isExam(item) && !elsewhere && !forNextLesson,
   };
 }
+
+/**
+ * Whether undo is offered on an item in this lesson's list: one evaluated
+ * here, or one recited on the spot here (undoEvaluation removes it), also
+ * once marked "not memorized".
+ */
+export const canUndoIn = (
+  item: Pick<HomeworkRecord, "assignedLessonId" | "evaluatedLessonId">,
+  lessonId: string,
+): boolean => item.evaluatedLessonId === lessonId || item.assignedLessonId === lessonId;

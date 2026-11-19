@@ -26,6 +26,7 @@ export function HomeworkItem({
   onToggle,
   exam,
   evaluated,
+  undoable,
   marks,
   choices,
   readOnly,
@@ -39,6 +40,8 @@ export function HomeworkItem({
   onToggle: () => void;
   exam: boolean;
   evaluated: boolean;
+  /** Offer undo (canUndoIn). */
+  undoable: boolean;
   /** What the wheels show today (marksIn). */
   marks: { memorization: MemorizationChoice; behavior: number | null };
   /** What the memorization wheel offers today (memorizationChoices). */
@@ -121,7 +124,7 @@ export function HomeworkItem({
               <View style={styles.action}>
                 <Button variant="plain" label={t("evaluation.editRange")} onPress={onEdit} />
               </View>
-              {evaluated ? (
+              {undoable ? (
                 <View style={styles.action}>
                   <Button variant="plain" label={t("evaluation.undo")} onPress={onUndo} />
                 </View>

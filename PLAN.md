@@ -70,6 +70,8 @@ Agreed with the user from 2026-10-05 on; the date marks when a group was added.
 | 56 | Several suras | A homework item or exam holds **one or more suras**, each with its own ayah range or "السورة كاملة", and gets **one** memorization and one behavior mark. The next-homework suggestion continues after the last sura in the list, with that sura's size. |
 | 57 | Pages | Homework and exams can be entered as **whole pages** of the Madinah Mushaf (King Fahd Complex, Hafs, 604 pages): from page X to page Y. They're stored as the suras and ayahs those pages hold, plus the page range, and shown as pages with the ayahs beneath. Editing the ayahs afterwards turns it into an ayah homework. After a page homework, the form opens on pages and suggests the next pages of the same count. |
 | 58 | Session on a chosen date | An "إضافة جلسة" button with the month table picks a **past day or today** and opens that day for the student: attendance, due homework (assigned before that day and still pending), marks, "not memorized", recite now, exams and homework for the next session. It creates the class's lesson for that day if there is none; the other students show as not marked. Replaces "marking applies to today" in #31; editing a row of the month table stays. |
+| 59 | Not memorized without homework (2026-11-19) | When nothing is due, the portion picked with "تسميع الآن" can also be marked **"لم يحفظ"** (a mark of 0 already could). It then works as any "not memorized": it stays in that day's list with its badge, it's due at the next session, and the month table, print and parent page show the portion. Clearing the picker brings it back to "recite now" with no mark; undo removes it. Exams and items recited on another day still don't get it. |
+| 60 | Homework on the parent page | The parent page shows a **"الواجب القادم"** card above the month: the student's pending homework (what he's to recite next, "لم يحفظ" ones included), whatever month is picked. Portions only: no ids or notes. |
 
 ---
 
@@ -536,7 +538,7 @@ An Expo app for iPhone, iPad, Android phones and Android tablets with the PWA's 
 
 ### [ ] Phase 3: Marking and homework improvements
 
-Five features asked for by the user on 2026-11-07 (§0 #54–58), each built in `packages/core`, the web app and the mobile app in the same step. No version of the app before this phase is in use, so records change shape without keeping older apps working (#52 doesn't apply here). Records already on the server and on devices are read through helpers that fill in the new shape, as with `postponedLessonsOf()` and `kindOf()`.
+Five features asked for by the user on 2026-11-07 (§0 #54–58), and two more on 2026-11-19 (#59–60, steps 3.7–3.8, built before the 3.6 release), each built in `packages/core`, the web app and the mobile app in the same step. No version of the app before this phase is in use, so records change shape without keeping older apps working (#52 doesn't apply here). Records already on the server and on devices are read through helpers that fill in the new shape, as with `postponedLessonsOf()` and `kindOf()`.
 
 - [x] **3.1 Marks 0–10 in halves (#54).**
   - `rateSchema`: 0–10, multiple of 0.5. The picker (web native select, mobile wheel): 0, 0.5 … 10.
@@ -559,7 +561,15 @@ Five features asked for by the user on 2026-11-07 (§0 #54–58), each built in 
   - "إضافة جلسة" with the month table on both platforms: the system date picker (no future dates), then that day's screen, built from the today card with the date as a parameter. Today opens the today card.
   - Core: the day's due homework and the next-homework suggestion as of that date (items created later are left out); the lesson created on the first thing recorded, as today.
   - Access: `lessons.run`, as for today.
-- [ ] **3.6 Tests and release.** Web E2E and Maestro flows updated (half marks, "لم يحفظ", several suras, pages, a past session); the README checklist; app version 1.1.0 with release notes in both store listings. The user deploys the web app and submits the builds.
+- [ ] **3.6 Tests and release.** Web E2E and Maestro flows updated (half marks, "لم يحفظ", several suras, pages, a past session, and 3.7–3.8); the README checklist; app version 1.1.0 with release notes in both store listings. The user deploys the web app and submits the builds.
+- [x] **3.7 "Not memorized" without homework (#59).**
+  - Core: `memorizationChoices` offers "لم يحفظ" on an item recited on the spot ("تسميع الآن"). `rateHomework`: clearing it on such an item makes it "recite now" again. `splitLessonHomework` keeps an item that has a "not memorized" entry in the lesson in that day's list, never under next homework.
+  - UI (web and mobile): the picker offers it; undo shows on such an item and removes it.
+  - Tests: choices, rateHomework and the split on every adapter; the today card on both platforms.
+- [ ] **3.8 Homework on the parent page (#60).**
+  - `ParentReport.homework`: the pending items' portions and pages, oldest first, from `buildStudentProfile().pending`.
+  - The page: a "الواجب القادم" card above the month table (none when there's nothing pending); messages in `ar` and `en`.
+  - Tests: the server report and the component.
 
 ---
 

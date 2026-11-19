@@ -29,10 +29,12 @@ export type RateField = "memorizationRate" | "behaviorRate";
  * - A mark makes the item evaluated in this lesson. If he was "not
  *   memorized" here, that's replaced, and its behavior mark carries over.
  * - NOT_MEMORIZED keeps (or puts) the item back to pending with an entry for
- *   this lesson, carrying over a behavior mark given here. Not for exams, items
- *   added in this lesson, or items recited in another lesson.
+ *   this lesson, carrying over a behavior mark given here. Not for exams,
+ *   homework given in this lesson for the next one, or items recited in
+ *   another lesson (memorizationChoices).
  * - While he's "not memorized" here, a behavior mark goes into that entry, and
- *   clearing the memorization picker removes the entry.
+ *   clearing the memorization picker removes the entry. An item recited on
+ *   the spot here then goes back to "recite now" with no memorization mark.
  * - A mark in a lesson where he failed it, after he recited it in a later
  *   one, is ignored (it would move that evaluation).
  *
@@ -71,10 +73,20 @@ export async function rateHomework(
 
     if (entry && (field === "behaviorRate" || score === null)) {
       await ensurePresent(tx, lessonId, current.studentId);
-      await tx.update("homework", current.id, {
-        notMemorized:
-          field === "behaviorRate" ? [...others, { lessonId, behaviorRate: score }] : others,
-      });
+      if (field === "behaviorRate") {
+        await tx.update("homework", current.id, {
+          notMemorized: [...others, { lessonId, behaviorRate: score }],
+        });
+      } else if (current.assignedLessonId === lessonId) {
+        // Recited on the spot: back to "recite now", keeping the behavior mark.
+        await tx.update("homework", current.id, {
+          notMemorized: others,
+          evaluatedLessonId: lessonId,
+          behaviorRate: entry.behaviorRate,
+        });
+      } else {
+        await tx.update("homework", current.id, { notMemorized: others });
+      }
       return;
     }
 
